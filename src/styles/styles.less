@@ -1,0 +1,834 @@
+/**
+ *  Power BI Visualizations
+ *
+ *  Copyright (c) Microsoft Corporation
+ *  All rights reserved. 
+ *  MIT License
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the ""Software""), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in 
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
+/**
+ * Import Power KPI's styles
+ */ 
+@import (less) "../../../powerKPI/visual/styles/styles.less";
+
+.vcBody,
+.powerKPIMatrix_rootComponent,
+.powerKPIMatrix_rootComponent * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.displayFlex {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.flexOrder(@order) {
+    -webkit-box-ordinal-group: @order + 1;
+    -ms-flex-order: @order;
+    order: @order;
+}
+
+.flexDirectionColumn {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+}
+
+.flexDirectionRow {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+}
+
+.justifyContentStart {
+    -webkit-box-pack: start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+}
+
+.justifyContentCenter {
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+}
+
+.justifyContentEnd {
+    -webkit-box-pack: end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+}
+
+.justifyContentSpaceBetween {
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+.alignItemsCenter {
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.alignItemsStart {
+    -webkit-box-align: start;
+    -ms-flex-align: start;
+    align-items: flex-start;
+}
+
+.alignItemsEnd{
+    -webkit-box-align: end;
+    -ms-flex-align: end;
+    align-items: flex-end;
+}
+
+.flexGrow(@flexGrow) {
+    -webkit-box-flex: @flexGrow;
+    -ms-flex-positive: @flexGrow;
+    flex-grow: @flexGrow;
+}
+
+.modalWindow_rootElement {
+    position: absolute;
+    z-index: 100;
+
+    .displayFlex();
+    .justifyContentCenter();
+    .alignItemsCenter();
+
+    .modalWindow_rootElement-innerElement {
+        padding: 5px;
+
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8)
+    }
+}
+
+.powerKPIMatrix_rootComponent {
+    @sizeOfDraggableComponent: 2px;
+
+    color: black;
+
+    overflow: hidden;
+
+    .displayFlex();
+
+    font-size: 16px;
+
+    &:hover,
+    &:focus {
+        .collapserCellComponent_collapserSign {
+            display: block !important;
+        }
+    }
+
+    .textEllipsis {
+        overflow: hidden;
+        text-align: left;
+        text-overflow: ellipsis;
+    }
+
+    .boldStyle {
+        font-weight: bold;
+    }
+
+    .columnMappingComponent {
+        @borderColor: #C8C8C8;
+
+        .displayFlex();
+
+        height: 100%;
+
+        min-width: 325px;
+        max-width: 35%;
+
+        padding-right: 5px;
+
+        pointer-events: none;
+
+        & * {
+            pointer-events: all;
+        }
+
+        .columnMappingComponent_root {
+            overflow: hidden;
+
+            .displayFlex();
+            .flexDirectionColumn();
+
+            margin: 0;
+
+            background-color: #f9f9f9;
+            border: 1px solid #dddddd;
+
+            .columnMappingHeaderComponent {
+                .displayFlex();
+                .flexOrder(1);
+
+                .justifyContentCenter();
+                .alignItemsCenter();
+
+                border-bottom: 1px solid @borderColor;
+
+                .columnMappingHeaderComponent_headerElement {
+                    color: #5d5d5d;
+                    padding: 0 5px 0 5px;
+
+                    .textEllipsis();
+                }
+            }
+
+            .columnMappingHeaderComponent,
+            .columnMappingFooterComponent {
+                background-color: #eaeaea;
+                height: 50px;
+            }
+
+            .columnMappingFooterComponent {
+                .displayFlex();
+                .flexOrder(3);
+                .justifyContentCenter();
+
+                border-top: 1px solid @borderColor;
+
+                .columnMappingFooterComponent_container {
+                    .displayFlex();
+                    .justifyContentEnd();
+                    .alignItemsCenter();
+                }
+
+                .columnMappingButtonComponent {
+                    .columnMappingButtonComponent_button {
+                        line-height: 1em;
+
+                        padding: 9px 20px;
+
+                        background-color: #F2C811;
+
+                        color: #000;
+                        font-weight: 500;
+
+                        min-width: 120px;
+
+                        cursor: pointer;
+
+                        transition: color .2s, background-color .2s, border-color .2s;
+
+                        &:hover,
+                        &:active {
+                            background-color: #DDB612;
+                        }
+                    }
+                }
+            }
+
+            .columnMappingFooterComponent_container,
+            .columnMappingDropDownComponent_container,
+            .columnMappingApplyButtonComponent_container,
+            .columnMappingGroupComponent_title,
+            .columnMappingHeaderComponent_headerElement {
+                width: 90%;
+            }
+
+            .columnMappingComponent_scrollable {
+                .flexOrder(2);
+                .flexGrow(1);
+
+                overflow: auto;
+                max-height: 90%;
+                max-width: 100%;
+
+                .columnMappingDropDownComponent_container,
+                .columnMappingApplyButtonComponent_container  {
+                    .displayFlex();
+                }
+
+                .columnMappingColumnSelectorComponent {
+                    padding: 10px 0 0 0;
+
+                    .columnMappingGroupComponent {
+                        .columnMappingGroupComponent_titleContainer {
+                            .displayFlex();
+
+                            .justifyContentCenter();
+
+                            .columnMappingGroupComponent_title {
+                                padding: 5px 0 10px 0;
+
+                                font-weight: 500;
+                                color: black;
+                            }
+                        }
+
+                        .columnMappingDropDownComponent {
+                            .displayFlex();
+
+                            .justifyContentCenter();
+
+                            .columnMappingDropDownComponent_container {
+                                padding-bottom: 10px;
+
+                                .flexDirectionColumn();
+
+                                .columnMappingDropDownComponent_caption {
+                                    .displayFlex();
+                                    .flexDirectionRow();
+                                    .justifyContentSpaceBetween();
+
+                                    margin-bottom: 10px;
+
+                                    .textEllipsis();
+
+                                    .columnMappingDropDownComponent_captionIndicator {
+                                        font-size: 1.1em;
+                                        color: #33669A;
+                                    }
+                                }
+
+                                .columnMappingDropDownComponent_captionIndicatorHelpMessageContainer {
+                                    position: absolute;
+
+                                    display: none;
+
+                                    color: black;
+
+                                    margin-top: 35px;
+
+                                    max-width: 380px;
+                                    padding: 12px;
+                                    vertical-align: baseline;
+                                    line-height: 21px;
+                                    background-color: #FFF;
+                                    box-shadow: 0 0 20px 2px rgba(0, 0, 0, 0.15);
+                                    transition: opacity .1s ease-in-out;
+                                    word-wrap: break-word;
+                                    overflow-wrap: break-word;
+                                    z-index: 9999999;
+
+                                    /*
+                                     * This rule describes a small arrow of the element.
+                                     **/
+                                    &:after {
+                                        border-color: transparent transparent #FFF;
+                                        top: -15px;
+
+                                        left: 13px;
+
+                                        content: "";
+                                        border-style: solid;
+                                        border-width: 8px;
+                                        width: 0;
+                                        height: 0;
+                                        position: absolute;
+                                    }
+
+                                }
+
+                                .columnMappingDropDownComponent_select {
+                                    font-weight: 500;
+                                    min-height: 40px;
+
+                                    .textEllipsis();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .setMaxSize(@maxWidth, @maxHeight) {
+        .setMaxWidth(@maxWidth);
+        .setMaxHeight(@maxHeight);
+    }
+
+    .setMaxWidth(@maxWidth) {
+        width: @maxWidth;
+        min-width: @maxWidth;
+        max-width: @maxWidth;
+    }
+
+    .setMaxHeight(@maxHeight) {
+        height: @maxHeight;
+        min-height: @maxHeight;
+        max-height: @maxHeight;
+    }
+
+    .tableComponent {
+        @availableSize: 100%;
+
+        max-height: @availableSize;
+        height: @availableSize;
+
+        overflow: hidden;
+
+        .flexGrow(1);
+
+        .displayFlex();
+
+        .textNoWrap {
+            white-space: nowrap;
+            word-wrap: normal;
+        }
+    
+        .textWrap {
+            white-space: normal;
+            word-wrap: normal;
+        }
+    
+        .textBreakWord {
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        .italicStyle {
+            font-style: italic;
+        }
+
+        .bodyComponent {
+            overflow: auto;
+
+            .flexGrow(2);
+        }
+
+        .cellComponent {
+            .setMaxHeight(100%);
+
+            overflow: hidden;
+
+            font-size: 1em;
+
+            .displayFlex();
+
+            .textCellComponent_text,
+            .kpiIndicatorCellComponent_indicator {
+                .textEllipsis();
+
+                max-height: 100%;
+                max-width: 100%;
+            }
+
+            .kpiIndicatorCellComponent_indicator {
+                min-width: 1em;
+            }
+
+            .textCellComponent_text_hyperlink {
+                cursor: pointer;
+            }
+        }
+
+        .textCellComponent_image,
+        .collapserCellComponent_collapserSign {
+            @iconSize: 1.2em;
+
+            width: @iconSize;
+            min-width: @iconSize;
+
+            height: @iconSize;
+            min-height: @iconSize;
+        }
+
+        .textCellComponent {
+            .textCellComponent_image {
+                -webkit-background-size: contain;
+                background-size: contain;
+                background-repeat: no-repeat;
+
+                padding-right: 5px;
+
+                .flexOrder(1);
+            }
+
+            .textCellComponent_text {
+                .flexOrder(2);
+            }
+        }
+
+        .kpiIndicatorCellComponent  {
+            &.kpiIndicatorPosition_left {
+                .kpiIndicatorCellComponent_indicator {
+                    .flexOrder(1);
+                }
+
+                .textCellComponent_text {
+                    .flexOrder(2);
+                }
+            }
+
+            &.kpiIndicatorPosition_right {
+                .kpiIndicatorCellComponent_indicator {
+                    .flexOrder(2);
+                }
+
+                .textCellComponent_text {
+                    .flexOrder(1);
+                }
+            }
+
+            &.verticalAlignment_top,
+            &.verticalAlignment_center,
+            &.verticalAlignment_bottom {
+                .kpiIndicatorCellComponent_indicator,
+                .textCellComponent_text {
+                    -webkit-box-ordinal-group: 1;
+                }
+            }
+        }
+
+        @kpiIndicatorPadding: 3px;
+
+        .horizontalAlignment_left {
+            .justifyContentStart();
+
+            .textWrap,
+            .textBreakWord {
+                text-align: left;
+            }
+        }
+
+        .horizontalAlignment_center {
+            .justifyContentCenter();
+
+            .textWrap,
+            .textBreakWord {
+                text-align: center;
+            }
+        }
+
+        .horizontalAlignment_right {
+            .justifyContentEnd();
+
+            .textWrap,
+            .textBreakWord {
+                text-align: right;
+            }
+        }
+
+        .verticalAlignment_top {
+            .alignItemsStart();
+        }
+
+        .verticalAlignment_center {
+            .alignItemsCenter();
+        }
+
+        .verticalAlignment_bottom {
+            .alignItemsEnd();
+        }
+
+        .kpiIndicatorRowDirectionClassName {
+            &.kpiIndicatorPosition_left {
+                .kpiIndicatorCellComponent_indicator {
+                    padding-right: @kpiIndicatorPadding;
+                }
+            }
+
+            &.kpiIndicatorPosition_right {
+                .kpiIndicatorCellComponent_indicator {
+                    padding-left: @kpiIndicatorPadding;
+                }
+            }
+        }
+
+        .kpiIndicatorColumnDirectionClassName {
+            .flexDirectionColumn();
+
+            &.kpiIndicatorPosition_left {
+                .kpiIndicatorCellComponent_indicator {
+                    padding-bottom: @kpiIndicatorPadding;
+                }
+            }
+
+            &.kpiIndicatorPosition_right {
+                .kpiIndicatorCellComponent_indicator{
+                    padding-top: @kpiIndicatorPadding;
+                }
+            }
+
+            &.horizontalAlignment_left {
+                .alignItemsStart();
+            }
+
+            &.horizontalAlignment_center {
+                .alignItemsCenter();
+            }
+
+            &.horizontalAlignment_right {
+                .alignItemsEnd();
+            }
+
+            &.verticalAlignment_top {
+                .justifyContentStart();
+            }
+    
+            &.verticalAlignment_center {
+                .justifyContentCenter();
+            }
+
+            &.verticalAlignment_bottom {
+                .justifyContentEnd();
+            }
+        }
+
+        .sparklineCellComponent {
+            .sparklineCellComponent_svg {
+                .setMaxSize(100%, 100%);
+            }
+
+            .lineComponent {
+                .lineComponent_line {
+                    fill: transparent;
+                }
+
+                .dottedLine {
+                    stroke-dasharray: 1, 5;
+                }
+
+                .dashedLine {
+                    stroke-dasharray: 5, 10;
+                }
+
+                .dotDashedLine { 
+                    stroke-dasharray: 5, 5, 1, 5;
+                }
+            }
+
+            .verticalLineComponent {
+                .verticalLine {
+                    pointer-events: none;
+                }
+            }
+        }
+
+        .collapserCellComponent {
+            .displayFlex();
+
+            .collapserCellComponent_collapserSign {
+                display: none;
+
+                margin-left: 5px;
+                padding-top: 2px;
+
+                .textEllipsis();
+
+                .flexOrder(3);
+            }
+        }
+
+        .headerRowComponent_container {
+            .flexGrow(0);
+
+            overflow: hidden;
+        }
+    }
+
+    .draggableComponent::before {
+        content: "";
+
+        position: relative;
+        .displayFlex();
+    }
+
+    .draggableComponentBeforeVertical {
+        @width: 20px;
+
+        height: 100%;
+
+        width: @width;
+        left: -(@width / 2);
+        top: 0;
+    }
+
+    .draggableComponentBeforeHorizontal {
+        @height: 20px;
+
+        width: 100%;
+
+        height: @height;
+        top: -(@height / 2);
+        left: 0;
+    }
+
+    .textCellComponent_text,
+    .textCellComponent_image,
+    .sparklineCellComponent_svg,
+    .kpiIndicatorCellComponent_indicator,
+    .collapserCellComponent_collapserSign {
+        z-index: 1;
+    }
+
+    .bodyRowComponent_clickAction {
+        .textCellComponent {
+            &:hover,
+            &:active {
+                background-color: rgba(51,51,51,.3) !important;
+            }
+        }
+
+        .cellComponent {
+            &:hover,
+            &:active {
+                cursor: pointer;
+            }
+        }
+    }
+
+    .tableComponent_row {
+        .flexDirectionColumn();
+
+        .rowComponent {
+            .draggableComponent {
+                .setMaxSize(100%, @sizeOfDraggableComponent);
+
+                cursor: row-resize;
+
+                &::before {
+                    .draggableComponentBeforeHorizontal();
+                }
+            }
+
+            .rowComponent_container {
+                .displayFlex();
+                .flexDirectionRow();
+
+                .draggableComponent {
+                    .setMaxSize(@sizeOfDraggableComponent, 100%);
+
+                    cursor: col-resize;
+
+                    &::before{
+                        .draggableComponentBeforeVertical();
+                    }
+                }
+            }
+
+            .bodyRowComponent_children_container {
+                .displayFlex();
+                .flexDirectionColumn();
+            }
+
+            .bodyRowComponent_row_container {
+                .bodyRowComponent {
+                    width: 100%;
+                }
+            }
+        }
+
+        .kpiIndicatorRowDirectionClassName {
+            &.kpiStatus_horizontalAlignment_center {
+                .textCellComponent_text,
+                .kpiIndicatorCellComponent_indicator  {
+                    width: 50%;
+                }
+
+                &.kpiIndicatorPosition_left {
+                    .kpiIndicatorCellComponent_indicator {
+                        text-align: right;
+                    }
+
+                    .textCellComponent_text {
+                        text-align: left;
+                    }
+                }
+
+                &.kpiIndicatorPosition_right {
+                    .kpiIndicatorCellComponent_indicator {
+                        text-align: left;
+                    }
+
+                    .textCellComponent_text {
+                        text-align: right;
+                    }
+                }
+            }
+        }
+
+        .tabular {
+            .displayFlex();
+        }
+    }
+
+    .tableComponent_column {
+        .flexDirectionRow();
+
+        .rowComponent {
+            .headerRowComponent_container {
+                .flexDirectionColumn();
+            }
+
+            .draggableComponent {
+                .setMaxSize(@sizeOfDraggableComponent, 100%);
+
+                cursor: col-resize;
+
+                &::before {
+                    .draggableComponentBeforeVertical();
+                }
+            }
+
+            .rowComponent_container {
+                .displayFlex();
+                .flexDirectionColumn();
+
+                .draggableComponent {
+                    .setMaxSize(100%, @sizeOfDraggableComponent);
+
+                    cursor: row-resize;
+
+                    &::before {
+                        .draggableComponentBeforeHorizontal();
+                    }
+                }
+            }
+
+            .bodyRowComponent_root_container {
+                .displayFlex();
+                .flexDirectionColumn();
+
+                &.horizontalAlignment_left {
+                    .alignItemsStart();
+                }
+
+                &.horizontalAlignment_center {
+                    .alignItemsCenter();
+                }
+
+                &.horizontalAlignment_right {
+                    .alignItemsEnd();
+                }
+            }
+        }
+
+        .bodyComponent,
+        .bodyRowComponent_children_container,
+        .common,
+        .headerRowComponent {
+            .displayFlex();
+        }
+    }
+}

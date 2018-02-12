@@ -1,0 +1,37 @@
+{
+  "visual": {
+    "name": "powerbi-visuals-power-kpi-matrix",
+    "displayName": "Power KPI Matrix",
+    "guid": "powerKPIMatrixEB2381CC88A8425FBEB1B07FF57784E6",
+    "visualClassName": "PowerKPIMatrix",
+    "version": "2.1.1",
+    "description": "Monitor balanced scorecards and unlimited number of metrics and KPIs in a single, compact, easy to read list"
+  },
+  "apiVersion": "1.10.0",
+  "author": {
+      "name": "Microsoft",
+      "email": "pbicvsupport@microsoft.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": [
+    "node_modules/jquery/dist/jquery.min.js",
+    "node_modules/d3/d3.min.js",
+    "node_modules/lodash/lodash.min.js",
+    "node_modules/globalize/lib/globalize.js",
+    "node_modules/globalize/lib/cultures/globalize.culture.en-US.js",
+    "node_modules/powerbi-visuals-utils-typeutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-svgutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-colorutils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-tooltiputils/lib/index.js",
+    "node_modules/powerbi-visuals-utils-chartutils/lib/index.js",
+    "node_modules/powerkpi/lib/index.js"
+  ],
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "stringResources": []
+}
