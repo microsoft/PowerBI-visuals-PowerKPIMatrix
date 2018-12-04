@@ -107,8 +107,6 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         this.isDataColumnBasedModel = isDataColumnBasedModel;
     }
 
-    protected abstract converterStep(options: IConverterStepOptions): void;
-
     public abstract deepSearchSeries(
         seriesSet: DataRepresentationSeriesSet,
         levels: string[]
@@ -228,6 +226,8 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
         return dataRepresentation;
     }
+
+    protected abstract converterStep(options: IConverterStepOptions): void;
 
     private postProcess(
         seriesArray: DataRepresentationSeries[],

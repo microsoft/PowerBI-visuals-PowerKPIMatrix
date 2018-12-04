@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,41 +12,41 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class ScrollUtils {
-        public static d3ScrollTo(element: D3.Selection, x: number, y: number): void {
-            ScrollUtils.scrollTo(ScrollUtils.getHTMLElement(element), x, y);
+import { Selection } from "d3-selection";
+
+export class ScrollUtils {
+    public static d3ScrollTo(element: Selection<any, any, any, any>, x: number, y: number): void {
+        ScrollUtils.scrollTo(ScrollUtils.getHTMLElement(element), x, y);
+    }
+
+    public static scrollTo(element: HTMLElement, x: number, y: number): void {
+        if (!element) {
+            return;
         }
 
-        public static scrollTo(element: HTMLElement, x: number, y: number): void {
-            if (!element) {
-                return;
-            }
+        element.scrollLeft = x;
+        element.scrollTop = y;
+    }
 
-            element.scrollLeft = x;
-            element.scrollTop = y;
-        }
+    public static resetScroll(element: Selection<any, any, any, any>): void {
+        ScrollUtils.scrollTo(ScrollUtils.getHTMLElement(element), 0, 0);
+    }
 
-        public static resetScroll(element: D3.Selection): void {
-            ScrollUtils.scrollTo(ScrollUtils.getHTMLElement(element), 0, 0);
-        }
-
-        private static getHTMLElement(element: D3.Selection): HTMLElement {
-            return element
-                ? element.node<HTMLElement>()
-                : null;
-        }
+    private static getHTMLElement(element: Selection<any, any, any, any>): HTMLElement {
+        return element
+            ? element.node()
+            : null;
     }
 }

@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,83 +12,81 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class DataRepresentationPointFilter {
-        private static instance: DataRepresentationPointFilter;
+export class DataRepresentationPointFilter {
+    public static create(): DataRepresentationPointFilter {
+        return new DataRepresentationPointFilter();
+    }
 
-        constructor() {
-            if (DataRepresentationPointFilter.instance) {
-                return DataRepresentationPointFilter.instance;
-            }
+    private static instance: DataRepresentationPointFilter;
 
-            DataRepresentationPointFilter.instance = this;
+    constructor() {
+        if (DataRepresentationPointFilter.instance) {
+            return DataRepresentationPointFilter.instance;
         }
 
-        public static create(): DataRepresentationPointFilter {
-            return new DataRepresentationPointFilter();
+        DataRepresentationPointFilter.instance = this;
+    }
+
+    public isPointValid(point: DataRepresentationPoint): boolean {
+        return point
+            && point.value !== null
+            && point.value !== undefined
+            && !isNaN(point.value);
+    }
+
+    public groupAndFilterByColor(
+        points: DataRepresentationPoint[],
+        colors: string[],
+        defaultColor: string
+    ): DataRepresentationPointGradientColor[] {
+        if (!colors || !colors.length) {
+            return [{
+                points: this.filter(points),
+                color: defaultColor,
+            }];
         }
 
-        public isPointValid(point: DataRepresentationPoint): boolean {
-            return point
-                && point.value !== null
-                && point.value !== undefined
-                && !isNaN(point.value);
-        }
+        const gradientSet: DataRepresentationPointGradientColor[] = [];
 
-        public groupAndFilterByColor(
-            points: DataRepresentationPoint[],
-            colors: string[],
-            defaultColor: string
-        ): DataRepresentationPointGradientColor[] {
-            if (!colors || !colors.length) {
-                return [{
-                    points: this.filter(points),
-                    color: defaultColor,
-                }];
-            }
+        colors.forEach((color: string, colorIndex: number) => {
+            const currentGradient: DataRepresentationPointGradientColor = gradientSet.slice(-1)[0];
+            const point: DataRepresentationPoint = points[colorIndex];
 
-            const gradientSet: DataRepresentationPointGradientColor[] = [];
+            if (this.isPointValid(point)) {
+                if (!currentGradient) {
+                    gradientSet.push({
+                        color,
+                        points: [point],
+                    });
+                } else if (currentGradient && currentGradient.color === color) {
+                    currentGradient.points.push(point);
+                } else if (currentGradient && currentGradient.color !== color) {
+                    currentGradient.points.push(point);
 
-            colors.forEach((color: string, colorIndex: number) => {
-                const currentGradient: DataRepresentationPointGradientColor = gradientSet.slice(-1)[0];
-                const point: DataRepresentationPoint = points[colorIndex];
-
-                if (this.isPointValid(point)) {
-                    if (!currentGradient) {
-                        gradientSet.push({
-                            color,
-                            points: [point],
-                        });
-                    } else if (currentGradient && currentGradient.color === color) {
-                        currentGradient.points.push(point);
-                    } else if (currentGradient && currentGradient.color !== color) {
-                        currentGradient.points.push(point);
-
-                        gradientSet.push({
-                            color,
-                            points: [point],
-                        });
-                    }
+                    gradientSet.push({
+                        color,
+                        points: [point],
+                    });
                 }
-            });
+            }
+        });
 
-            return gradientSet;
-        }
+        return gradientSet;
+    }
 
-        public filter(points: DataRepresentationPoint[]): DataRepresentationPoint[] {
-            return points.filter((point: DataRepresentationPoint) => this.isPointValid(point));
-        }
+    public filter(points: DataRepresentationPoint[]): DataRepresentationPoint[] {
+        return points.filter((point: DataRepresentationPoint) => this.isPointValid(point));
     }
 }

@@ -24,69 +24,67 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class ColumnMappingState extends State<DataRepresentationColumnMapping> {
-        private currentRowName: string;
+export class ColumnMappingState extends State<DataRepresentationColumnMapping> {
+    private currentRowName: string;
 
-        constructor() {
-            super();
+    constructor() {
+        super();
 
-            this.state = {};
+        this.state = {};
+    }
+
+    public setRow(rowName: string): ColumnMappingState {
+        this.state[rowName] = this.state[rowName]
+            ? this.state[rowName]
+            : {};
+
+        return this;
+    }
+
+    public isCurrentRowSet(): boolean {
+        return this.currentRowName !== undefined
+            && this.currentRowName !== null;
+    }
+
+    public setCurrentRowName(rowName: string): ColumnMappingState {
+        this.currentRowName = rowName;
+
+        return this;
+    }
+
+    public setColumn(columnName: string, displayName: string): ColumnMappingState {
+        this.state[this.currentRowName][columnName] = displayName || undefined;
+
+        return this;
+    }
+
+    public getSelectedValueByColumnName(columnName: string): string {
+        if (!this.currentRowName || !this.state[this.currentRowName]) {
+            return null;
         }
 
-        public setRow(rowName: string): ColumnMappingState {
-            this.state[rowName] = this.state[rowName]
-                ? this.state[rowName]
-                : {};
+        return this.state[this.currentRowName][columnName] || null;
+    }
 
-            return this;
-        }
+    public getColumnMapping(): DataRepresentationColumnMapping {
+        return this.state;
+    }
 
-        public isCurrentRowSet(): boolean {
-            return this.currentRowName !== undefined
-                && this.currentRowName !== null;
-        }
+    public applyDefaultRows(rowNames: string[]): ColumnMappingState {
+        (rowNames || []).forEach((rowName: string) => {
+            this.setRow(rowName);
+        });
 
-        public setCurrentRowName(rowName: string): ColumnMappingState {
-            this.currentRowName = rowName;
+        return this;
+    }
 
-            return this;
-        }
-
-        public setColumn(columnName: string, displayName: string): ColumnMappingState {
-            this.state[this.currentRowName][columnName] = displayName || undefined;
-
-            return this;
-        }
-
-        public getSelectedValueByColumnName(columnName: string): string {
-            if (!this.currentRowName || !this.state[this.currentRowName]) {
-                return null;
+    public save(): ISettingsServiceItem[] {
+        return [{
+            objectName: "internalState",
+            selectionId: null,
+            properties: {
+                columnMapping: this.serializeState(),
             }
-
-            return this.state[this.currentRowName][columnName] || null;
-        }
-
-        public getColumnMapping(): DataRepresentationColumnMapping {
-            return this.state;
-        }
-
-        public applyDefaultRows(rowNames: string[]): ColumnMappingState {
-            (rowNames || []).forEach((rowName: string) => {
-                this.setRow(rowName);
-            });
-
-            return this;
-        }
-
-        public save(): ISettingsServiceItem[] {
-            return [{
-                objectName: "internalState",
-                selectionId: null,
-                properties: {
-                    columnMapping: this.serializeState(),
-                }
-            }];
-        }
+        }];
     }
 }

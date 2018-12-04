@@ -24,22 +24,20 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export abstract class State<StateType> {
-        protected state: StateType;
+export abstract class State<StateType> {
+    protected state: StateType;
 
-        public abstract save(): ISettingsServiceItem[];
+    public abstract save(): ISettingsServiceItem[];
 
-        public parse(state: StateType): void {
-            this.state = state || {} as StateType;
-        }
+    public parse(state: StateType): void {
+        this.state = state || {} as StateType;
+    }
 
-        protected serializeState(state: StateType = this.state): string {
-            try {
-                return JSON.stringify(state);
-            } catch (_) {
-                return "";
-            }
+    protected serializeState(state: StateType = this.state): string {
+        try {
+            return JSON.stringify(state);
+        } catch (_) {
+            return "";
         }
     }
 }

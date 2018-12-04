@@ -24,91 +24,89 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export interface OnSaveHandler {
-        (instances: ISettingsServiceItem[], isRenderRequired: boolean): void;
+export interface OnSaveHandler {
+    (instances: ISettingsServiceItem[], isRenderRequired: boolean): void;
+}
+
+export interface States {
+    [stateName: string]: State<any>;
+    columnMapping: ColumnMappingState;
+    table: TableInternalState;
+    settings: SettingsState;
+}
+
+export class StateService {
+    private onSave: OnSaveHandler;
+
+    public states: States;
+
+    constructor(states: States, onSave: OnSaveHandler) {
+        this.states = states;
+        this.onSave = onSave;
     }
 
-    export interface States {
-        [stateName: string]: State<any>;
-        columnMapping: ColumnMappingState;
-        table: TableInternalState;
-        settings: SettingsState;
-    }
+    public save(isRenderRequired: boolean = false): void {
+        const obj: { [name: string]: ISettingsServiceItem[] } = {};
 
-    export class StateService {
-        private onSave: OnSaveHandler;
+        for (const stateName in this.states) {
+            const state: State<any> = this.states[stateName];
 
-        public states: States;
+            state.save().map((item: ISettingsServiceItem) => {
+                if (obj[item.objectName]) {
+                    const mergedItem: ISettingsServiceItem = this.findItemForMerge(
+                        obj[item.objectName],
+                        item
+                    );
 
-        constructor(states: States, onSave: OnSaveHandler) {
-            this.states = states;
-            this.onSave = onSave;
-        }
-
-        public save(isRenderRequired: boolean = false): void {
-            const obj: { [name: string]: ISettingsServiceItem[] } = {};
-
-            for (const stateName in this.states) {
-                const state: State<any> = this.states[stateName];
-
-                state.save().map((item: ISettingsServiceItem) => {
-                    if (obj[item.objectName]) {
-                        const mergedItem: ISettingsServiceItem = this.findItemForMerge(
-                            obj[item.objectName],
-                            item
-                        );
-
-                        if (mergedItem) {
-                            mergedItem.properties = {
-                                ...mergedItem.properties,
-                                ...item.properties
-                            };
-                        } else {
-                            obj[item.objectName] = [
-                                ...obj[item.objectName],
-                                item,
-                            ];
-                        }
+                    if (mergedItem) {
+                        mergedItem.properties = {
+                            ...mergedItem.properties,
+                            ...item.properties
+                        };
                     } else {
-                        obj[item.objectName] = [item];
+                        obj[item.objectName] = [
+                            ...obj[item.objectName],
+                            item,
+                        ];
                     }
-                });
-            }
-
-            const items: ISettingsServiceItem[] = [];
-
-            for (let key in obj) {
-                items.push(...obj[key]);
-            }
-
-            this.onSave(items, isRenderRequired);
-        }
-
-        private findItemForMerge(items: ISettingsServiceItem[], item: ISettingsServiceItem): ISettingsServiceItem {
-            for (let currentItem of items) {
-                if (currentItem.objectName === item.objectName
-                    && currentItem.selectionId === item.selectionId
-                ) {
-                    return currentItem;
+                } else {
+                    obj[item.objectName] = [item];
                 }
-            }
-
-            return null;
+            });
         }
 
-        public parse(settings: PersistentSettings): void {
-            for (const stateName in this.states) {
-                this.states[stateName].parse(this.parseState(settings && settings[stateName]));
+        const items: ISettingsServiceItem[] = [];
+
+        for (let key in obj) {
+            items.push(...obj[key]);
+        }
+
+        this.onSave(items, isRenderRequired);
+    }
+
+    private findItemForMerge(items: ISettingsServiceItem[], item: ISettingsServiceItem): ISettingsServiceItem {
+        for (let currentItem of items) {
+            if (currentItem.objectName === item.objectName
+                && currentItem.selectionId === item.selectionId
+            ) {
+                return currentItem;
             }
         }
 
-        private parseState(str: string): State<any> {
-            try {
-                return JSON.parse(str) || undefined;
-            } catch (_) {
-                return undefined;
-            }
+        return null;
+    }
+
+    public parse(settings: PersistentSettings): void {
+        for (const stateName in this.states) {
+            this.states[stateName].parse(this.parseState(settings && settings[stateName]));
+        }
+    }
+
+    private parseState(str: string): State<any> {
+        try {
+            return JSON.parse(str) || undefined;
+        } catch (_) {
+            return undefined;
         }
     }
 }

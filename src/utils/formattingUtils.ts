@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,77 +12,81 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class FormattingUtils {
-        public static getFormatterOfAxisValue(
-            min: DataRepresentationAxisValueType,
-            max: DataRepresentationAxisValueType,
-            type: DataRepresentationTypeEnum,
-            metadata: DataViewMetadataColumn,
-            settings: AsOfDateSettings
-        ): IValueFormatter {
+import {
+    displayUnitSystemType as displayUnitSystemTypeModule,
+    valueFormatter,
+} from "powerbi-visuals-utils-formattingutils";
 
-            switch (type) {
-                case DataRepresentationTypeEnum.NumberType: {
-                    return this.getValueFormatter(
-                        settings.displayUnits || min,
-                        undefined,
-                        metadata,
-                        settings.precision,
-                        settings.getFormat());
-                }
-                default: {
-                    return this.getValueFormatter(
-                        min,
-                        max,
-                        metadata,
-                        undefined,
-                        settings.getFormat(),
-                        undefined);
-                }
+export class FormattingUtils {
+    public static getFormatterOfAxisValue(
+        min: DataRepresentationAxisValueType,
+        max: DataRepresentationAxisValueType,
+        type: DataRepresentationTypeEnum,
+        metadata: DataViewMetadataColumn,
+        settings: AsOfDateSettings
+    ): valueFormatter.IValueFormatter {
+
+        switch (type) {
+            case DataRepresentationTypeEnum.NumberType: {
+                return this.getValueFormatter(
+                    settings.displayUnits || min,
+                    undefined,
+                    metadata,
+                    settings.precision,
+                    settings.getFormat());
+            }
+            default: {
+                return this.getValueFormatter(
+                    min,
+                    max,
+                    metadata,
+                    undefined,
+                    settings.getFormat(),
+                    undefined);
             }
         }
+    }
 
-        public static getValueFormatter(
-            min: DataRepresentationAxisValueType,
-            max: DataRepresentationAxisValueType,
-            metadata?: DataViewMetadataColumn,
-            precision?: number,
-            format?: string,
-            displayUnitSystemType: DisplayUnitSystemType = DisplayUnitSystemType.WholeUnits,
-        ): IValueFormatter {
-            return valueFormatter.create({
-                format,
-                precision,
-                value: min,
-                value2: max,
-                displayUnitSystemType,
-                columnType: metadata && metadata.type,
-            });
+    public static getValueFormatter(
+        min: DataRepresentationAxisValueType,
+        max: DataRepresentationAxisValueType,
+        metadata?: DataViewMetadataColumn,
+        precision?: number,
+        format?: string,
+        displayUnitSystemType: displayUnitSystemTypeModule.DisplayUnitSystemType
+            = displayUnitSystemTypeModule.DisplayUnitSystemType.WholeUnits,
+    ): valueFormatter.IValueFormatter {
+        return valueFormatter.valueFormatter.create({
+            columnType: metadata && metadata.type,
+            displayUnitSystemType,
+            format,
+            precision,
+            value: min,
+            value2: max,
+        });
+    }
+
+    public static getFormattedValue(value: number, formatter: valueFormatter.IValueFormatter): string {
+        if (isNaN(value)) {
+            return "";
         }
 
-        public static getFormattedValue(value: number, formatter: IValueFormatter): string {
-            if (isNaN(value)) {
-                return "";
-            }
-
-            if (formatter) {
-                return formatter.format(value);
-            }
-
-            return `${value}`;
+        if (formatter) {
+            return formatter.format(value);
         }
+
+        return `${value}`;
     }
 }

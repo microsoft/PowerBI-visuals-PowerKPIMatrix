@@ -24,16 +24,14 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    import DataView = powerbi.DataView;
-    import IViewport = powerbi.IViewport;
 
-    export interface ConverterOptions {
-        dataView: DataView;
-        viewport: IViewport;
-        columnMapping: DataRepresentationColumnMapping;
-        settings: Settings;
-        settingsState: SettingsState;
-        viewMode: ViewMode;
-    }
+import powerbi from "powerbi-visuals-api";
+
+export interface ConverterOptions {
+    columnMapping: DataRepresentationColumnMapping;
+    dataView: powerbi.DataView;
+    settings: Settings;
+    settingsState: SettingsState;
+    viewMode: powerbi.ViewMode;
+    viewport: powerbi.IViewport;
 }

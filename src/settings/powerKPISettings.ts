@@ -24,69 +24,67 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // powerbi.extensibility.utils.dataview
-    import DataViewProperties = powerbi.extensibility.utils.dataview.DataViewProperties;
-    import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+// powerbi.extensibility.utils.dataview
+import DataViewProperties = powerbi.extensibility.utils.dataview.DataViewProperties;
+import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
-    // powerKpi
-    import BaseSettings = powerKpi.Settings;
+// powerKpi
+import BaseSettings = powerKpi.Settings;
 
-    export class PowerKPISettings extends BaseSettings {
-        private static InnumerablePrefix: RegExp = /^_/;
+export class PowerKPISettings extends BaseSettings {
+    private static InnumerablePrefix: RegExp = /^_/;
 
-        public getProperties(): DataViewProperties {
-            let properties: DataViewProperties = {},
-                objectNames: string[] = Object.keys(this);
+    public getProperties(): DataViewProperties {
+        let properties: DataViewProperties = {},
+            objectNames: string[] = Object.keys(this);
 
-            objectNames.forEach((objectName: string) => {
-                if (this.isPropertyEnumerable(objectName)) {
-                    let propertyNames: string[] = Object.keys(this[objectName]);
+        objectNames.forEach((objectName: string) => {
+            if (this.isPropertyEnumerable(objectName)) {
+                let propertyNames: string[] = Object.keys(this[objectName]);
 
-                    properties[objectName] = {};
+                properties[objectName] = {};
 
-                    propertyNames.forEach((propertyName: string) => {
-                        if (this.isPropertyEnumerable(objectName)) {
-                            properties[objectName][propertyName] =
-                                this.createPropertyIdentifier(
-                                    PowerKPIPrefixier.getObjectNameWithPrefix(objectName),
-                                    propertyName
-                                );
-                        }
-                    });
-                }
-            });
+                propertyNames.forEach((propertyName: string) => {
+                    if (this.isPropertyEnumerable(objectName)) {
+                        properties[objectName][propertyName] =
+                            this.createPropertyIdentifier(
+                                PowerKPIPrefixier.getObjectNameWithPrefix(objectName),
+                                propertyName
+                            );
+                    }
+                });
+            }
+        });
 
-            return properties;
-        }
+        return properties;
+    }
 
-        public static enumerateObjectInstances(
-            dataViewObjectParser: DataViewObjectsParser,
-            options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
+    public static enumerateObjectInstances(
+        dataViewObjectParser: DataViewObjectsParser,
+        options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
 
-            const objectName: string = options && options.objectName
-                ? PowerKPIPrefixier.getObjectNameWithoutPrefix(options.objectName)
-                : "";
+        const objectName: string = options && options.objectName
+            ? PowerKPIPrefixier.getObjectNameWithoutPrefix(options.objectName)
+            : "";
 
-            return super.enumerateObjectInstances(
-                dataViewObjectParser,
-                { objectName }
-            );
-        }
+        return super.enumerateObjectInstances(
+            dataViewObjectParser,
+            { objectName }
+        );
+    }
 
-        private isPropertyEnumerable(propertyName: string): boolean {
-            return !PowerKPISettings.InnumerablePrefix.test(propertyName);
-        }
+    private isPropertyEnumerable(propertyName: string): boolean {
+        return !PowerKPISettings.InnumerablePrefix.test(propertyName);
+    }
 
-        private createPropertyIdentifier(
-            objectName: string,
-            propertyName: string
-        ): DataViewObjectPropertyIdentifier {
+    private createPropertyIdentifier(
+        objectName: string,
+        propertyName: string
+    ): DataViewObjectPropertyIdentifier {
 
-            return {
-                objectName,
-                propertyName
-            };
-        }
+        return {
+            objectName,
+            propertyName
+        };
     }
 }

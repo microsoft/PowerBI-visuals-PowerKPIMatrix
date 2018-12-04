@@ -24,68 +24,66 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export interface ISettingsState extends VisualComponentStateBase {
-        [seriesName: string]: SeriesSettings;
+export interface ISettingsState extends VisualComponentStateBase {
+    [seriesName: string]: SeriesSettings;
+}
+
+export class SettingsState extends State<ISettingsState> {
+    private tempState: ISettingsState = {};
+
+    public setSeriesSettings(seriesName: string, settings: SeriesSettings) {
+        if (this.tempState[seriesName]) {
+            return;
+        }
+
+        this.tempState[seriesName] = settings;
     }
 
-    export class SettingsState extends State<ISettingsState> {
-        private tempState: ISettingsState = {};
+    private areStatesEqual(oldState: ISettingsState, newState: ISettingsState): boolean {
+        try {
+            return JSON.stringify(oldState) === JSON.stringify(newState);
+        } catch (_) {
+            return false;
+        }
+    }
 
-        public setSeriesSettings(seriesName: string, settings: SeriesSettings) {
-            if (this.tempState[seriesName]) {
-                return;
+    public getSeriesSettings(seriesName: string): DataViewObjects {
+        return (this.state[seriesName] as any) || undefined;
+    }
+
+    public get hasBeenUpdated(): boolean {
+        return !this.areStatesEqual(
+            this.state,
+            { ...this.state, ...this.tempState }
+        );
+    }
+
+    public reset() {
+        this.tempState = {};
+    }
+
+    public save(): ISettingsServiceItem[] {
+        const state: ISettingsState = {
+            ...this.state,
+            ...this.tempState,
+        };
+
+        const serializedState: string = this.serializeState(state);
+
+        this.reset();
+
+        return [{
+            objectName: "internalState",
+            selectionId: null,
+            properties: {
+                settings: serializedState,
             }
+        }];
+    }
 
-            this.tempState[seriesName] = settings;
-        }
+    public parse(value: ISettingsState): void {
+        this.reset();
 
-        private areStatesEqual(oldState: ISettingsState, newState: ISettingsState): boolean {
-            try {
-                return JSON.stringify(oldState) === JSON.stringify(newState);
-            } catch (_) {
-                return false;
-            }
-        }
-
-        public getSeriesSettings(seriesName: string): DataViewObjects {
-            return (this.state[seriesName] as any) || undefined;
-        }
-
-        public get hasBeenUpdated(): boolean {
-            return !this.areStatesEqual(
-                this.state,
-                { ...this.state, ...this.tempState }
-            );
-        }
-
-        public reset() {
-            this.tempState = {};
-        }
-
-        public save(): ISettingsServiceItem[] {
-            const state: ISettingsState = {
-                ...this.state,
-                ...this.tempState,
-            };
-
-            const serializedState: string = this.serializeState(state);
-
-            this.reset();
-
-            return [{
-                objectName: "internalState",
-                selectionId: null,
-                properties: {
-                    settings: serializedState,
-                }
-            }];
-        }
-
-        public parse(value: ISettingsState): void {
-            this.reset();
-
-            super.parse(value);
-        }
+        super.parse(value);
     }
 }

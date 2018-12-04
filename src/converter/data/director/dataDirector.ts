@@ -24,43 +24,48 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class DataDirector<DataType> {
-        private dataColumn: VisualDataColumn;
+import powerbi from "powerbi-visuals-api";
 
-        private rowBasedModelConverter: Converter<DataType>;
-        private columnBasedModelConverter: Converter<DataType>;
+import { IVisualDataColumn } from "../../../columns/visualDataColumn";
+import { Converter } from "../../converter";
+import { ConverterOptions } from "../../converterOptions";
 
-        constructor(
-            dataColumn: VisualDataColumn,
-            rowBasedModelConverter: Converter<DataType>,
-            columnBasedModelConverter: Converter<DataType>
-        ) {
-            this.dataColumn = dataColumn;
+export class DataDirector<DataType> {
+    private dataColumn: IVisualDataColumn;
 
-            this.rowBasedModelConverter = rowBasedModelConverter;
-            this.columnBasedModelConverter = columnBasedModelConverter;
-        }
+    private rowBasedModelConverter: Converter<DataType>;
+    private columnBasedModelConverter: Converter<DataType>;
 
-        public convert(options: ConverterOptions): DataType {
-            const converter: Converter<DataType> =
-                this.getConverter(options
-                    && options.dataView
-                    && options.dataView.table
-                    && options.dataView.table.columns
-                    || []);
+    constructor(
+        dataColumn: IVisualDataColumn,
+        rowBasedModelConverter: Converter<DataType>,
+        columnBasedModelConverter: Converter<DataType>,
+    ) {
+        this.dataColumn = dataColumn;
 
-            return converter && converter.convert(options);
-        }
+        this.rowBasedModelConverter = rowBasedModelConverter;
+        this.columnBasedModelConverter = columnBasedModelConverter;
+    }
 
-        private getConverter(columns: DataViewMetadataColumn[] = []): Converter<DataType> {
-            for (let column of columns) {
-                if (column.roles && column.roles[this.dataColumn.name]) {
-                    return this.rowBasedModelConverter;
-                }
+    public convert(options: ConverterOptions): DataType {
+        const converter: Converter<DataType> =
+            this.getConverter(options
+                && options.dataView
+                && options.dataView.table
+                && options.dataView.table.columns
+                || [],
+            );
+
+        return converter && converter.convert(options);
+    }
+
+    private getConverter(columns: powerbi.DataViewMetadataColumn[] = []): Converter<DataType> {
+        for (const column of columns) {
+            if (column.roles && column.roles[this.dataColumn.name]) {
+                return this.rowBasedModelConverter;
             }
-
-            return this.columnBasedModelConverter;
         }
+
+        return this.columnBasedModelConverter;
     }
 }

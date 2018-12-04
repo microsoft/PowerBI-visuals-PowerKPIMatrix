@@ -24,51 +24,49 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export interface ISettingsServiceItem {
-        objectName: string;
-        selectionId: ISelectionId;
-        properties: any;
+export interface ISettingsServiceItem {
+    objectName: string;
+    selectionId: ISelectionId;
+    properties: any;
+}
+
+export class SettingsService {
+    private hostServices: IVisualHostServices;
+
+    public set host(host: IVisualHostServices) {
+        this.hostServices = host;
     }
 
-    export class SettingsService {
-        private hostServices: IVisualHostServices;
+    public save(items: ISettingsServiceItem[]): void {
+        const instances: VisualObjectInstance[] = items.map((item: ISettingsServiceItem) => {
+            const selector: data.Selector = item.selectionId
+                && item.selectionId.getSelector
+                ? item.selectionId.getSelector()
+                : null;
 
-        public set host(host: IVisualHostServices) {
-            this.hostServices = host;
-        }
-
-        public save(items: ISettingsServiceItem[]): void {
-            const instances: VisualObjectInstance[] = items.map((item: ISettingsServiceItem) => {
-                const selector: data.Selector = item.selectionId
-                    && item.selectionId.getSelector
-                    ? item.selectionId.getSelector()
-                    : null;
-
-                return {
-                    selector,
-                    objectName: item.objectName,
-                    properties: item.properties || {},
-                };
-            });
-
-            this.sendInstancesToHost(instances);
-        }
-
-        public sendInstancesToHost(instances: VisualObjectInstance[]): void {
-            if (!this.hostServices) {
-                return;
-            }
-
-            const objectInstance: VisualObjectInstancesToPersist = {
-                replace: instances || [],
+            return {
+                selector,
+                objectName: item.objectName,
+                properties: item.properties || {},
             };
+        });
 
-            this.hostServices.persistProperties(objectInstance);
+        this.sendInstancesToHost(instances);
+    }
+
+    public sendInstancesToHost(instances: VisualObjectInstance[]): void {
+        if (!this.hostServices) {
+            return;
         }
 
-        public destroy(): void {
-            this.hostServices = null;
-        }
+        const objectInstance: VisualObjectInstancesToPersist = {
+            replace: instances || [],
+        };
+
+        this.hostServices.persistProperties(objectInstance);
+    }
+
+    public destroy(): void {
+        this.hostServices = null;
     }
 }

@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,111 +12,109 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class DataRepresentationScale {
-        private isOrdinalScale: boolean = false;
-        private baseScale: DataRepresentationAxisScale;
-        private internalType: DataRepresentationTypeEnum;
+export class DataRepresentationScale {
+    private isOrdinalScale: boolean = false;
+    private baseScale: DataRepresentationAxisScale;
+    private internalType: DataRepresentationTypeEnum;
 
-        private constructor(
-            scale: DataRepresentationAxisScale = null,
-            isOrdinal: boolean = false
-        ) {
-            this.baseScale = scale;
-            this.isOrdinalScale = isOrdinal;
-        }
+    private constructor(
+        scale: DataRepresentationAxisScale = null,
+        isOrdinal: boolean = false
+    ) {
+        this.baseScale = scale;
+        this.isOrdinalScale = isOrdinal;
+    }
 
-        public static create(): DataRepresentationScale {
-            return new DataRepresentationScale();
-        }
+    public static create(): DataRepresentationScale {
+        return new DataRepresentationScale();
+    }
 
-        public domain(
-            values: DataRepresentationAxisValueType[],
-            type: DataRepresentationTypeEnum
-        ): DataRepresentationScale {
-            let scale: DataRepresentationAxisScale;
+    public domain(
+        values: DataRepresentationAxisValueType[],
+        type: DataRepresentationTypeEnum
+    ): DataRepresentationScale {
+        let scale: DataRepresentationAxisScale;
 
-            if (values && values.length) {
-                switch (type) {
-                    case DataRepresentationTypeEnum.DateType: {
-                        scale = d3.time.scale();
-                        break;
-                    }
-                    case DataRepresentationTypeEnum.NumberType: {
-                        scale = d3.scale.linear();
-                        break;
-                    }
-                    case DataRepresentationTypeEnum.StringType: {
-                        scale = d3.scale.ordinal();
-                        this.isOrdinalScale = true;
-                        break;
-                    }
+        if (values && values.length) {
+            switch (type) {
+                case DataRepresentationTypeEnum.DateType: {
+                    scale = d3.time.scale();
+                    break;
+                }
+                case DataRepresentationTypeEnum.NumberType: {
+                    scale = d3.scale.linear();
+                    break;
+                }
+                case DataRepresentationTypeEnum.StringType: {
+                    scale = d3.scale.ordinal();
+                    this.isOrdinalScale = true;
+                    break;
                 }
             }
+        }
 
-            if (scale) {
-                scale.domain(values);
+        if (scale) {
+            scale.domain(values);
+        }
+
+        this.baseScale = scale;
+        this.internalType = type;
+
+        return this;
+    }
+
+    public getDomain(): DataRepresentationAxisValueType[] {
+        if (!this.baseScale) {
+            return [];
+        }
+
+        return this.baseScale.domain() || [];
+    }
+
+    public scale(value: DataRepresentationAxisValueType): number {
+        if (!this.baseScale) {
+            return 0;
+        }
+
+        return this.baseScale(value);
+    }
+
+    public copy(): DataRepresentationScale {
+        return new DataRepresentationScale(
+            this.baseScale && this.baseScale.copy(),
+            this.isOrdinalScale);
+    }
+
+    public range(rangeValues): DataRepresentationScale {
+        if (this.baseScale) {
+            if (this.isOrdinalScale) {
+                (this.baseScale as D3.Scale.OrdinalScale).rangePoints(rangeValues);
             }
-
-            this.baseScale = scale;
-            this.internalType = type;
-
-            return this;
-        }
-
-        public getDomain(): DataRepresentationAxisValueType[] {
-            if (!this.baseScale) {
-                return [];
+            else {
+                this.baseScale.range(rangeValues);
             }
-
-            return this.baseScale.domain() || [];
         }
 
-        public scale(value: DataRepresentationAxisValueType): number {
-            if (!this.baseScale) {
-                return 0;
-            }
+        return this;
+    }
 
-            return this.baseScale(value);
-        }
+    public get isOrdinal(): boolean {
+        return this.isOrdinalScale;
+    }
 
-        public copy(): DataRepresentationScale {
-            return new DataRepresentationScale(
-                this.baseScale && this.baseScale.copy(),
-                this.isOrdinalScale);
-        }
-
-        public range(rangeValues): DataRepresentationScale {
-            if (this.baseScale) {
-                if (this.isOrdinalScale) {
-                    (this.baseScale as D3.Scale.OrdinalScale).rangePoints(rangeValues);
-                }
-                else {
-                    this.baseScale.range(rangeValues);
-                }
-            }
-
-            return this;
-        }
-
-        public get isOrdinal(): boolean {
-            return this.isOrdinalScale;
-        }
-
-        public get type(): DataRepresentationTypeEnum {
-            return this.internalType;
-        }
+    public get type(): DataRepresentationTypeEnum {
+        return this.internalType;
     }
 }

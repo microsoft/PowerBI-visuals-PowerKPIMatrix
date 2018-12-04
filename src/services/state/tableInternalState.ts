@@ -24,32 +24,30 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class TableInternalState extends State<TableState> {
-        constructor() {
-            super();
+export class TableInternalState extends State<TableState> {
+    constructor() {
+        super();
 
-            this.state = { rowSet: {} };
-        }
+        this.state = { rowSet: {} };
+    }
 
-        public set(state: TableState): void {
-            this.state = state || {
-                rowSet: {}
-            };
-        }
+    public set(state: TableState): void {
+        this.state = state || {
+            rowSet: {}
+        };
+    }
 
-        public getRowStateSet(): RowStateSet {
-            return this.state.rowSet || {};
-        }
+    public getRowStateSet(): RowStateSet {
+        return this.state.rowSet || {};
+    }
 
-        public save(): ISettingsServiceItem[] {
-            return [{
-                objectName: "internalState",
-                selectionId: null,
-                properties: {
-                    table: this.serializeState(),
-                }
-            }];
-        }
+    public save(): ISettingsServiceItem[] {
+        return [{
+            objectName: "internalState",
+            selectionId: null,
+            properties: {
+                table: this.serializeState(),
+            }
+        }];
     }
 }
