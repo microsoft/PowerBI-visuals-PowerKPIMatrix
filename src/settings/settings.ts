@@ -24,6 +24,40 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+
+import {
+    IGeneratedCategory,
+    SettingsBase,
+} from "./settingsBase";
+
+import { AsOfDateSettings } from "./descriptors/asOfDateSettings";
+import { CategorySettings } from "./descriptors/categorySettings";
+import { FakeTitleSettings } from "./descriptors/fakeTitleSettings";
+
+import {
+    HorizontalTextAlignment,
+    VerticalTextAlignment,
+} from "./descriptors/fontSettings";
+
+import { GridSettings } from "./descriptors/gridSettings";
+import { HeaderSettings } from "./descriptors/headerSettings";
+import { KPIIndicatorSettings } from "./descriptors/kpi/kpiIndicatorSettings";
+import { KPIIndicatorValueSettings } from "./descriptors/kpi/kpiIndicatorValueSettings";
+import { KPIValueSettings } from "./descriptors/kpi/kpiValueSettings";
+import { MetricSpecificSettings } from "./descriptors/metricSpecificSettings";
+import { PersistentSettings } from "./descriptors/persistentSettings";
+import { PopOutGeneralSettings } from "./descriptors/popOutGeneralSettings";
+import { SparklineSettings } from "./descriptors/sparklineSettings";
+import { SubtotalSettings } from "./descriptors/subtotalSettings";
+
+import {
+    TableSettings,
+    TableStyle,
+} from "./descriptors/tableSettings";
+
+import { PowerKPISettings } from "./powerKPISettings";
+
 export class Settings extends SettingsBase<Settings> {
     public internalState: PersistentSettings = new PersistentSettings();
 
@@ -106,7 +140,7 @@ export class Settings extends SettingsBase<Settings> {
             HorizontalTextAlignment.center,
             VerticalTextAlignment.top,
             true,
-            true
+            true,
         );
     }
 
@@ -117,34 +151,6 @@ export class Settings extends SettingsBase<Settings> {
         this.metricName.updateHyperlinkVisibility(this.metricName.isHyperlinkSpecified);
 
         this.hideCategories(amountOfCategories);
-    }
-
-    private hideCategories(amountOfAllowedCategories: number): void {
-        for (let index: number = 0; index < SettingsBase.maxAmountOfCategories; index++) {
-            const category: GeneratedCategory = SettingsBase.getCategoryByIndex(index);
-
-            const options: CategorySettings = this[category.name];
-
-            if (options) {
-                options.updateHyperlinkVisibility(options.isHyperlinkSpecified);
-
-                if (index >= amountOfAllowedCategories) {
-                    options.isEnumerable = false;
-                }
-            }
-        }
-    }
-
-    protected onObjectHasBeenParsed(objectName: string): void {
-        if (objectName !== "table") {
-            return;
-        }
-
-        this.updatePropertiesBasedOnPreviousAndCurrentStyles();
-    }
-
-    protected onObjectsAreUndefined(): void {
-        this.updatePropertiesBasedOnPreviousAndCurrentStyles();
     }
 
     public updatePropertiesBasedOnPreviousAndCurrentStyles(): void {
@@ -179,6 +185,41 @@ export class Settings extends SettingsBase<Settings> {
         }
     }
 
+    public parse(dataView: powerbi.DataView): Settings {
+        // this.powerKPISettings = PowerKPISettings.parse(dataView);
+        // TODO: fix it
+
+        return super.parse(dataView);
+    }
+
+    protected onObjectHasBeenParsed(objectName: string): void {
+        if (objectName !== "table") {
+            return;
+        }
+
+        this.updatePropertiesBasedOnPreviousAndCurrentStyles();
+    }
+
+    protected onObjectsAreUndefined(): void {
+        this.updatePropertiesBasedOnPreviousAndCurrentStyles();
+    }
+
+    private hideCategories(amountOfAllowedCategories: number): void {
+        for (let index: number = 0; index < SettingsBase.maxAmountOfCategories; index++) {
+            const category: IGeneratedCategory = SettingsBase.getCategoryByIndex(index);
+
+            const options: CategorySettings = this[category.name];
+
+            if (options) {
+                options.updateHyperlinkVisibility(options.isHyperlinkSpecified);
+
+                if (index >= amountOfAllowedCategories) {
+                    options.isEnumerable = false;
+                }
+            }
+        }
+    }
+
     private applyBoldHeader(): void {
         this.header.show = true;
         this.header.backgroundColor = "#333333";
@@ -192,44 +233,4 @@ export class Settings extends SettingsBase<Settings> {
         this.verticalGrid.color = this.horizontalGrid.color = "#E7E7E7";
         this.verticalGrid.thickness = this.horizontalGrid.thickness = 2;
     }
-
-    public parse(dataView: DataView): Settings {
-        this.powerKPISettings = PowerKPISettings.parse(dataView);
-
-        return super.parse(dataView);
-    }
-
-    public static enumerateObjectInstances(
-        settings: Settings,
-        options: EnumerateVisualObjectInstancesOptions
-    ): VisualObjectInstanceEnumeration {
-        const enumeration: VisualObjectInstanceEnumeration = super.enumerateObjectInstances(
-            settings,
-            options
-        );
-
-        if (options
-            && options.objectName
-            && settings[options.objectName]
-        ) {
-            return enumeration;
-        }
-
-        const powerKPIEnumeration: VisualObjectInstanceEnumeration =
-            PowerKPISettings.enumerateObjectInstances(settings.powerKPISettings, options);
-
-        return {
-            instances: [
-                ...Settings.getInstances(enumeration),
-                ...Settings.getInstances(powerKPIEnumeration),
-            ]
-        };
-    }
-
-    private static getInstances(enumeration: VisualObjectInstanceEnumeration): VisualObjectInstance[] {
-        return enumeration
-            && (enumeration as VisualObjectInstanceEnumerationObject).instances
-            || [];
-    }
 }
-

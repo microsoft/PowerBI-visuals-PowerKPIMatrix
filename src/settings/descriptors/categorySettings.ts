@@ -24,7 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { FontSettings } from "./fontSettings";
+
 export class CategorySettings extends FontSettings {
     public isExpandCollapseShown: boolean = true;
 }
-

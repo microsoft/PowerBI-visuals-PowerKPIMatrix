@@ -24,25 +24,17 @@
  *  THE SOFTWARE.
  */
 
+import { SettingsPropertyBase } from "./settingsPropertyBase";
+import { ISettingsWithParser } from "./SettingsWithParser";
+
 export enum SubtotalType {
     SumOfItems,
     CountOfItems,
 }
 
-export const SubtotalTypeIEnumType: IEnumType = createEnumType([
-    {
-        value: SubtotalType.SumOfItems,
-        displayName: "Sum of Items"
-    },
-    {
-        value: SubtotalType.CountOfItems,
-        displayName: "Count of Items"
-    },
-]);
-
 export class SubtotalSettings
     extends SettingsPropertyBase
-    implements SettingsWithParser {
+    implements ISettingsWithParser {
 
     public show: boolean = true;
     public type: SubtotalType = SubtotalType.SumOfItems;

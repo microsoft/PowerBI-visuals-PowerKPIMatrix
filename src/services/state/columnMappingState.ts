@@ -24,7 +24,14 @@
  *  THE SOFTWARE.
  */
 
-export class ColumnMappingState extends State<DataRepresentationColumnMapping> {
+import {
+    IDataRepresentationColumnMapping,
+} from "../../converter/columnMapping/dataRepresentation/dataRepresentationColumnMapping";
+
+import { ISettingsServiceItem } from "../settingsService";
+import { State } from "./state";
+
+export class ColumnMappingState extends State<IDataRepresentationColumnMapping> {
     private currentRowName: string;
 
     constructor() {
@@ -66,7 +73,7 @@ export class ColumnMappingState extends State<DataRepresentationColumnMapping> {
         return this.state[this.currentRowName][columnName] || null;
     }
 
-    public getColumnMapping(): DataRepresentationColumnMapping {
+    public getColumnMapping(): IDataRepresentationColumnMapping {
         return this.state;
     }
 
@@ -81,10 +88,10 @@ export class ColumnMappingState extends State<DataRepresentationColumnMapping> {
     public save(): ISettingsServiceItem[] {
         return [{
             objectName: "internalState",
-            selectionId: null,
             properties: {
                 columnMapping: this.serializeState(),
-            }
+            },
+            selectionId: null,
         }];
     }
 }

@@ -24,32 +24,22 @@
  *  THE SOFTWARE.
  */
 
+import { LabelSettings } from "../descriptors/labelSettings";
+import { ISettingsWithParser } from "../descriptors/settingsWithParser";
+
+import { NumericValueUtils } from "../../utils/numericValueUtils";
+
 export enum HorizontalTextAlignment {
-    left = <any>"left",
-    center = <any>"center",
-    right = <any>"right",
+    left = "left",
+    center = "center",
+    right = "right",
 }
 
 export enum VerticalTextAlignment {
-    top = <any>"top",
-    center = <any>"center",
-    bottom = <any>"bottom",
+    top = "top",
+    center = "center",
+    bottom = "bottom",
 }
-
-export const verticalTextAlignmentIEnumType: IEnumType = createEnumType([
-    {
-        value: VerticalTextAlignment.top,
-        displayName: "Top"
-    },
-    {
-        value: VerticalTextAlignment.center,
-        displayName: "Center"
-    },
-    {
-        value: VerticalTextAlignment.bottom,
-        displayName: "Bottom"
-    },
-]);
 
 export enum WrapText {
     NoWrap,
@@ -57,27 +47,9 @@ export enum WrapText {
     BreakWord,
 }
 
-export const wrapTextIEnumType: IEnumType = createEnumType([
-    {
-        value: WrapText.NoWrap,
-        displayName: "No-wrap"
-    },
-    {
-        value: WrapText.Wrap,
-        displayName: "Wrap"
-    },
-    {
-        value: WrapText.BreakWord,
-        displayName: "Break Word"
-    },
-]);
-
 export class FontSettings
     extends LabelSettings
-    implements SettingsWithParser {
-
-    private minImageSize: number = Number.MIN_VALUE;
-    private maxImageSize: number = 4096;
+    implements ISettingsWithParser {
 
     public isHyperlinkSpecified: boolean;
     public isImageSpecified: boolean;
@@ -99,6 +71,9 @@ export class FontSettings
     public imageIconWidth: number;
     public imageIconHeight: number;
     public backgroundColor: string;
+
+    private minImageSize: number = Number.MIN_VALUE;
+    private maxImageSize: number = 4096;
 
     public get textFontSize(): number {
         return +this.fontSize; // Power BI returns numbers as string for some reason. This line converts into number
@@ -157,58 +132,6 @@ export class FontSettings
         this.isImageSpecified = visibility;
     }
 
-    public hideCommonProperties(): void {
-        this.changeVisibilityOfCommonProperties(false);
-    }
-
-    private changeVisibilityOfCommonProperties(enumerable: boolean): void {
-        Object.defineProperties(this, {
-            isUnderlined: {
-                enumerable,
-            },
-        });
-
-        this.changeVisibilityOfColor(enumerable);
-    }
-
-    protected changeVisibilityOfColor(enumerable: boolean): void {
-        Object.defineProperties(this, {
-            color: {
-                enumerable,
-            },
-        });
-    }
-
-    private changeVisibilityOfHyperlinkProperties(enumerable: boolean): void {
-        Object.defineProperties(this, {
-            isHyperlinkUnderlined: {
-                enumerable,
-            },
-            hyperlinkColor: {
-                enumerable,
-            },
-        });
-    }
-
-    private changeVisibilityOfImageProperties(enumerable: boolean): void {
-        const isImageSizeShown: boolean = enumerable && this.shouldShowImage;
-
-        Object.defineProperties(this, {
-            shouldShowLabel: {
-                enumerable,
-            },
-            shouldShowImage: {
-                enumerable,
-            },
-            imageIconWidth: {
-                enumerable: isImageSizeShown,
-            },
-            imageIconHeight: {
-                enumerable: isImageSizeShown,
-            },
-        });
-    }
-
     public getColor(isHyperlinkSpecified: boolean): string {
         if (isHyperlinkSpecified) {
             return this.hyperlinkColor;
@@ -234,6 +157,58 @@ export class FontSettings
 
         this.imageIconHeight = this.getImageSize(this.imageIconHeight, this.minImageSize, this.maxImageSize);
         this.imageIconWidth = this.getImageSize(this.imageIconWidth, this.minImageSize, this.maxImageSize);
+    }
+
+    public hideCommonProperties(): void {
+        this.changeVisibilityOfCommonProperties(false);
+    }
+
+    protected changeVisibilityOfColor(enumerable: boolean): void {
+        Object.defineProperties(this, {
+            color: {
+                enumerable,
+            },
+        });
+    }
+
+    private changeVisibilityOfCommonProperties(enumerable: boolean): void {
+        Object.defineProperties(this, {
+            isUnderlined: {
+                enumerable,
+            },
+        });
+
+        this.changeVisibilityOfColor(enumerable);
+    }
+
+    private changeVisibilityOfHyperlinkProperties(enumerable: boolean): void {
+        Object.defineProperties(this, {
+            hyperlinkColor: {
+                enumerable,
+            },
+            isHyperlinkUnderlined: {
+                enumerable,
+            },
+        });
+    }
+
+    private changeVisibilityOfImageProperties(enumerable: boolean): void {
+        const isImageSizeShown: boolean = enumerable && this.shouldShowImage;
+
+        Object.defineProperties(this, {
+            imageIconHeight: {
+                enumerable: isImageSizeShown,
+            },
+            imageIconWidth: {
+                enumerable: isImageSizeShown,
+            },
+            shouldShowImage: {
+                enumerable,
+            },
+            shouldShowLabel: {
+                enumerable,
+            },
+        });
     }
 
     private getImageSize(imageSize: number, minImageSize: number, maxImageSize: number): number {

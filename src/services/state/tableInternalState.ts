@@ -24,6 +24,12 @@
  *  THE SOFTWARE.
  */
 
+import { TableState } from "../../visualComponent/table/tableState";
+import { ISettingsServiceItem } from "../settingsService";
+import { State } from "./state";
+
+import { RowStateSet } from "../../visualComponent/table/row/rowState";
+
 export class TableInternalState extends State<TableState> {
     constructor() {
         super();
@@ -33,7 +39,7 @@ export class TableInternalState extends State<TableState> {
 
     public set(state: TableState): void {
         this.state = state || {
-            rowSet: {}
+            rowSet: {},
         };
     }
 
@@ -44,10 +50,10 @@ export class TableInternalState extends State<TableState> {
     public save(): ISettingsServiceItem[] {
         return [{
             objectName: "internalState",
-            selectionId: null,
             properties: {
                 table: this.serializeState(),
-            }
+            },
+            selectionId: null,
         }];
     }
 }

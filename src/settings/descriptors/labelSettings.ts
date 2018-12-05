@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { ShowSettings } from "./showSettings";
+
 export class LabelSettings extends ShowSettings {
     public backgroundColor: string = undefined;
     public label: string = "";

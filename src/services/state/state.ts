@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { ISettingsServiceItem } from "../settingsService";
+
 export abstract class State<StateType> {
     protected state: StateType;
 

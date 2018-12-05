@@ -24,18 +24,25 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+
 import {
     displayUnitSystemType as displayUnitSystemTypeModule,
     valueFormatter,
 } from "powerbi-visuals-utils-formattingutils";
+
+import { DataRepresentationAxisValueType } from "../converter/data/dataRepresentation/dataRepresentationAxisValueType";
+import { DataRepresentationTypeEnum } from "../converter/data/dataRepresentation/dataRepresentationType";
+
+import { AsOfDateSettings } from "../settings/descriptors/asOfDateSettings"ж
 
 export class FormattingUtils {
     public static getFormatterOfAxisValue(
         min: DataRepresentationAxisValueType,
         max: DataRepresentationAxisValueType,
         type: DataRepresentationTypeEnum,
-        metadata: DataViewMetadataColumn,
-        settings: AsOfDateSettings
+        metadata: powerbi.DataViewMetadataColumn,
+        settings: AsOfDateSettings,
     ): valueFormatter.IValueFormatter {
 
         switch (type) {
@@ -62,7 +69,7 @@ export class FormattingUtils {
     public static getValueFormatter(
         min: DataRepresentationAxisValueType,
         max: DataRepresentationAxisValueType,
-        metadata?: DataViewMetadataColumn,
+        metadata?: powerbi.DataViewMetadataColumn,
         precision?: number,
         format?: string,
         displayUnitSystemType: displayUnitSystemTypeModule.DisplayUnitSystemType

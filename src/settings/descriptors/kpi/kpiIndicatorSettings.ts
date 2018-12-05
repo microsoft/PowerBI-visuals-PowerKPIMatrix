@@ -24,44 +24,27 @@
  *  THE SOFTWARE.
  */
 
-export interface PropertyConfiguration {
+import { SettingsPropertyBase } from "../settingsPropertyBase";
+import { ISettingsWithParser } from "../settingsWithParser";
+
+import { NumericValueUtils } from "../../../utils/numericValueUtils";
+
+export interface IPropertyConfiguration {
     name: string;
     defaultValue: any | ((index: number) => any);
     displayName: (text: string) => string;
-    type: DataViewObjectPropertyTypeDescriptor;
+    // type: powerbi.ValueTypeDescriptor; // DataViewObjectPropertyTypeDescriptor;
 }
 
-interface EnumPropertyConfiguration {
+interface IEnumPropertyConfiguration {
     name: string;
     displayName: string;
 }
 
 export enum KPIIndicatorPosition {
     left,
-    right
+    right,
 }
-
-export const kpiIndicatorHorizontalPositionIEnumType: IEnumType = createEnumType([
-    {
-        value: KPIIndicatorPosition.left,
-        displayName: "Left"
-    },
-    {
-        value: KPIIndicatorPosition.right,
-        displayName: "Right"
-    }
-]);
-
-export const kpiIndicatorVerticalPositionIEnumType: IEnumType = createEnumType([
-    {
-        value: KPIIndicatorPosition.left,
-        displayName: "Top"
-    },
-    {
-        value: KPIIndicatorPosition.right,
-        displayName: "Bottom"
-    }
-]);
 
 export interface IKPIIndicatorSettings { // This should be synchronized with _properties
     kpiIndex?: number;
@@ -71,7 +54,11 @@ export interface IKPIIndicatorSettings { // This should be synchronized with _pr
 
 export class KPIIndicatorSettings
     extends SettingsPropertyBase
-    implements SettingsWithParser {
+    implements ISettingsWithParser {
+
+    public static createDefault(): KPIIndicatorSettings {
+        return new KPIIndicatorSettings();
+    }
 
     public isShown: boolean = true;
     public fontSize: string = "8";
@@ -80,22 +67,12 @@ export class KPIIndicatorSettings
     public horizontalPosition: KPIIndicatorPosition = KPIIndicatorPosition.left;
     public verticalPosition: KPIIndicatorPosition = KPIIndicatorPosition.left;
 
-    public get textFontSize(): number {
-        return +this.fontSize; // Power BI returns numbers as string for some reason. This line converts into number
-    }
-
-    public get position(): KPIIndicatorPosition {
-        return this.shouldWrap
-            ? this.verticalPosition
-            : this.horizontalPosition;
-    }
-
     private _maxAmountOfKPIs: number = 5;
 
     private _default: IKPIIndicatorSettings = Object.freeze({
-        kpiIndex: NaN,
         color: null,
-        shape: null
+        kpiIndex: NaN,
+        shape: null,
     });
 
     private _colors: string[] = [
@@ -103,10 +80,10 @@ export class KPIIndicatorSettings
         "#f2c80f",
         "#fd625e",
         "#a66999",
-        "#374649"
+        "#374649",
     ];
 
-    private _shapes: EnumPropertyConfiguration[] = [
+    private _shapes: IEnumPropertyConfiguration[] = [
         { name: "circle-full", displayName: "Circle" },
         { name: "triangle", displayName: "Triangle" },
         { name: "rhombus", displayName: "Diamond" },
@@ -126,52 +103,40 @@ export class KPIIndicatorSettings
         { name: "circle-checkmark", displayName: "Circle Checkmark" },
         { name: "x", displayName: "X" },
         { name: "star-empty", displayName: "Star Empty" },
-        { name: "star-full", displayName: "Star Full" }
+        { name: "star-full", displayName: "Star Full" },
     ];
-
-    public parse(): void {
-        if (this.shouldWrap) {
-            this.hidePropertyByName("horizontalPosition");
-        } else {
-            this.hidePropertyByName("verticalPosition");
-        }
-    }
-
-    private hidePropertyByName(name: string): void {
-        Object.defineProperty(this, name, { enumerable: false });
-    }
 
     private kpiIndexPropertyName: string = "kpiIndex";
 
-    private _properties: PropertyConfiguration[] = [
+    private _properties: IPropertyConfiguration[] = [
         {
-            name: "color",
-            displayName: (text: string) => text,
             defaultValue: (index: number) => {
                 const color: string = this.getElementByIndex<string>(this._colors, index);
 
                 return color || this._colors[0];
             },
-            type: { fill: { solid: { color: true } } }
+            displayName: (text: string) => text,
+            name: "color",
+            // type: { fill: { solid: { color: true } } },
         },
         {
-            name: "shape",
-            displayName: () => "    Indicator",
             defaultValue: (index: number) => {
-                const shape: EnumPropertyConfiguration =
-                    this.getElementByIndex<EnumPropertyConfiguration>(this._shapes, index);
+                const shape: IEnumPropertyConfiguration =
+                    this.getElementByIndex<IEnumPropertyConfiguration>(this._shapes, index);
 
                 return shape
                     ? shape.name
                     : this._shapes[0].name;
             },
-            type: { enumeration: this.getEnumType() }
+            displayName: () => "    Indicator",
+            name: "shape",
+            // type: { enumeration: this.getEnumType() }
         },
         {
-            name: this.kpiIndexPropertyName,
-            displayName: () => "    Value",
             defaultValue: (index: number) => index + 1,
-            type: { numeric: true },
+            displayName: () => "    Value",
+            name: this.kpiIndexPropertyName,
+            // type: { numeric: true },
         },
     ];
 
@@ -186,16 +151,16 @@ export class KPIIndicatorSettings
     }
 
     public applySettingToContext(): void {
-        this.forEach((property: PropertyConfiguration, index: number, indexedName: string) => {
+        this.forEach((property: IPropertyConfiguration, index: number, indexedName: string) => {
             this[indexedName] = typeof property.defaultValue === "function"
                 ? property.defaultValue(index)
                 : property.defaultValue;
         });
     }
 
-    public forEach(iterator: (property: PropertyConfiguration, index: number, indexedName: string) => void): void {
+    public forEach(iterator: (property: IPropertyConfiguration, index: number, indexedName: string) => void): void {
         for (let index: number = 0; index < this._maxAmountOfKPIs; index++) {
-            this._properties.forEach((property: PropertyConfiguration) => {
+            this._properties.forEach((property: IPropertyConfiguration) => {
                 const indexedName: string = this.getPropertyName(property.name, index);
 
                 iterator(property, index, indexedName);
@@ -203,33 +168,39 @@ export class KPIIndicatorSettings
         }
     }
 
-    private getEnumType(): IEnumType {
-        const members: IEnumMember[] = this._shapes.map((shape: EnumPropertyConfiguration) => {
-            return {
-                value: shape.name,
-                displayName: shape.displayName
-            };
-        });
-
-        return createEnumType(members);
+    public get textFontSize(): number {
+        return +this.fontSize; // Power BI returns numbers as string for some reason. This line converts into number
     }
 
-    private getPropertyName(name: string, index: number): string {
-        return `${name}_${index}`;
+    public get position(): KPIIndicatorPosition {
+        return this.shouldWrap
+            ? this.verticalPosition
+            : this.horizontalPosition;
     }
 
-    public applyProperties(properties: DataViewObjectPropertyDescriptors, margin: string): void {
-        for (let index: number = 0; index < this._maxAmountOfKPIs; index++) {
-            this._properties.forEach((property: PropertyConfiguration) => {
-                const indexedName: string = this.getPropertyName(property.name, index);
-
-                properties[indexedName] = {
-                    displayName: property.displayName(`${margin}KPI ${index + 1}`),
-                    type: property.type
-                };
-            });
+    public parse(): void {
+        if (this.shouldWrap) {
+            this.hidePropertyByName("horizontalPosition");
+        } else {
+            this.hidePropertyByName("verticalPosition");
         }
     }
+
+    // public applyProperties(
+    //     properties: DataViewObjectPropertyDescriptors,
+    //     margin: string,
+    // ): void {
+    //     for (let index: number = 0; index < this._maxAmountOfKPIs; index++) {
+    //         this._properties.forEach((property: IPropertyConfiguration) => {
+    //             const indexedName: string = this.getPropertyName(property.name, index);
+
+    //             properties[indexedName] = {
+    //                 displayName: property.displayName(`${margin}KPI ${index + 1}`),
+    //                 type: property.type,
+    //             };
+    //         });
+    //     }
+    // }
 
     public getCurrentKPI(kpiIndex: number): IKPIIndicatorSettings {
         if (NumericValueUtils.isValueFinite(kpiIndex)) {
@@ -239,7 +210,7 @@ export class KPIIndicatorSettings
                 if (currentKPIIndex === kpiIndex) {
                     return this._properties.reduce((
                         current: IKPIIndicatorSettings,
-                        property: PropertyConfiguration
+                        property: IPropertyConfiguration,
                     ) => {
                         const indexedName: string = this.getPropertyName(property.name, index);
 
@@ -254,7 +225,11 @@ export class KPIIndicatorSettings
         return this._default;
     }
 
-    public static createDefault(): KPIIndicatorSettings {
-        return new KPIIndicatorSettings();
+    private hidePropertyByName(name: string): void {
+        Object.defineProperty(this, name, { enumerable: false });
+    }
+
+    private getPropertyName(name: string, index: number): string {
+        return `${name}_${index}`;
     }
 }

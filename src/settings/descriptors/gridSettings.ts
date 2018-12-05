@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { ShowSettings } from "./showSettings";
+
 export class GridSettings extends ShowSettings {
     public color: string;
 

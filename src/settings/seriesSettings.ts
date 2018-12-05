@@ -26,6 +26,15 @@
 
 import { SettingsBase } from "./settingsBase";
 
+import { AsOfDateSettings } from "./descriptors/asOfDateSettings";
+import { FontSettings } from "./descriptors/fontSettings";
+import { KPIIndicatorSettings } from "./descriptors/kpi/kpiIndicatorSettings";
+import { KPIIndicatorValueSettings } from "./descriptors/kpi/kpiIndicatorValueSettings";
+import { KPIValueSettings } from "./descriptors/kpi/kpiValueSettings";
+import { LabelSettings } from "./descriptors/labelSettings";
+import { MetricSpecificSettings } from "./descriptors/metricSpecificSettings";
+import { SparklineSettings } from "./descriptors/sparklineSettings";
+
 export class SeriesSettings extends SettingsBase<SeriesSettings> {
     public asOfDate: AsOfDateSettings = new AsOfDateSettings();
     public metricName: FontSettings = new FontSettings();
@@ -82,7 +91,7 @@ export class SeriesSettings extends SettingsBase<SeriesSettings> {
 
     private applyBackgroundColorIfOwnColorIsNotSpecified(
         specificSettings: LabelSettings,
-        backgroundColor: string
+        backgroundColor: string,
     ): void {
         if (!specificSettings || !backgroundColor || specificSettings.backgroundColor) {
             return;
@@ -91,4 +100,3 @@ export class SeriesSettings extends SettingsBase<SeriesSettings> {
         specificSettings.backgroundColor = backgroundColor;
     }
 }
-

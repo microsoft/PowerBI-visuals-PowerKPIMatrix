@@ -24,10 +24,9 @@
  *  THE SOFTWARE.
  */
 
-export class NumberSettingsBase extends FontSettings {
-    protected minPrecision: number = 0;
-    protected maxPrecision: number = 17;
+import { FontSettings } from "./fontSettings";
 
+export class NumberSettingsBase extends FontSettings {
     public format: string = undefined;
     public defaultFormat: string = undefined;
     public columnFormat: string = undefined;
@@ -37,10 +36,25 @@ export class NumberSettingsBase extends FontSettings {
 
     public textReplacement: string = undefined;
 
+    protected minPrecision: number = 0;
+    protected maxPrecision: number = 17;
+
     public parse() {
         this.precision = this.getValidPrecision(this.precision);
 
         super.parse();
+    }
+
+    public getFormat(): string {
+        return this.format || this.columnFormat || this.defaultFormat;
+    }
+
+    public setColumnFormat(format: string) {
+        if (!format) {
+            return;
+        }
+
+        this.columnFormat = format;
     }
 
     protected getValidPrecision(precision: number): number {
@@ -56,11 +70,11 @@ export class NumberSettingsBase extends FontSettings {
     protected hideNumericProperties(): void {
         Object.defineProperties(this, {
             displayUnits: {
-                enumerable: false
+                enumerable: false,
             },
             precision: {
-                enumerable: false
-            }
+                enumerable: false,
+            },
         });
     }
 
@@ -68,20 +82,8 @@ export class NumberSettingsBase extends FontSettings {
         Object.defineProperty(
             this,
             "format", {
-                enumerable: false
-            }
+                enumerable: false,
+            },
         );
-    }
-
-    public getFormat(): string {
-        return this.format || this.columnFormat || this.defaultFormat;
-    }
-
-    public setColumnFormat(format: string) {
-        if (!format) {
-            return;
-        }
-
-        this.columnFormat = format;
     }
 }

@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-export interface ModalWindowServiceInitOptions {
+export interface IModalWindowServiceInitOptions {
     element: D3.Selection;
     componentCreators: ((options: VisualComponentConstructorOptions) => VisualComponent)[];
 }
@@ -37,7 +37,7 @@ export class ModalWindowService extends BaseContainerComponent {
 
     private renderOptions: VisualComponentRenderOptionsBase;
 
-    constructor(options: ModalWindowServiceInitOptions) {
+    constructor(options: IModalWindowServiceInitOptions) {
         super();
 
         this.element = options.element

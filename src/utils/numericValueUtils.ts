@@ -24,7 +24,9 @@
  *  THE SOFTWARE.
  */
 
-import { DataRepresentationAxisValueType } from "../converter/data/dataRepresentation/dataRepresentationAxisValueType";
+import {
+    DataRepresentationAxisValueType,
+} from "../converter/data/dataRepresentation/dataRepresentationAxisValueType";
 
 export class NumericValueUtils {
     public static isValueValid(value: number): boolean {

@@ -1,3 +1,5 @@
+import { any } from "bluebird";
+
 /**
  *  Power BI Visualizations
  *
@@ -24,4 +26,6 @@
  *  THE SOFTWARE.
  */
 
-export interface VisualComponentStateBase { }
+export interface IVisualComponentStateBase {
+    [seriesName: string]: any;
+}

@@ -24,21 +24,13 @@
  *  THE SOFTWARE.
  */
 
+import { SettingsPropertyBase } from "./settingsPropertyBase";
+import { ISettingsWithParser } from "./settingsWithParser";
+
 export enum TableType {
     RowBasedKPIS,
     ColumnBasedKPIS,
 }
-
-export const tableTypeIEnumType: IEnumType = createEnumType([
-    {
-        value: TableType.RowBasedKPIS,
-        displayName: "Row-based KPIs"
-    },
-    {
-        value: TableType.ColumnBasedKPIS,
-        displayName: "Column-based KPIs"
-    },
-]);
 
 export enum TableStyle {
     Default,
@@ -48,64 +40,19 @@ export enum TableStyle {
     BoldHeaderAndAlternatingMetrics,
 }
 
-export const tableStyleIEnumType: IEnumType = createEnumType([
-    {
-        value: TableStyle.Default,
-        displayName: "Default"
-    },
-    {
-        value: TableStyle.BoldHeader,
-        displayName: "Bold Header"
-    },
-    {
-        value: TableStyle.BoldHeaderAndCurrentValue,
-        displayName: "Bold Header & Current Value"
-    },
-    {
-        value: TableStyle.AlternatingMetrics,
-        displayName: "Alternating Metrics"
-    },
-    {
-        value: TableStyle.BoldHeaderAndAlternatingMetrics,
-        displayName: "Bold Header And Alternating Metrics"
-    },
-]);
-
 export enum SortOrder {
     Ascending,
     Descending,
 }
-
-export const sortOrderIEnumType: IEnumType = createEnumType([
-    {
-        value: SortOrder.Ascending,
-        displayName: "Ascending"
-    },
-    {
-        value: SortOrder.Descending,
-        displayName: "Descending"
-    },
-]);
 
 export enum DefaultSortOrderBy {
     Name,
     ColumnOrder,
 }
 
-export const defaultSortOrderByIEnumType: IEnumType = createEnumType([
-    {
-        value: DefaultSortOrderBy.Name,
-        displayName: "Name"
-    },
-    {
-        value: DefaultSortOrderBy.ColumnOrder,
-        displayName: "Initial Column Order"
-    },
-]);
-
 export class TableSettings
     extends SettingsPropertyBase
-    implements SettingsWithParser {
+    implements ISettingsWithParser {
 
     public type: TableType = TableType.RowBasedKPIS;
     public style: TableStyle = TableStyle.BoldHeader;
@@ -146,4 +93,3 @@ export class TableSettings
         );
     }
 }
-

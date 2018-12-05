@@ -24,6 +24,10 @@
  *  THE SOFTWARE.
  */
 
+import { NumberSettingsBase } from "./numberSettingsBase";
+
+import { DataRepresentationTypeEnum } from "../../converter/data/dataRepresentation/dataRepresentationType";
+
 export class AsOfDateSettings extends NumberSettingsBase {
     public parseByType(type: DataRepresentationTypeEnum): void {
         if (type !== DataRepresentationTypeEnum.NumberType) {

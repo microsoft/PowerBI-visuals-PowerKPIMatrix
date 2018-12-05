@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { OrderSettings } from "./orderSettings";
+
 export class ShowSettings extends OrderSettings {
     public show: boolean = true; // This is for entire group
     public isShown: boolean = true;

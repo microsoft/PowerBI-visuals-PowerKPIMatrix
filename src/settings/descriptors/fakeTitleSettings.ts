@@ -30,4 +30,3 @@
 export class FakeTitleSettings {
     public untrackedProperty: boolean = false;
 }
-

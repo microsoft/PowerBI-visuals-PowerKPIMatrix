@@ -24,11 +24,19 @@
  *  THE SOFTWARE.
  */
 
-export interface VisualComponentRenderOptions extends VisualComponentRenderOptionsBase {
-    columnSet: DataRepresentationColumnSet;
-    data: DataRepresentation;
+import powerbi from "powerbi-visuals-api";
+
+import { IDataRepresentationColumnSet } from "../converter/columnSet/dataRepresentation/dataRepresentationColumnSet";
+import { IDataRepresentation } from "../converter/data/dataRepresentation/dataRepresentation";
+import { HyperlinkAdapter } from "../hyperlink/hyperlinkAdapter";
+import { Settings } from "../settings/settings";
+import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOptionsBase";
+
+export interface IVisualComponentRenderOptions extends IVisualComponentRenderOptionsBase {
+    columnSet: IDataRepresentationColumnSet;
+    data: IDataRepresentation;
     settings: Settings;
-    viewport: IViewport;
+    viewport: powerbi.IViewport;
     isAdvancedEditModeTurnedOn: boolean;
     hyperlinkAdapter: HyperlinkAdapter;
 }

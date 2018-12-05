@@ -24,22 +24,24 @@
  *  THE SOFTWARE.
  */
 
-export class PopOutGeneralSettings implements SettingsWithParser {
-    private minViewportSize: number = 10;
-    private maxViewportSize: number = 90;
+import { ISettingsWithParser } from "./settingsWithParser";
 
+export class PopOutGeneralSettings implements ISettingsWithParser {
     public show: boolean = true;
 
     public backgroundColor: string = "#ffffff";
     public viewportSize: number = 80;
+
+    private minViewportSize: number = 10;
+    private maxViewportSize: number = 90;
 
     public parse(): void {
         this.viewportSize = Math.max(
             this.minViewportSize,
             Math.min(
                 this.viewportSize,
-                this.maxViewportSize
-            )
+                this.maxViewportSize,
+            ),
         );
     }
 

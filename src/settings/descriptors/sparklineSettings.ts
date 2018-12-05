@@ -24,6 +24,9 @@
  *  THE SOFTWARE.
  */
 
+import { LabelSettings } from "./labelSettings";
+import { ISettingsWithParser } from "./SettingsWithParser";
+
 export enum LineStyle {
     solidLine = "solidLine",
     dottedLine = "dottedLine",
@@ -31,33 +34,9 @@ export enum LineStyle {
     dotDashedLine = "dotDashedLine",
 }
 
-export const lineStyleEnumType: IEnumType = createEnumType([
-    {
-        displayName: "Solid",
-        value: LineStyle.solidLine,
-    },
-    {
-        displayName: "Dotted",
-        value: LineStyle.dottedLine,
-    },
-    {
-        displayName: "Dashed",
-        value: LineStyle.dashedLine,
-    },
-    {
-        displayName: "Dot-dashed",
-        value: LineStyle.dotDashedLine,
-    },
-]);
-
 export class SparklineSettings
     extends LabelSettings
-    implements SettingsWithParser {
-
-    private radiusFactor: number = 1.4;
-
-    private minThickness: number = 0.25;
-    private maxThickness: number = 10;
+    implements ISettingsWithParser {
 
     public isActualVisible: boolean = true;
     public actualColor: string = "#3599b8";
@@ -83,6 +62,11 @@ export class SparklineSettings
     public verticalReferenceLineColor: string = "#666";
     public verticalReferenceLineThickness: number = 1;
 
+    private radiusFactor: number = 1.4;
+
+    private minThickness: number = 0.25;
+    private maxThickness: number = 10;
+
     public parse(): void {
         this.actualThickness = this.parseThickness(this.actualThickness);
         this.targetThickness = this.parseThickness(this.targetThickness);
@@ -90,12 +74,6 @@ export class SparklineSettings
         this.verticalReferenceLineThickness = this.parseThickness(this.verticalReferenceLineThickness);
 
         super.parse();
-    }
-
-    private parseThickness(thickness: number): number {
-        return Math.min(
-            Math.max(this.minThickness, thickness),
-            this.maxThickness);
     }
 
     public getMaxThickness(): number {
@@ -108,5 +86,11 @@ export class SparklineSettings
 
     public getOffset(): number {
         return this.getMaxThickness() * this.radiusFactor;
+    }
+
+    private parseThickness(thickness: number): number {
+        return Math.min(
+            Math.max(this.minThickness, thickness),
+            this.maxThickness);
     }
 }

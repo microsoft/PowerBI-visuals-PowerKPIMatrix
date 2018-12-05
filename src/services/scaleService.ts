@@ -24,6 +24,7 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
 
 export class ScaleService {
     private rootElement: HTMLElement;
@@ -32,11 +33,11 @@ export class ScaleService {
         this.rootElement = element;
     }
 
-    public getScale(): IViewport {
+    public getScale(): powerbi.IViewport {
         if (!this.rootElement) {
             return {
+                height: 1,
                 width: 1,
-                height: 1
             };
         }
 

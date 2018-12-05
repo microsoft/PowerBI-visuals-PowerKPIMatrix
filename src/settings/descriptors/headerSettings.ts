@@ -24,6 +24,11 @@
  *  THE SOFTWARE.
  */
 
+import {
+    FontSettings,
+    HorizontalTextAlignment,
+} from "./fontSettings";
+
 export class HeaderSettings extends FontSettings {
     public setDefault(): void {
         super.setDefault();

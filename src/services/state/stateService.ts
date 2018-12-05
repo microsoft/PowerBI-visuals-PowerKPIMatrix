@@ -24,11 +24,23 @@
  *  THE SOFTWARE.
  */
 
-export interface OnSaveHandler {
-    (instances: ISettingsServiceItem[], isRenderRequired: boolean): void;
-}
+import {
+    ISettingsServiceItem,
+} from "../settingsService";
 
-export interface States {
+import { ColumnMappingState } from "./columnMappingState";
+import { SettingsState } from "./settingsState";
+import { State } from "./state";
+import { TableInternalState } from "./tableInternalState";
+
+import { PersistentSettings } from "../../settings/descriptors/persistentSettings";
+
+export type OnSaveHandler = (
+    instances: ISettingsServiceItem[],
+    isRenderRequired: boolean,
+) => void;
+
+export interface IStates {
     [stateName: string]: State<any>;
     columnMapping: ColumnMappingState;
     table: TableInternalState;
@@ -36,11 +48,11 @@ export interface States {
 }
 
 export class StateService {
+    public states: IStates;
+
     private onSave: OnSaveHandler;
 
-    public states: States;
-
-    constructor(states: States, onSave: OnSaveHandler) {
+    constructor(states: IStates, onSave: OnSaveHandler) {
         this.states = states;
         this.onSave = onSave;
     }
@@ -55,13 +67,13 @@ export class StateService {
                 if (obj[item.objectName]) {
                     const mergedItem: ISettingsServiceItem = this.findItemForMerge(
                         obj[item.objectName],
-                        item
+                        item,
                     );
 
                     if (mergedItem) {
                         mergedItem.properties = {
                             ...mergedItem.properties,
-                            ...item.properties
+                            ...item.properties,
                         };
                     } else {
                         obj[item.objectName] = [
@@ -77,23 +89,11 @@ export class StateService {
 
         const items: ISettingsServiceItem[] = [];
 
-        for (let key in obj) {
+        for (const key in obj) {
             items.push(...obj[key]);
         }
 
         this.onSave(items, isRenderRequired);
-    }
-
-    private findItemForMerge(items: ISettingsServiceItem[], item: ISettingsServiceItem): ISettingsServiceItem {
-        for (let currentItem of items) {
-            if (currentItem.objectName === item.objectName
-                && currentItem.selectionId === item.selectionId
-            ) {
-                return currentItem;
-            }
-        }
-
-        return null;
     }
 
     public parse(settings: PersistentSettings): void {
@@ -108,5 +108,17 @@ export class StateService {
         } catch (_) {
             return undefined;
         }
+    }
+
+    private findItemForMerge(items: ISettingsServiceItem[], item: ISettingsServiceItem): ISettingsServiceItem {
+        for (const currentItem of items) {
+            if (currentItem.objectName === item.objectName
+                && currentItem.selectionId === item.selectionId
+            ) {
+                return currentItem;
+            }
+        }
+
+        return null;
     }
 }

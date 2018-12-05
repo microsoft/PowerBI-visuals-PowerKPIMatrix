@@ -24,115 +24,126 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // powerbi.extensibility.utils.dataview
-    import DataViewObjects = powerbi.extensibility.utils.dataview.DataViewObjects;
-    import DataViewProperties = powerbi.extensibility.utils.dataview.DataViewProperties;
-    import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+import powerbi from "powerbi-visuals-api";
 
-    export interface GeneratedCategory {
-        name: string;
-        displayName: string;
-    }
+import {
+    dataViewObjects,
+    dataViewObjectsParser,
+} from "powerbi-visuals-utils-dataviewutils";
 
-    export abstract class SettingsBase<T extends DataViewObjectsParser> extends DataViewObjectsParser {
-        public static get maxAmountOfCategories(): number {
-            return 5;
-        }
+import {
+    HorizontalTextAlignment,
+    VerticalTextAlignment,
+} from "./descriptors/fontSettings";
 
-        private static CategoryNamePrefix: string = "category_";
-        private static CategoryDisplayNamePrefix: string = "Category";
+import { CategorySettings } from "./descriptors/categorySettings";
+import { SettingsPropertyBase } from "./descriptors/settingsPropertyBase";
+import { ISettingsWithParser } from "./descriptors/settingsWithParser";
 
-        public static getCategoryByIndex(categoryIndex: number): GeneratedCategory {
+export interface IGeneratedCategory {
+    name: string;
+    displayName: string;
+}
+
+export abstract class SettingsBase<T extends dataViewObjectsParser.DataViewObjectsParser>
+    extends dataViewObjectsParser.DataViewObjectsParser {
+
+    public static enumerateObjectInstances(
+        dataViewObjectParser: dataViewObjectsParser.DataViewObjectsParser,
+        options: powerbi.EnumerateVisualObjectInstancesOptions,
+    ): powerbi.VisualObjectInstanceEnumeration {
+        const instanceEnumeration: powerbi.VisualObjectInstanceEnumeration =
+            super.enumerateObjectInstances(dataViewObjectParser, options);
+
+        if (dataViewObjectParser
+            && dataViewObjectParser[options.objectName]
+            && dataViewObjectParser[options.objectName] instanceof SettingsPropertyBase
+            && !(dataViewObjectParser[options.objectName] as SettingsPropertyBase).isEnumerable) {
             return {
-                name: `${SettingsBase.CategoryNamePrefix}${categoryIndex}`,
-                displayName: `${SettingsBase.CategoryDisplayNamePrefix} [${categoryIndex + 1}]`,
+                instances: [],
             };
         }
 
-        public parse(dataView: DataView): T {
-            return this.parseObjects(dataView
-                && dataView.metadata
-                && dataView.metadata.objects
-            );
-        }
+        return instanceEnumeration;
+    }
 
-        /**
-         * It'd be better to move this method into DataViewUtils later
-         */
-        public parseObjects(objects: DataViewObjects): T {
-            if (objects) {
-                let properties: DataViewProperties = this.getProperties();
+    public static get maxAmountOfCategories(): number {
+        return 5;
+    }
 
-                for (let objectName in properties) {
-                    for (let propertyName in properties[objectName]) {
-                        const defaultValue: any = this[objectName][propertyName];
+    public static getCategoryByIndex(categoryIndex: number): IGeneratedCategory {
+        return {
+            displayName: `${SettingsBase.CategoryDisplayNamePrefix} [${categoryIndex + 1}]`,
+            name: `${SettingsBase.CategoryNamePrefix}${categoryIndex}`,
+        };
+    }
 
-                        this[objectName][propertyName] = DataViewObjects.getCommonValue(
-                            objects,
-                            properties[objectName][propertyName],
-                            defaultValue);
-                    }
+    private static CategoryNamePrefix: string = "category_";
+    private static CategoryDisplayNamePrefix: string = "Category";
 
-                    if ((this[objectName] as SettingsWithParser).parse) {
-                        (this[objectName] as SettingsWithParser).parse();
-                    }
+    public parse(dataView: powerbi.DataView): T {
+        return this.parseObjects(dataView
+            && dataView.metadata
+            && dataView.metadata.objects,
+        );
+    }
 
-                    this.onObjectHasBeenParsed(objectName);
+    /**
+     * It'd be better to move this method into DataViewUtils later
+     */
+    public parseObjects(objects: powerbi.DataViewObjects): T {
+        if (objects) {
+            const properties: dataViewObjectsParser.DataViewProperties = this.getProperties();
 
+            for (const objectName in properties) {
+                for (const propertyName in properties[objectName]) {
+                    const defaultValue: any = this[objectName][propertyName];
+
+                    this[objectName][propertyName] = dataViewObjects.DataViewObjects.getCommonValue(
+                        objects,
+                        properties[objectName][propertyName],
+                        defaultValue);
                 }
-            } else {
-                this.onObjectsAreUndefined();
-            }
 
-            return this as any;
+                if ((this[objectName] as ISettingsWithParser).parse) {
+                    (this[objectName] as ISettingsWithParser).parse();
+                }
+
+                this.onObjectHasBeenParsed(objectName);
+
+            }
+        } else {
+            this.onObjectsAreUndefined();
         }
 
-        protected abstract onObjectHasBeenParsed(objectName: string): void;
-        protected abstract onObjectsAreUndefined(): void;
+        return this as any;
+    }
 
-        public static enumerateObjectInstances(
-            dataViewObjectParser: DataViewObjectsParser,
-            options: EnumerateVisualObjectInstancesOptions
-        ): VisualObjectInstanceEnumeration {
-            const instanceEnumeration: VisualObjectInstanceEnumeration =
-                super.enumerateObjectInstances(dataViewObjectParser, options);
+    protected abstract onObjectHasBeenParsed(objectName: string): void;
+    protected abstract onObjectsAreUndefined(): void;
 
-            if (dataViewObjectParser
-                && dataViewObjectParser[options.objectName]
-                && dataViewObjectParser[options.objectName] instanceof SettingsPropertyBase
-                && !(dataViewObjectParser[options.objectName] as SettingsPropertyBase).isEnumerable) {
-                return {
-                    instances: []
-                };
-            }
+    protected generateCategories(
+        maxAmountOfCategories: number,
+        horizontalAlignment: HorizontalTextAlignment,
+        verticalAlignment: VerticalTextAlignment,
+        isShown: boolean,
+        isEnumerable: boolean,
+    ): void {
+        for (let categoryIndex: number = 0; categoryIndex < maxAmountOfCategories; categoryIndex++) {
+            const category: IGeneratedCategory = SettingsBase.getCategoryByIndex(categoryIndex);
 
-            return instanceEnumeration;
-        }
+            const fontSettings: CategorySettings = new CategorySettings();
 
-        protected generateCategories(
-            maxAmountOfCategories: number,
-            horizontalAlignment: HorizontalTextAlignment,
-            verticalAlignment: VerticalTextAlignment,
-            isShown: boolean,
-            isEnumerable: boolean
-        ): void {
-            for (let categoryIndex: number = 0; categoryIndex < maxAmountOfCategories; categoryIndex++) {
-                const category: GeneratedCategory = SettingsBase.getCategoryByIndex(categoryIndex);
+            fontSettings.setDefault();
 
-                const fontSettings: CategorySettings = new CategorySettings();
+            fontSettings.alignment = horizontalAlignment;
+            fontSettings.verticalAlignment = verticalAlignment;
+            fontSettings.label = category.displayName;
+            fontSettings.show = isShown;
+            fontSettings.isEnumerable = isEnumerable;
+            fontSettings.order = 0;
 
-                fontSettings.setDefault();
-
-                fontSettings.alignment = horizontalAlignment;
-                fontSettings.verticalAlignment = verticalAlignment;
-                fontSettings.label = category.displayName;
-                fontSettings.show = isShown;
-                fontSettings.isEnumerable = isEnumerable;
-                fontSettings.order = 0;
-
-                this[category.name] = fontSettings;
-            }
+            this[category.name] = fontSettings;
         }
     }
 }

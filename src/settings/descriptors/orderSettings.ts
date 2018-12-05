@@ -24,19 +24,21 @@
  *  THE SOFTWARE.
  */
 
+import { SettingsPropertyBase } from "./settingsPropertyBase";
+import { ISettingsWithParser } from "./settingsWithParser";
+
 export class OrderSettings
     extends SettingsPropertyBase
-    implements SettingsWithParser {
+    implements ISettingsWithParser {
+    public order: number = 0;
 
     private minOrder: number = 1;
     private maxOrder: number = 10;
 
-    public order: number = 0;
-
     public parse(): void {
         this.order = Math.max(
             Math.min(this.maxOrder, this.order),
-            this.minOrder
+            this.minOrder,
         );
     }
 }

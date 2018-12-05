@@ -24,7 +24,11 @@
  *  THE SOFTWARE.
  */
 
-export interface VisualComponentRenderOptionsBase {
-    viewport?: IViewport;
+import powerbi from "powerbi-visuals-api";
+
+import { Settings } from "../settings/settings";
+
+export interface IVisualComponentRenderOptionsBase {
+    viewport?: powerbi.IViewport;
     settings?: Settings;
 }

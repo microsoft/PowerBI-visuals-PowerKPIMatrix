@@ -24,7 +24,10 @@
  *  THE SOFTWARE.
  */
 
-export class PersistentSettings extends SettingsPropertyBase implements SettingsWithParser {
+import { SettingsPropertyBase } from "./settingsPropertyBase";
+import { ISettingsWithParser } from "./settingsWithParser";
+
+export class PersistentSettings extends SettingsPropertyBase implements ISettingsWithParser {
     public show: boolean = false;
     public value: string = "";
 
@@ -49,7 +52,9 @@ export class PersistentSettings extends SettingsPropertyBase implements Settings
 
                 this.columnMapping = this.getSerializedObject(parsedValue && parsedValue.columnMapping);
                 this.table = this.getSerializedObject(parsedValue && parsedValue.table);
-            } catch (_) { }
+            } catch (_) {
+                // Catch error
+            }
         }
     }
 

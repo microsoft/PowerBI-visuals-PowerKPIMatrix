@@ -24,11 +24,24 @@
  *  THE SOFTWARE.
  */
 
-export interface ISettingsState extends VisualComponentStateBase {
+import powerbi from "powerbi-visuals-api";
+
+import { SeriesSettings } from "../../settings/seriesSettings";
+import { IVisualComponentStateBase } from "../../visualComponent/visualComponentStateBase";
+import { ISettingsServiceItem } from "../settingsService";
+import { State } from "./state";
+
+export interface ISettingsState extends IVisualComponentStateBase {
     [seriesName: string]: SeriesSettings;
 }
 
 export class SettingsState extends State<ISettingsState> {
+    public get hasBeenUpdated(): boolean {
+        return !this.areStatesEqual(
+            this.state,
+            { ...this.state, ...this.tempState },
+        );
+    }
     private tempState: ISettingsState = {};
 
     public setSeriesSettings(seriesName: string, settings: SeriesSettings) {
@@ -39,23 +52,8 @@ export class SettingsState extends State<ISettingsState> {
         this.tempState[seriesName] = settings;
     }
 
-    private areStatesEqual(oldState: ISettingsState, newState: ISettingsState): boolean {
-        try {
-            return JSON.stringify(oldState) === JSON.stringify(newState);
-        } catch (_) {
-            return false;
-        }
-    }
-
-    public getSeriesSettings(seriesName: string): DataViewObjects {
+    public getSeriesSettings(seriesName: string): powerbi.DataViewObjects {
         return (this.state[seriesName] as any) || undefined;
-    }
-
-    public get hasBeenUpdated(): boolean {
-        return !this.areStatesEqual(
-            this.state,
-            { ...this.state, ...this.tempState }
-        );
     }
 
     public reset() {
@@ -74,10 +72,10 @@ export class SettingsState extends State<ISettingsState> {
 
         return [{
             objectName: "internalState",
-            selectionId: null,
             properties: {
                 settings: serializedState,
-            }
+            },
+            selectionId: null,
         }];
     }
 
@@ -85,5 +83,13 @@ export class SettingsState extends State<ISettingsState> {
         this.reset();
 
         super.parse(value);
+    }
+
+    private areStatesEqual(oldState: ISettingsState, newState: ISettingsState): boolean {
+        try {
+            return JSON.stringify(oldState) === JSON.stringify(newState);
+        } catch (_) {
+            return false;
+        }
     }
 }

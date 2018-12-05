@@ -24,42 +24,44 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+
 export interface ISettingsServiceItem {
     objectName: string;
-    selectionId: ISelectionId;
+    selectionId: powerbi.visuals.ISelectionId;
     properties: any;
 }
 
 export class SettingsService {
-    private hostServices: IVisualHostServices;
+    private hostServices: powerbi.extensibility.visual.IVisualHost;
 
-    public set host(host: IVisualHostServices) {
+    public set host(host: powerbi.extensibility.visual.IVisualHost) {
         this.hostServices = host;
     }
 
     public save(items: ISettingsServiceItem[]): void {
-        const instances: VisualObjectInstance[] = items.map((item: ISettingsServiceItem) => {
-            const selector: data.Selector = item.selectionId
+        const instances: powerbi.VisualObjectInstance[] = items.map((item: ISettingsServiceItem) => {
+            const selector: powerbi.data.Selector = item.selectionId
                 && item.selectionId.getSelector
                 ? item.selectionId.getSelector()
                 : null;
 
             return {
-                selector,
                 objectName: item.objectName,
                 properties: item.properties || {},
+                selector,
             };
         });
 
         this.sendInstancesToHost(instances);
     }
 
-    public sendInstancesToHost(instances: VisualObjectInstance[]): void {
+    public sendInstancesToHost(instances: powerbi.VisualObjectInstance[]): void {
         if (!this.hostServices) {
             return;
         }
 
-        const objectInstance: VisualObjectInstancesToPersist = {
+        const objectInstance: powerbi.VisualObjectInstancesToPersist = {
             replace: instances || [],
         };
 
