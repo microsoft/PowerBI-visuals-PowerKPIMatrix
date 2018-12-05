@@ -482,7 +482,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
                 this.updateAlignment(this.containerElement, undefined, undefined);
             }
 
-            options.series.children.forEach((childSeries: DataRepresentationSeries, childSeriesIndex: number) => {
+            options.series.children.forEach((childSeries: IDataRepresentationSeries, childSeriesIndex: number) => {
                 const component: BodyRowComponent = this.components[childSeriesIndex + cellConstructors.length + this.amountOfSubRows] as BodyRowComponent;
 
                 if (component) {

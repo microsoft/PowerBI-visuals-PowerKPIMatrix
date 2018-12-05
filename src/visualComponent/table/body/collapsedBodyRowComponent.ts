@@ -209,11 +209,11 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
             this.verticalDraggableComponents[componentIndex].updateOrder(componentOrder);
         }
 
-        private getLabel(series: DataRepresentationSeries): string {
+        private getLabel(series: IDataRepresentationSeries): string {
             const amountOfHiddenItems: number = series.children.length;
 
             const amountOfHiddenSubCategories: number = series.children
-                .reduce((currentAmount: number, currentSeries: DataRepresentationSeries) => {
+                .reduce((currentAmount: number, currentSeries: IDataRepresentationSeries) => {
                     return currentAmount + currentSeries.children.length;
                 }, 0);
 

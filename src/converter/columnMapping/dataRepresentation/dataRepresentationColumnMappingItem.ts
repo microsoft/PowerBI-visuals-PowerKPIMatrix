@@ -24,6 +24,6 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationColumnMappingItem {
+export interface IDataRepresentationColumnMappingItem {
     [columnName: string]: string;
 }

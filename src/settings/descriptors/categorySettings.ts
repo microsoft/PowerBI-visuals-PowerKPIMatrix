@@ -24,8 +24,7 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class CategorySettings extends FontSettings {
-        public isExpandCollapseShown: boolean = true;
-    }
+export class CategorySettings extends FontSettings {
+    public isExpandCollapseShown: boolean = true;
 }
+

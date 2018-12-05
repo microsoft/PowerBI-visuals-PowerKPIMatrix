@@ -24,127 +24,126 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export enum TableType {
-        RowBasedKPIS,
-        ColumnBasedKPIS,
+export enum TableType {
+    RowBasedKPIS,
+    ColumnBasedKPIS,
+}
+
+export const tableTypeIEnumType: IEnumType = createEnumType([
+    {
+        value: TableType.RowBasedKPIS,
+        displayName: "Row-based KPIs"
+    },
+    {
+        value: TableType.ColumnBasedKPIS,
+        displayName: "Column-based KPIs"
+    },
+]);
+
+export enum TableStyle {
+    Default,
+    BoldHeader,
+    BoldHeaderAndCurrentValue,
+    AlternatingMetrics,
+    BoldHeaderAndAlternatingMetrics,
+}
+
+export const tableStyleIEnumType: IEnumType = createEnumType([
+    {
+        value: TableStyle.Default,
+        displayName: "Default"
+    },
+    {
+        value: TableStyle.BoldHeader,
+        displayName: "Bold Header"
+    },
+    {
+        value: TableStyle.BoldHeaderAndCurrentValue,
+        displayName: "Bold Header & Current Value"
+    },
+    {
+        value: TableStyle.AlternatingMetrics,
+        displayName: "Alternating Metrics"
+    },
+    {
+        value: TableStyle.BoldHeaderAndAlternatingMetrics,
+        displayName: "Bold Header And Alternating Metrics"
+    },
+]);
+
+export enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+export const sortOrderIEnumType: IEnumType = createEnumType([
+    {
+        value: SortOrder.Ascending,
+        displayName: "Ascending"
+    },
+    {
+        value: SortOrder.Descending,
+        displayName: "Descending"
+    },
+]);
+
+export enum DefaultSortOrderBy {
+    Name,
+    ColumnOrder,
+}
+
+export const defaultSortOrderByIEnumType: IEnumType = createEnumType([
+    {
+        value: DefaultSortOrderBy.Name,
+        displayName: "Name"
+    },
+    {
+        value: DefaultSortOrderBy.ColumnOrder,
+        displayName: "Initial Column Order"
+    },
+]);
+
+export class TableSettings
+    extends SettingsPropertyBase
+    implements SettingsWithParser {
+
+    public type: TableType = TableType.RowBasedKPIS;
+    public style: TableStyle = TableStyle.BoldHeader;
+    public sortOrder: SortOrder = SortOrder.Ascending;
+    public defaultSortOrderBy: DefaultSortOrderBy = DefaultSortOrderBy.ColumnOrder;
+    public shouldHideUnmappedMetrics: boolean = true;
+    public defaultUnmappedCategoryName: string = "Other";
+    public keepSeriesSettingOnFilteringInEditMode: boolean = false;
+
+    public getDefaultUnmappedCategoryName(): string {
+        return this.shouldHideUnmappedMetrics
+            ? undefined
+            : this.defaultUnmappedCategoryName;
     }
 
-    export const tableTypeIEnumType: IEnumType = createEnumType([
-        {
-            value: TableType.RowBasedKPIS,
-            displayName: "Row-based KPIs"
-        },
-        {
-            value: TableType.ColumnBasedKPIS,
-            displayName: "Column-based KPIs"
-        },
-    ]);
-
-    export enum TableStyle {
-        Default,
-        BoldHeader,
-        BoldHeaderAndCurrentValue,
-        AlternatingMetrics,
-        BoldHeaderAndAlternatingMetrics,
+    public parse(): void {
+        if (this.shouldHideUnmappedMetrics) {
+            this.hideProperty("defaultUnmappedCategoryName");
+        }
     }
 
-    export const tableStyleIEnumType: IEnumType = createEnumType([
-        {
-            value: TableStyle.Default,
-            displayName: "Default"
-        },
-        {
-            value: TableStyle.BoldHeader,
-            displayName: "Bold Header"
-        },
-        {
-            value: TableStyle.BoldHeaderAndCurrentValue,
-            displayName: "Bold Header & Current Value"
-        },
-        {
-            value: TableStyle.AlternatingMetrics,
-            displayName: "Alternating Metrics"
-        },
-        {
-            value: TableStyle.BoldHeaderAndAlternatingMetrics,
-            displayName: "Bold Header And Alternating Metrics"
-        },
-    ]);
-
-    export enum SortOrder {
-        Ascending,
-        Descending,
+    public isDefaultSortOrderByName(): boolean {
+        return this.defaultSortOrderBy === DefaultSortOrderBy.Name;
     }
 
-    export const sortOrderIEnumType: IEnumType = createEnumType([
-        {
-            value: SortOrder.Ascending,
-            displayName: "Ascending"
-        },
-        {
-            value: SortOrder.Descending,
-            displayName: "Descending"
-        },
-    ]);
-
-    export enum DefaultSortOrderBy {
-        Name,
-        ColumnOrder,
+    public forceToUseDefaultSortOrderByName(): void {
+        this.defaultSortOrderBy = DefaultSortOrderBy.Name;
+        this.hideProperty("defaultSortOrderBy");
     }
 
-    export const defaultSortOrderByIEnumType: IEnumType = createEnumType([
-        {
-            value: DefaultSortOrderBy.Name,
-            displayName: "Name"
-        },
-        {
-            value: DefaultSortOrderBy.ColumnOrder,
-            displayName: "Initial Column Order"
-        },
-    ]);
-
-    export class TableSettings
-        extends SettingsPropertyBase
-        implements SettingsWithParser {
-
-        public type: TableType = TableType.RowBasedKPIS;
-        public style: TableStyle = TableStyle.BoldHeader;
-        public sortOrder: SortOrder = SortOrder.Ascending;
-        public defaultSortOrderBy: DefaultSortOrderBy = DefaultSortOrderBy.ColumnOrder;
-        public shouldHideUnmappedMetrics: boolean = true;
-        public defaultUnmappedCategoryName: string = "Other";
-        public keepSeriesSettingOnFilteringInEditMode: boolean = false;
-
-        public getDefaultUnmappedCategoryName(): string {
-            return this.shouldHideUnmappedMetrics
-                ? undefined
-                : this.defaultUnmappedCategoryName;
-        }
-
-        public parse(): void {
-            if (this.shouldHideUnmappedMetrics) {
-                this.hideProperty("defaultUnmappedCategoryName");
-            }
-        }
-
-        public isDefaultSortOrderByName(): boolean {
-            return this.defaultSortOrderBy === DefaultSortOrderBy.Name;
-        }
-
-        public forceToUseDefaultSortOrderByName(): void {
-            this.defaultSortOrderBy = DefaultSortOrderBy.Name;
-            this.hideProperty("defaultSortOrderBy");
-        }
-
-        private hideProperty(name: string): void {
-            Object.defineProperty(
-                this,
-                name,
-                {
-                    enumerable: false,
-                }
-            );
-        }
+    private hideProperty(name: string): void {
+        Object.defineProperty(
+            this,
+            name,
+            {
+                enumerable: false,
+            },
+        );
     }
 }
+

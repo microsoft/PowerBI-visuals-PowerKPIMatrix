@@ -24,6 +24,12 @@
  *  THE SOFTWARE.
  */
 
+import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
+import { IDataRepresentationSeries } from "./dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "./dataRepresentationSeriesSet";
+
+import { SortOrder } from "../../../settings/descriptors/tableSettings";
+
 export class DataRepresentationSeriesUtils {
     private static _instance: DataRepresentationSeriesUtils;
 
@@ -43,19 +49,19 @@ export class DataRepresentationSeriesUtils {
         return new DataRepresentationSeriesUtils();
     }
 
-    public toArray(columnSet: DataRepresentationSeriesSet): DataRepresentationSeries[] {
+    public toArray(columnSet: IDataRepresentationSeriesSet): IDataRepresentationSeries[] {
         return Object.keys(columnSet).map((columnName: string) => {
             return columnSet[columnName];
         });
     }
 
     public sortSeriesBySortOrder(
-        series: DataRepresentationSeries[],
-        sortOrder: SortOrder
-    ): DataRepresentationSeries[] {
+        series: IDataRepresentationSeries[],
+        sortOrder: SortOrder,
+    ): IDataRepresentationSeries[] {
         return series.sort((
-            firstSeries: DataRepresentationSeries,
-            secondSeries: DataRepresentationSeries
+            firstSeries: IDataRepresentationSeries,
+            secondSeries: IDataRepresentationSeries,
         ) => {
             let firstSeriesSortOrder = this.getSortOrder(firstSeries.sortOrder);
             let secondSeriesSortOrder = this.getSortOrder(secondSeries.sortOrder);

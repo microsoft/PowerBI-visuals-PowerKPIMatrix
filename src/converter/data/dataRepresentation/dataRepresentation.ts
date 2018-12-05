@@ -26,13 +26,19 @@
 
 import powerbi from "powerbi-visuals-api";
 
-export interface DataRepresentation {
-    series: DataRepresentationSeriesSet;
-    seriesArray: DataRepresentationSeries[];
+import { IDataRepresentationAxis } from "./dataRepresentationAxis";
+import { IDataRepresentationColumns } from "./dataRepresentationColumns";
+import { IDataRepresentationSeries } from "./dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "./dataRepresentationSeriesSet";
+import { DataRepresentationTypeEnum } from "./dataRepresentationType";
+
+export interface IDataRepresentation {
+    series: IDataRepresentationSeriesSet;
+    seriesArray: IDataRepresentationSeries[];
     seriesDeep: number;
     isDataColumnBasedModel: boolean;
-    columns: DataRepresentationColumns;
+    columns: IDataRepresentationColumns;
     type: DataRepresentationTypeEnum;
-    y: DataRepresentationAxis;
+    y: IDataRepresentationAxis;
     metadata?: powerbi.DataViewMetadataColumn;
 }

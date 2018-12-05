@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
+
 export interface DataRepresentationPoint {
     axisValue: DataRepresentationAxisValueType;
     value: number;

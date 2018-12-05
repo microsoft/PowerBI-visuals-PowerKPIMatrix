@@ -26,6 +26,6 @@
 
 import powerbi from "powerbi-visuals-api";
 
-export interface DataRepresentationColumns {
+export interface IDataRepresentationColumns {
     [columnName: string]: powerbi.DataViewMetadataColumn;
 }

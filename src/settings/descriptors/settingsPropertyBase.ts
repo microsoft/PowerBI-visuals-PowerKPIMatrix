@@ -24,20 +24,18 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export abstract class SettingsPropertyBase {
-        public isEnumerable: boolean = true;
+export abstract class SettingsPropertyBase {
+    public isEnumerable: boolean = true;
 
-        public applyDefault(defaultSettings: SettingsPropertyBase) {
-            if (!defaultSettings) {
-                return;
-            }
-
-            Object
-                .keys(defaultSettings)
-                .forEach((propertyName: string) => {
-                    this[propertyName] = defaultSettings[propertyName];
-                });
+    public applyDefault(defaultSettings: SettingsPropertyBase) {
+        if (!defaultSettings) {
+            return;
         }
+
+        Object
+            .keys(defaultSettings)
+            .forEach((propertyName: string) => {
+                this[propertyName] = defaultSettings[propertyName];
+            });
     }
 }

@@ -27,19 +27,19 @@
 import powerbi from "powerbi-visuals-api";
 
 import { IVisualDataColumn } from "../../../columns/visualDataColumn";
-import { Converter } from "../../converter";
-import { ConverterOptions } from "../../converterOptions";
+import { IConverter } from "../../converter";
+import { IConverterOptions } from "../../converterOptions";
 
 export class DataDirector<DataType> {
     private dataColumn: IVisualDataColumn;
 
-    private rowBasedModelConverter: Converter<DataType>;
-    private columnBasedModelConverter: Converter<DataType>;
+    private rowBasedModelConverter: IConverter<DataType>;
+    private columnBasedModelConverter: IConverter<DataType>;
 
     constructor(
         dataColumn: IVisualDataColumn,
-        rowBasedModelConverter: Converter<DataType>,
-        columnBasedModelConverter: Converter<DataType>,
+        rowBasedModelConverter: IConverter<DataType>,
+        columnBasedModelConverter: IConverter<DataType>,
     ) {
         this.dataColumn = dataColumn;
 
@@ -47,8 +47,8 @@ export class DataDirector<DataType> {
         this.columnBasedModelConverter = columnBasedModelConverter;
     }
 
-    public convert(options: ConverterOptions): DataType {
-        const converter: Converter<DataType> =
+    public convert(options: IConverterOptions): DataType {
+        const converter: IConverter<DataType> =
             this.getConverter(options
                 && options.dataView
                 && options.dataView.table
@@ -59,7 +59,7 @@ export class DataDirector<DataType> {
         return converter && converter.convert(options);
     }
 
-    private getConverter(columns: powerbi.DataViewMetadataColumn[] = []): Converter<DataType> {
+    private getConverter(columns: powerbi.DataViewMetadataColumn[] = []): IConverter<DataType> {
         for (const column of columns) {
             if (column.roles && column.roles[this.dataColumn.name]) {
                 return this.rowBasedModelConverter;

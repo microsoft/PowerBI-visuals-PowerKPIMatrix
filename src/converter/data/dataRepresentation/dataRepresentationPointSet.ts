@@ -24,7 +24,13 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationPointSet extends DataRepresentationAxis {
+import { NumberSettingsBase } from "../../../settings/descriptors/numberSettingsBase";
+import { LineStyle } from "../../../settings/descriptors/sparklineSettings";
+
+import { IDataRepresentationAxis } from "./dataRepresentationAxis";
+import { DataRepresentationPoint } from "./dataRepresentationPoint";
+
+export interface IDataRepresentationPointSet extends IDataRepresentationAxis {
     name: string;
     settings: NumberSettingsBase;
     isShown: boolean;

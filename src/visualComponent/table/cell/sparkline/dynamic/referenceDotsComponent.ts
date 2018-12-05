@@ -72,7 +72,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
 
             const dotSelection: D3.UpdateSelection = dotGroupSelection
                 .selectAll(this.dotSelector.selector)
-                .data((series: DataRepresentationSeries) => {
+                .data((series: IDataRepresentationSeries) => {
                     return series.points.filter((pointSet: DataRepresentationPointSet) => {
                         return pointSet.isShown && this.dataPointFilter.filter(pointSet.points || []).length > 0;
                     });

@@ -24,53 +24,64 @@
  *  THE SOFTWARE.
  */
 
-export class DataRepresentationScale {
-    private isOrdinalScale: boolean = false;
-    private baseScale: DataRepresentationAxisScale;
-    private internalType: DataRepresentationTypeEnum;
+import {
+    scaleLinear,
+    scalePoint,
+    ScalePoint,
+    scaleTime,
+} from "d3-scale";
 
-    private constructor(
-        scale: DataRepresentationAxisScale = null,
-        isOrdinal: boolean = false
-    ) {
-        this.baseScale = scale;
-        this.isOrdinalScale = isOrdinal;
+import { DataRepresentationAxisScale } from "./dataRepresentationAxisScale";
+import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
+import { DataRepresentationTypeEnum } from "./dataRepresentationType";
+
+export class DataRepresentationScale {
+    public get isCategorical(): boolean {
+        return this.isCategoricalScale;
     }
 
     public static create(): DataRepresentationScale {
         return new DataRepresentationScale();
     }
+    private isCategoricalScale: boolean = false;
+    private baseScale: DataRepresentationAxisScale;
+
+    private constructor(
+        scale: DataRepresentationAxisScale = null,
+        isOrdinal: boolean = false,
+    ) {
+        this.baseScale = scale;
+        this.isCategoricalScale = isOrdinal;
+    }
 
     public domain(
         values: DataRepresentationAxisValueType[],
-        type: DataRepresentationTypeEnum
+        scaleType: DataRepresentationTypeEnum,
     ): DataRepresentationScale {
         let scale: DataRepresentationAxisScale;
-
         if (values && values.length) {
-            switch (type) {
+            switch (scaleType) {
                 case DataRepresentationTypeEnum.DateType: {
-                    scale = d3.time.scale();
+                    scale = scaleTime();
                     break;
                 }
                 case DataRepresentationTypeEnum.NumberType: {
-                    scale = d3.scale.linear();
+                    scale = scaleLinear();
                     break;
                 }
                 case DataRepresentationTypeEnum.StringType: {
-                    scale = d3.scale.ordinal();
-                    this.isOrdinalScale = true;
+                    scale = scalePoint().padding(0);
+                    this.isCategoricalScale = true;
                     break;
                 }
             }
         }
 
         if (scale) {
-            scale.domain(values);
+            (scale as ScalePoint<DataRepresentationAxisValueType>).domain(values);
         }
 
         this.baseScale = scale;
-        this.internalType = type;
 
         return this;
     }
@@ -88,33 +99,20 @@ export class DataRepresentationScale {
             return 0;
         }
 
-        return this.baseScale(value);
+        return (this.baseScale as any)(value);
     }
 
     public copy(): DataRepresentationScale {
         return new DataRepresentationScale(
             this.baseScale && this.baseScale.copy(),
-            this.isOrdinalScale);
+            this.isCategoricalScale);
     }
 
     public range(rangeValues): DataRepresentationScale {
         if (this.baseScale) {
-            if (this.isOrdinalScale) {
-                (this.baseScale as D3.Scale.OrdinalScale).rangePoints(rangeValues);
-            }
-            else {
-                this.baseScale.range(rangeValues);
-            }
+            (this.baseScale as ScalePoint<DataRepresentationAxisValueType>).range(rangeValues);
         }
 
         return this;
-    }
-
-    public get isOrdinal(): boolean {
-        return this.isOrdinalScale;
-    }
-
-    public get type(): DataRepresentationTypeEnum {
-        return this.internalType;
     }
 }

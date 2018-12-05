@@ -314,7 +314,7 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
     }
 
     private enumerateSettingsDeep(
-        seriesArray: DataRepresentationSeries[],
+        seriesArray: IDataRepresentationSeries[],
         objectName: string,
         enumerationBuilder: ObjectEnumerationBuilder,
         getSettings: (

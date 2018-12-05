@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationSeriesSet {
-    [columnName: string]: DataRepresentationSeries;
+import { IDataRepresentationSeries } from "./dataRepresentationSeries";
+
+export interface IDataRepresentationSeriesSet {
+    [columnName: string]: IDataRepresentationSeries;
 }

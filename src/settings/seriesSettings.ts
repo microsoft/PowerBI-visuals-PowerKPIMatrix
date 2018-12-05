@@ -24,70 +24,71 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class SeriesSettings extends SettingsBase<SeriesSettings> {
-        public asOfDate: AsOfDateSettings = new AsOfDateSettings();
-        public metricName: FontSettings = new FontSettings();
-        public currentValue: KPIValueSettings = new KPIValueSettings();
-        public kpiIndicator: KPIIndicatorSettings = new KPIIndicatorSettings();
-        public kpiIndicatorValue: KPIIndicatorValueSettings = new KPIIndicatorValueSettings();
-        public comparisonValue: KPIValueSettings = new KPIValueSettings();
-        public secondComparisonValue: KPIValueSettings = new KPIValueSettings();
-        public secondKPIIndicatorValue: KPIIndicatorValueSettings = new KPIIndicatorValueSettings();
-        public sparklineSettings: SparklineSettings = new SparklineSettings();
+import { SettingsBase } from "./settingsBase";
 
-        public metricSpecific: MetricSpecificSettings = new MetricSpecificSettings();
+export class SeriesSettings extends SettingsBase<SeriesSettings> {
+    public asOfDate: AsOfDateSettings = new AsOfDateSettings();
+    public metricName: FontSettings = new FontSettings();
+    public currentValue: KPIValueSettings = new KPIValueSettings();
+    public kpiIndicator: KPIIndicatorSettings = new KPIIndicatorSettings();
+    public kpiIndicatorValue: KPIIndicatorValueSettings = new KPIIndicatorValueSettings();
+    public comparisonValue: KPIValueSettings = new KPIValueSettings();
+    public secondComparisonValue: KPIValueSettings = new KPIValueSettings();
+    public secondKPIIndicatorValue: KPIIndicatorValueSettings = new KPIIndicatorValueSettings();
+    public sparklineSettings: SparklineSettings = new SparklineSettings();
 
-        protected onObjectHasBeenParsed(objectName: string): void {
-            if (objectName !== "metricSpecific") {
-                return;
-            }
+    public metricSpecific: MetricSpecificSettings = new MetricSpecificSettings();
 
-            this.applyMetricSpecificSettings();
+    public applyAlternativeBackgroundColor(): void {
+        const backgroundColor: string = this.metricSpecific.alternativeBackgroundColor;
+
+        this.applyBackgroundColor(backgroundColor);
+        this.metricSpecific.backgroundColor = backgroundColor;
+    }
+
+    protected onObjectHasBeenParsed(objectName: string): void {
+        if (objectName !== "metricSpecific") {
+            return;
         }
 
-        protected onObjectsAreUndefined(): void {
-            this.applyMetricSpecificSettings();
+        this.applyMetricSpecificSettings();
+    }
+
+    protected onObjectsAreUndefined(): void {
+        this.applyMetricSpecificSettings();
+    }
+
+    private applyMetricSpecificSettings(): void {
+        this.applyBackgroundColor(this.metricSpecific.backgroundColor);
+    }
+
+    private applyBackgroundColor(backgroundColor): void {
+        [
+            this.asOfDate,
+            this.metricName,
+            this.currentValue,
+            this.kpiIndicatorValue,
+            this.comparisonValue,
+            this.sparklineSettings,
+            this.secondComparisonValue,
+            this.secondKPIIndicatorValue,
+        ].forEach((specificSettings: LabelSettings) => {
+            this.applyBackgroundColorIfOwnColorIsNotSpecified(
+                specificSettings,
+                backgroundColor,
+            );
+        });
+    }
+
+    private applyBackgroundColorIfOwnColorIsNotSpecified(
+        specificSettings: LabelSettings,
+        backgroundColor: string
+    ): void {
+        if (!specificSettings || !backgroundColor || specificSettings.backgroundColor) {
+            return;
         }
 
-        private applyMetricSpecificSettings(): void {
-            this.applyBackgroundColor(this.metricSpecific.backgroundColor);
-        }
-
-        public applyAlternativeBackgroundColor(): void {
-            const backgroundColor: string = this.metricSpecific.alternativeBackgroundColor;
-
-            this.applyBackgroundColor(backgroundColor);
-            this.metricSpecific.backgroundColor = backgroundColor;
-        }
-
-        private applyBackgroundColor(backgroundColor): void {
-            [
-                this.asOfDate,
-                this.metricName,
-                this.currentValue,
-                this.kpiIndicatorValue,
-                this.comparisonValue,
-                this.sparklineSettings,
-                this.secondComparisonValue,
-                this.secondKPIIndicatorValue,
-            ].forEach((specificSettings: LabelSettings) => {
-                this.applyBackgroundColorIfOwnColorIsNotSpecified(
-                    specificSettings,
-                    backgroundColor
-                );
-            });
-        }
-
-        private applyBackgroundColorIfOwnColorIsNotSpecified(
-            specificSettings: LabelSettings,
-            backgroundColor: string
-        ): void {
-            if (!specificSettings || !backgroundColor || specificSettings.backgroundColor) {
-                return;
-            }
-
-            specificSettings.backgroundColor = backgroundColor;
-        }
+        specificSettings.backgroundColor = backgroundColor;
     }
 }
+

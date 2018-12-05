@@ -24,11 +24,27 @@
  *  THE SOFTWARE.
  */
 
-export class ColumnSetConverter implements Converter<DataRepresentationColumnSet> {
-    public convert(options: ConverterOptions): DataRepresentationColumnSet {
+import powerbi from "powerbi-visuals-api";
+
+import { actualValueColumn } from "../../columns/actualValueColumn";
+import { comparisonValueColumn } from "../../columns/comparisonValueColumn";
+import { kpiIndicatorIndexColumn } from "../../columns/kpiIndicatorIndexColumn";
+import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
+import { rowBasedMetricNameColumn } from "../../columns/rowBasedMetricNameColumn";
+import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorValueColumn } from "../../columns/secondKPIIndicatorValueColumn";
+import { IVisualDataColumn } from "../../columns/visualDataColumn";
+
+import { IConverter } from "../converter";
+import { IConverterOptions } from "../converterOptions";
+
+import { IDataRepresentationColumnSet } from "../columnSet/dataRepresentation/dataRepresentationColumnSet";
+
+export class ColumnSetConverter implements IConverter<IDataRepresentationColumnSet> {
+    public convert(options: IConverterOptions): IDataRepresentationColumnSet {
         const { dataView } = options;
 
-        const dataMapping: DataRepresentationColumnSet = this.getDefaultColumnSet();
+        const dataMapping: IDataRepresentationColumnSet = this.getDefaultColumnSet();
 
         if (!dataView
             || !dataView.table
@@ -37,7 +53,7 @@ export class ColumnSetConverter implements Converter<DataRepresentationColumnSet
             return dataMapping;
         }
 
-        dataView.table.columns.forEach((column: DataViewMetadataColumn) => {
+        dataView.table.columns.forEach((column: powerbi.DataViewMetadataColumn) => {
             if (column.roles) {
                 Object.keys(column.roles).forEach((roleName: string) => {
                     if (dataMapping[roleName]) {
@@ -52,8 +68,8 @@ export class ColumnSetConverter implements Converter<DataRepresentationColumnSet
         return dataMapping;
     }
 
-    private getDefaultColumnSet(): DataRepresentationColumnSet {
-        const dataMapping: DataRepresentationColumnSet = {};
+    private getDefaultColumnSet(): IDataRepresentationColumnSet {
+        const dataMapping: IDataRepresentationColumnSet = {};
 
         [
             actualValueColumn,
@@ -63,7 +79,7 @@ export class ColumnSetConverter implements Converter<DataRepresentationColumnSet
             secondComparisonValueColumn,
             secondKPIIndicatorValueColumn,
             rowBasedMetricNameColumn,
-        ].forEach((column: VisualDataRole) => {
+        ].forEach((column: IVisualDataColumn) => {
             dataMapping[column.name] = [];
         });
 

@@ -163,7 +163,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
 
             const axisValue: DataRepresentationAxisValueType = series.axisValues[dataPointIndex];
 
-            const particularSeries: DataRepresentationSeries = {
+            const particularSeries: IDataRepresentationSeries = {
                 axisValue,
                 x: series.x,
                 y: series.y,

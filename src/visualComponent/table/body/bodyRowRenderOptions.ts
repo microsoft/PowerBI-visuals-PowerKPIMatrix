@@ -26,7 +26,7 @@
 
 namespace powerbi.visuals.samples.powerKPIMatrix {
     export interface BodyRowRenderOptions extends VisualComponentRenderOptionsBase {
-        series: DataRepresentationSeries;
+        series: IDataRepresentationSeries;
         settings: Settings;
         seriesSettings: SeriesSettings;
         hyperlinkAdapter: HyperlinkAdapter;

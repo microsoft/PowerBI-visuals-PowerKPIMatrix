@@ -34,7 +34,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
     import PowerKpiDataRepresentationAxis = powerKpi.DataRepresentationAxis;
     import PowerKpiDataRepresentationScale = powerKpi.DataRepresentationScale;
     import PowerKpiDataRepresentationPoint = powerKpi.DataRepresentationPoint;
-    import PowerKpiDataRepresentationSeries = powerKpi.DataRepresentationSeries;
+    import PowerKpiDataRepresentationSeries = powerKpi.IDataRepresentationSeries;
     import PowerKpiDataRepresentationPointFilter = powerKpi.DataRepresentationPointFilter;
     import PowerKpiDataRepresentationPointGradientColor = powerKpi.DataRepresentationPointGradientColor;
 

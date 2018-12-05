@@ -26,26 +26,35 @@
 
 import { actualValueColumn } from "../../../columns/actualValueColumn";
 import { comparisonValueColumn } from "../../../columns/comparisonValueColumn";
+import { dateColumn } from "../../../columns/dateColumn";
 import { kpiIndicatorIndexColumn } from "../../../columns/kpiIndicatorIndexColumn";
 import { kpiIndicatorValueColumn } from "../../../columns/kpiIndicatorValueColumn";
+import { rowBasedMetricNameColumn } from "../../../columns/rowBasedMetricNameColumn";
 import { secondComparisonValueColumn } from "../../../columns/secondComparisonValueColumn";
 import { secondKPIIndicatorValueColumn } from "../../../columns/secondKPIIndicatorValueColumn";
 
+import { DataRepresentationAxisValueType } from "../dataRepresentation/dataRepresentationAxisValueType";
+import { IDataRepresentationSeries } from "../dataRepresentation/dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "../dataRepresentation/dataRepresentationSeriesSet";
+
 import {
     DataConverter,
+    IColumnValue,
     IConverterStepOptions,
 } from "../dataConverter";
 
+import { NumericValueUtils } from "../../../utils/numericValueUtils";
+
 export class RowBasedModelConverter extends DataConverter {
     public deepSearchSeries(
-        seriesSet: DataRepresentationSeriesSet,
-        levels: string[] = []
-    ): DataRepresentationSeries {
+        seriesSet: IDataRepresentationSeriesSet,
+        levels: string[] = [],
+    ): IDataRepresentationSeries {
         const restLevels: string[] = levels.slice(); // Copies an array in order not to modify the original one
 
         const currentLevel: string = restLevels.shift();
 
-        const series: DataRepresentationSeries = seriesSet && seriesSet[currentLevel];
+        const series: IDataRepresentationSeries = seriesSet && seriesSet[currentLevel];
 
         if (!series) {
             return null;
@@ -93,7 +102,7 @@ export class RowBasedModelConverter extends DataConverter {
                 || undefined;
 
             if (seriesName) {
-                const series: DataRepresentationSeries
+                const series: IDataRepresentationSeries
                     = this.getSeriesByDisplayName(
                         dataRepresentation.series,
                         dataRepresentation.seriesArray,
@@ -137,7 +146,7 @@ export class RowBasedModelConverter extends DataConverter {
                     if (columnValues[columnName]) {
                         const currentColumnName: string = Object.keys(columnValues[columnName])[0];
 
-                        const columnValue: ColumnValue = columnValues[columnName][currentColumnName];
+                        const columnValue: IColumnValue = columnValues[columnName][currentColumnName];
                         const value = columnValue && columnValue.value;
                         const format: string = columnValue && columnValue.format;
 
@@ -194,28 +203,28 @@ export class RowBasedModelConverter extends DataConverter {
                 }
 
                 this.applyDataToCurrentSeries({
-                    series,
-                    dataRepresentation,
                     axisValue,
-                    currentValue,
-                    currentFormat,
-                    currentValueColumnName: series.name,
-                    comparisonValue,
                     comparisonFormat,
-                    isComparisonValueSpecified,
+                    comparisonValue,
                     comparisonValueColumnName,
-                    kpiIndicatorIndex,
+                    currentFormat,
+                    currentValue,
+                    currentValueColumnName: series.name,
+                    dataRepresentation,
+                    isComparisonValueSpecified,
                     isKPIIndicatorIndexSpecified,
+                    isKPIIndicatorValueSpecified,
+                    isSecondComparisonValueSpecified,
+                    isSecondKPIIndicatorValueSpecified,
+                    kpiIndicatorIndex,
                     kpiIndicatorValue,
                     kpiIndicatorValueFormat,
-                    isKPIIndicatorValueSpecified,
                     secondComparisonValue,
+                    secondComparisonValueColumnName,
                     secondComparisonValueFormat,
-                    isSecondComparisonValueSpecified,
                     secondKPIIndicatorValue,
                     secondKPIIndicatorValueFormat,
-                    isSecondKPIIndicatorValueSpecified,
-                    secondComparisonValueColumnName,
+                    series,
                 });
             }
         }

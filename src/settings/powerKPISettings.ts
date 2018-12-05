@@ -61,7 +61,8 @@ export class PowerKPISettings extends BaseSettings {
 
     public static enumerateObjectInstances(
         dataViewObjectParser: DataViewObjectsParser,
-        options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
+        options: EnumerateVisualObjectInstancesOptions
+    ): VisualObjectInstanceEnumeration {
 
         const objectName: string = options && options.objectName
             ? PowerKPIPrefixier.getObjectNameWithoutPrefix(options.objectName)

@@ -25,11 +25,13 @@
  */
 
 import {
-    ScaleBand,
     ScaleLinear,
+    ScalePoint,
     ScaleTime,
 } from "d3-scale";
 
-export type DataRepresentationAxisScale = ScaleTime<number, Date>
-    | ScaleLinear<number, number>
-    | ScaleBand<string>;
+import { DataRepresentationAxisValueType } from "./DataRepresentationAxisValueType";
+
+export type DataRepresentationAxisScale = ScaleTime<DataRepresentationAxisValueType, number>
+    | ScaleLinear<DataRepresentationAxisValueType, number>
+    | ScalePoint<DataRepresentationAxisValueType>;

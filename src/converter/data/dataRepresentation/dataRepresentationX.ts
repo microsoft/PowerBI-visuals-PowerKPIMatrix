@@ -24,7 +24,11 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationX {
+import powerbi from "powerbi-visuals-api";
+
+import { DataRepresentationTypeEnum } from "./dataRepresentationType";
+
+export interface IDataRepresentationX {
     type: DataRepresentationTypeEnum;
-    metadata?: DataViewMetadataColumn;
+    metadata?: powerbi.DataViewMetadataColumn;
 }

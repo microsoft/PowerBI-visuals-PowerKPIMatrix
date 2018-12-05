@@ -24,6 +24,6 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationColumnSet {
+export interface IDataRepresentationColumnSet {
     [columnName: string]: string[];
 }

@@ -24,8 +24,8 @@
  *  THE SOFTWARE.
  */
 
-import { DataRepresentationColumnMappingItem } from "./dataRepresentationColumnMappingItem";
+import { IDataRepresentationColumnMappingItem } from "./dataRepresentationColumnMappingItem";
 
-export interface DataRepresentationColumnMapping {
-    [columnName: string]: DataRepresentationColumnMappingItem;
+export interface IDataRepresentationColumnMapping {
+    [columnName: string]: IDataRepresentationColumnMappingItem;
 }

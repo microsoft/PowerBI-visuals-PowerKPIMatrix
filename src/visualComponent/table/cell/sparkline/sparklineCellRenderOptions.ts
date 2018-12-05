@@ -28,7 +28,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
     export interface SparklineCellRenderOptions extends KPIIndicatorCellRenderOptionsBase {
         offset: number;
         settings: Settings;
-        series: DataRepresentationSeries;
+        series: IDataRepresentationSeries;
         metadata: DataViewMetadataColumn;
         y: DataRepresentationAxis;
     }

@@ -110,7 +110,7 @@ namespace powerbi.visuals.samples.powerKPIMatrix {
 
             const rowStateSet: RowStateSet = this.stateService.states.table.getRowStateSet();
 
-            seriesArray.forEach((series: DataRepresentationSeries, rowIndex: number) => {
+            seriesArray.forEach((series: IDataRepresentationSeries, rowIndex: number) => {
                 const rowRenderOptions: BodyRowRenderOptions = {
                     y,
                     type,

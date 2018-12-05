@@ -24,13 +24,22 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationSeries {
+import powerbi from "powerbi-visuals-api";
+
+import { IDataRepresentationAxisWithScale } from "./dataRepresentationAxis";
+import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
+import { IDataRepresentationPointSet } from "./dataRepresentationPointSet";
+import { IDataRepresentationSeriesSet } from "./dataRepresentationSeriesSet";
+
+import { SeriesSettings } from "../../../settings/seriesSettings";
+
+export interface IDataRepresentationSeries {
     axisValue?: DataRepresentationAxisValueType;
     axisValues: DataRepresentationAxisValueType[];
     level: number;
     name: string;
     image?: string;
-    points?: DataRepresentationPointSet[];
+    points?: IDataRepresentationPointSet[];
     varianceSet?: number[][];
     kpiIndicatorIndex?: number;
     kpiIndicatorValue?: number;
@@ -38,13 +47,13 @@ export interface DataRepresentationSeries {
     comparisonValue?: number;
     secondComparisonValue?: number;
     secondKPIIndicatorValue?: number;
-    x?: DataRepresentationAxisWithScale;
-    y?: DataRepresentationAxisWithScale;
+    x?: IDataRepresentationAxisWithScale;
+    y?: IDataRepresentationAxisWithScale;
     sortOrder?: DataRepresentationAxisValueType;
     hyperlink?: string;
-    selectionId?: SelectionId;
+    selectionId?: powerbi.visuals.ISelectionId;
     settings?: SeriesSettings;
     hasBeenFilled?: boolean;
-    childrenSet: DataRepresentationSeriesSet;
-    children: DataRepresentationSeries[];
+    childrenSet: IDataRepresentationSeriesSet;
+    children: IDataRepresentationSeries[];
 }

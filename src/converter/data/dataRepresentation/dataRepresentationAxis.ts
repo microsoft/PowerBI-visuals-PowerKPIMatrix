@@ -24,11 +24,14 @@
  *  THE SOFTWARE.
  */
 
-export interface DataRepresentationAxis {
+import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
+import { DataRepresentationScale } from "./dataRepresentationScale";
+
+export interface IDataRepresentationAxis {
     min: DataRepresentationAxisValueType;
     max: DataRepresentationAxisValueType;
 }
 
-export interface DataRepresentationAxisWithScale extends DataRepresentationAxis {
+export interface IDataRepresentationAxisWithScale extends IDataRepresentationAxis {
     scale: DataRepresentationScale;
 }

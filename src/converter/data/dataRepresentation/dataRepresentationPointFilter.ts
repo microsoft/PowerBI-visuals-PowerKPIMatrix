@@ -24,6 +24,9 @@
  *  THE SOFTWARE.
  */
 
+import { DataRepresentationPoint } from "./dataRepresentationPoint";
+import { DataRepresentationPointGradientColor } from "./dataRepresentationPointGradientColor";
+
 export class DataRepresentationPointFilter {
     public static create(): DataRepresentationPointFilter {
         return new DataRepresentationPointFilter();
@@ -49,12 +52,12 @@ export class DataRepresentationPointFilter {
     public groupAndFilterByColor(
         points: DataRepresentationPoint[],
         colors: string[],
-        defaultColor: string
+        defaultColor: string,
     ): DataRepresentationPointGradientColor[] {
         if (!colors || !colors.length) {
             return [{
-                points: this.filter(points),
                 color: defaultColor,
+                points: this.filter(points),
             }];
         }
 

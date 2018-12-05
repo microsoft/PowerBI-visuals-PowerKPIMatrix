@@ -24,194 +24,212 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    /**
-     * TODO: This converter looks very heavy
-     * TODO: Let's revisit and optimize this once you have a chance to improve this
-     */
-    export class ColumnBasedModelConverter extends DataConverter {
-        constructor() {
-            super(true);
+import {
+    DataConverter,
+    IColumnValue,
+    IConverterStepOptions,
+} from "../dataConverter";
+
+import { actualValueColumn } from "../../../columns/actualValueColumn";
+import { comparisonValueColumn } from "../../../columns/comparisonValueColumn";
+import { dateColumn } from "../../../columns/dateColumn";
+import { kpiIndicatorIndexColumn } from "../../../columns/kpiIndicatorIndexColumn";
+import { kpiIndicatorValueColumn } from "../../../columns/kpiIndicatorValueColumn";
+import { secondComparisonValueColumn } from "../../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorValueColumn } from "../../../columns/secondKPIIndicatorValueColumn";
+
+import { NumericValueUtils } from "../../../utils/numericValueUtils";
+
+import { DataRepresentationAxisValueType } from "../dataRepresentation/dataRepresentationAxisValueType";
+import { IDataRepresentationSeries } from "../dataRepresentation/dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "../dataRepresentation/dataRepresentationSeriesSet";
+
+/**
+ * TODO: This converter looks very heavy
+ * TODO: Let's revisit and optimize this once you have a chance to improve this
+ */
+export class ColumnBasedModelConverter extends DataConverter {
+    constructor() {
+        super(true);
+    }
+
+    public deepSearchSeries(
+        seriesSet: IDataRepresentationSeriesSet,
+        levels: string[] = [],
+    ): IDataRepresentationSeries {
+        const [seriesName] = levels;
+
+        if (seriesSet[seriesName]) {
+            return seriesSet[seriesName];
         }
 
-        protected converterStep(options: IConverterStepOptions): void {
-            const {
-                dataRepresentation,
-                columnValues,
-                identities,
-                identityQueryName,
-                columnMapping,
-                rows,
-                settings,
-                settingsState,
-                viewMode,
-            } = options;
+        for (const seriesSetName in seriesSet) {
+            const currentSeries: IDataRepresentationSeries = seriesSet[seriesSetName];
 
-            let axisValue: DataRepresentationAxisValueType;
+            if (currentSeries && currentSeries.childrenSet) {
+                const series: IDataRepresentationSeries = this.deepSearchSeries(currentSeries.childrenSet, levels);
 
-            if (columnValues[dateColumn.name]) {
-                const dateColumnName: string = Object.keys(columnValues[dateColumn.name])[0];
-
-                axisValue = (
-                    dateColumnName
-                    && columnValues[dateColumn.name][dateColumnName]
-                    && columnValues[dateColumn.name][dateColumnName].value) || undefined;
+                if (series) {
+                    return series;
+                }
             }
+        }
 
-            if (NumericValueUtils.isValueDefined(axisValue)) {
-                if (columnValues[actualValueColumn.name]) {
-                    Object.keys(columnValues[actualValueColumn.name]).forEach((columnName: string, columnIndex: number) => {
-                        if (columnMapping[columnName]) {
-                            const series: DataRepresentationSeries
-                                = this.getSeriesByDisplayName(
-                                    dataRepresentation.series,
-                                    dataRepresentation.seriesArray,
-                                    [columnName],
-                                    columnName,
-                                    identities,
-                                    columnIndex,
-                                    identityQueryName,
-                                    rows,
-                                    settings,
-                                    settingsState,
-                                    dataRepresentation.type,
-                                    viewMode,
-                                );
+        return null;
+    }
 
-                            const columnValue: ColumnValue = columnValues[actualValueColumn.name][columnName];
+    protected converterStep(options: IConverterStepOptions): void {
+        const {
+            dataRepresentation,
+            columnValues,
+            identities,
+            identityQueryName,
+            columnMapping,
+            rows,
+            settings,
+            settingsState,
+            viewMode,
+        } = options;
 
-                            const currentValue: number = columnValue && columnValue.value;
-                            const currentFormat: string = columnValue && columnValue.format;
-                            const currentValueColumnName: string = columnName;
+        let axisValue: DataRepresentationAxisValueType;
 
-                            let comparisonValue: number = NaN;
-                            let comparisonFormat: string;
-                            let isComparisonValueSpecified: boolean = false;
-                            let comparisonValueColumnName: string;
+        if (columnValues[dateColumn.name]) {
+            const dateColumnName: string = Object.keys(columnValues[dateColumn.name])[0];
 
-                            let kpiIndicatorIndex: number = NaN;
-                            let isKPIIndicatorIndexSpecified: boolean = false;
+            axisValue = (
+                dateColumnName
+                && columnValues[dateColumn.name][dateColumnName]
+                && columnValues[dateColumn.name][dateColumnName].value) || undefined;
+        }
 
-                            let kpiIndicatorValue: number = NaN;
-                            let kpiIndicatorValueFormat: string;
-                            let isKPIIndicatorValueSpecified: boolean = false;
+        if (NumericValueUtils.isValueDefined(axisValue)) {
+            if (columnValues[actualValueColumn.name]) {
+                Object.keys(columnValues[actualValueColumn.name]).forEach((columnName: string, columnIndex: number) => {
+                    if (columnMapping[columnName]) {
+                        const series: IDataRepresentationSeries
+                            = this.getSeriesByDisplayName(
+                                dataRepresentation.series,
+                                dataRepresentation.seriesArray,
+                                [columnName],
+                                columnName,
+                                identities,
+                                columnIndex,
+                                identityQueryName,
+                                rows,
+                                settings,
+                                settingsState,
+                                dataRepresentation.type,
+                                viewMode,
+                            );
 
-                            let secondComparisonValue: number = NaN;
-                            let secondComparisonValueFormat: string;
-                            let isSecondComparisonValueSpecified: boolean = false;
-                            let secondComparisonValueColumnName: string;
+                        const columnValue: IColumnValue = columnValues[actualValueColumn.name][columnName];
 
-                            let secondKPIIndicatorValue: number = NaN;
-                            let secondKPIIndicatorValueFormat: string;
-                            let isSecondKPIIndicatorValueSpecified: boolean = false;
+                        const currentValue: number = columnValue && columnValue.value;
+                        const currentFormat: string = columnValue && columnValue.format;
+                        const currentValueColumnName: string = columnName;
 
-                            Object.keys(columnMapping[columnName]).forEach((roleName: string) => {
-                                const mappedColumnName: string = columnMapping[columnName][roleName];
+                        let comparisonValue: number = NaN;
+                        let comparisonFormat: string;
+                        let isComparisonValueSpecified: boolean = false;
+                        let comparisonValueColumnName: string;
 
-                                if (mappedColumnName !== undefined && mappedColumnName !== null && columnValues[roleName]) {
-                                    const columnValue: ColumnValue = columnValues[roleName][mappedColumnName];
-                                    const value: any = columnValue && columnValue.value;
-                                    const format: string = columnValue && columnValue.format;
+                        let kpiIndicatorIndex: number = NaN;
+                        let isKPIIndicatorIndexSpecified: boolean = false;
 
-                                    switch (roleName) {
-                                        case comparisonValueColumn.name: {
-                                            comparisonValue = value;
-                                            comparisonFormat = format;
-                                            comparisonValueColumnName = mappedColumnName;
+                        let kpiIndicatorValue: number = NaN;
+                        let kpiIndicatorValueFormat: string;
+                        let isKPIIndicatorValueSpecified: boolean = false;
 
-                                            isComparisonValueSpecified = true;
+                        let secondComparisonValue: number = NaN;
+                        let secondComparisonValueFormat: string;
+                        let isSecondComparisonValueSpecified: boolean = false;
+                        let secondComparisonValueColumnName: string;
 
-                                            break;
-                                        }
-                                        case kpiIndicatorIndexColumn.name: {
-                                            kpiIndicatorIndex = value;
+                        let secondKPIIndicatorValue: number = NaN;
+                        let secondKPIIndicatorValueFormat: string;
+                        let isSecondKPIIndicatorValueSpecified: boolean = false;
 
-                                            isKPIIndicatorIndexSpecified = true;
+                        Object.keys(columnMapping[columnName]).forEach((roleName: string) => {
+                            const mappedColumnName: string = columnMapping[columnName][roleName];
 
-                                            break;
-                                        }
-                                        case kpiIndicatorValueColumn.name: {
-                                            kpiIndicatorValue = value;
-                                            kpiIndicatorValueFormat = format;
+                            if (mappedColumnName !== undefined && mappedColumnName !== null && columnValues[roleName]) {
+                                const currentColumnValue: IColumnValue = columnValues[roleName][mappedColumnName];
+                                const value: any = currentColumnValue && currentColumnValue.value;
+                                const format: string = currentColumnValue && currentColumnValue.format;
 
-                                            isKPIIndicatorValueSpecified = true;
+                                switch (roleName) {
+                                    case comparisonValueColumn.name: {
+                                        comparisonValue = value;
+                                        comparisonFormat = format;
+                                        comparisonValueColumnName = mappedColumnName;
 
-                                            break;
-                                        }
-                                        case secondComparisonValueColumn.name: {
-                                            secondComparisonValue = value;
-                                            secondComparisonValueFormat = format;
-                                            secondComparisonValueColumnName = mappedColumnName;
+                                        isComparisonValueSpecified = true;
 
-                                            isSecondComparisonValueSpecified = true;
+                                        break;
+                                    }
+                                    case kpiIndicatorIndexColumn.name: {
+                                        kpiIndicatorIndex = value;
 
-                                            break;
-                                        }
-                                        case secondKPIIndicatorValueColumn.name: {
-                                            secondKPIIndicatorValue = value;
-                                            secondKPIIndicatorValueFormat = format;
+                                        isKPIIndicatorIndexSpecified = true;
 
-                                            isSecondKPIIndicatorValueSpecified = true;
+                                        break;
+                                    }
+                                    case kpiIndicatorValueColumn.name: {
+                                        kpiIndicatorValue = value;
+                                        kpiIndicatorValueFormat = format;
 
-                                            break;
-                                        }
+                                        isKPIIndicatorValueSpecified = true;
+
+                                        break;
+                                    }
+                                    case secondComparisonValueColumn.name: {
+                                        secondComparisonValue = value;
+                                        secondComparisonValueFormat = format;
+                                        secondComparisonValueColumnName = mappedColumnName;
+
+                                        isSecondComparisonValueSpecified = true;
+
+                                        break;
+                                    }
+                                    case secondKPIIndicatorValueColumn.name: {
+                                        secondKPIIndicatorValue = value;
+                                        secondKPIIndicatorValueFormat = format;
+
+                                        isSecondKPIIndicatorValueSpecified = true;
+
+                                        break;
                                     }
                                 }
-                            });
+                            }
+                        });
 
-                            this.applyDataToCurrentSeries({
-                                series,
-                                dataRepresentation,
-                                axisValue,
-                                currentValue,
-                                currentFormat,
-                                currentValueColumnName,
-                                comparisonValue,
-                                comparisonFormat,
-                                comparisonValueColumnName,
-                                isComparisonValueSpecified,
-                                kpiIndicatorIndex,
-                                isKPIIndicatorIndexSpecified,
-                                kpiIndicatorValue,
-                                kpiIndicatorValueFormat,
-                                isKPIIndicatorValueSpecified,
-                                secondComparisonValue,
-                                secondComparisonValueFormat,
-                                isSecondComparisonValueSpecified,
-                                secondKPIIndicatorValue,
-                                secondKPIIndicatorValueFormat,
-                                isSecondKPIIndicatorValueSpecified,
-                                secondComparisonValueColumnName,
-                            });
-                        }
-                    });
-                }
-            }
-        }
-
-        public deepSearchSeries(
-            seriesSet: DataRepresentationSeriesSet,
-            levels: string[] = []
-        ): DataRepresentationSeries {
-            const [seriesName] = levels;
-
-            if (seriesSet[seriesName]) {
-                return seriesSet[seriesName];
-            }
-
-            for (const seriesSetName in seriesSet) {
-                const currentSeries: DataRepresentationSeries = seriesSet[seriesSetName];
-
-                if (currentSeries && currentSeries.childrenSet) {
-                    const series: DataRepresentationSeries = this.deepSearchSeries(currentSeries.childrenSet, levels);
-
-                    if (series) {
-                        return series;
+                        this.applyDataToCurrentSeries({
+                            axisValue,
+                            comparisonFormat,
+                            comparisonValue,
+                            comparisonValueColumnName,
+                            currentFormat,
+                            currentValue,
+                            currentValueColumnName,
+                            dataRepresentation,
+                            isComparisonValueSpecified,
+                            isKPIIndicatorIndexSpecified,
+                            isKPIIndicatorValueSpecified,
+                            isSecondComparisonValueSpecified,
+                            isSecondKPIIndicatorValueSpecified,
+                            kpiIndicatorIndex,
+                            kpiIndicatorValue,
+                            kpiIndicatorValueFormat,
+                            secondComparisonValue,
+                            secondComparisonValueColumnName,
+                            secondComparisonValueFormat,
+                            secondKPIIndicatorValue,
+                            secondKPIIndicatorValueFormat,
+                            series,
+                        });
                     }
-                }
+                });
             }
-
-            return null;
         }
     }
 }

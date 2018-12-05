@@ -24,47 +24,45 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class PersistentSettings extends SettingsPropertyBase implements SettingsWithParser {
-        public show: boolean = false;
-        public value: string = "";
+export class PersistentSettings extends SettingsPropertyBase implements SettingsWithParser {
+    public show: boolean = false;
+    public value: string = "";
 
-        public columnMapping: string = "";
-        public table: string = "";
-        public settings: string = "";
+    public columnMapping: string = "";
+    public table: string = "";
+    public settings: string = "";
 
-        constructor() {
-            super();
+    constructor() {
+        super();
 
-            this.isEnumerable = false;
-        }
-
-        public parse() {
-            if (!this.columnMapping
-                && !this.table
-                && !this.settings
-                && this.value
-            ) {
-                try {
-                    const parsedValue: PersistentSettings = JSON.parse(this.value);
-
-                    this.columnMapping = this.getSerializedObject(parsedValue && parsedValue.columnMapping);
-                    this.table = this.getSerializedObject(parsedValue && parsedValue.table);
-                } catch (_) { }
-            }
-        }
-
-        private getSerializedObject(originObject: any): string {
-            if (!originObject) {
-                return "";
-            }
-
-            try {
-                return JSON.stringify(originObject) || "";
-            } catch (_) {
-                return "";
-            }
-        }
-
+        this.isEnumerable = false;
     }
+
+    public parse() {
+        if (!this.columnMapping
+            && !this.table
+            && !this.settings
+            && this.value
+        ) {
+            try {
+                const parsedValue: PersistentSettings = JSON.parse(this.value);
+
+                this.columnMapping = this.getSerializedObject(parsedValue && parsedValue.columnMapping);
+                this.table = this.getSerializedObject(parsedValue && parsedValue.table);
+            } catch (_) { }
+        }
+    }
+
+    private getSerializedObject(originObject: any): string {
+        if (!originObject) {
+            return "";
+        }
+
+        try {
+            return JSON.stringify(originObject) || "";
+        } catch (_) {
+            return "";
+        }
+    }
+
 }

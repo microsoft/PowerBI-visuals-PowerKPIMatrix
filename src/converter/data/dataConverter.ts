@@ -24,31 +24,84 @@
  *  THE SOFTWARE.
  */
 
-export interface HyperlinkSet {
+import powerbi from "powerbi-visuals-api";
+
+import { IDataRepresentationColumnMapping } from "../columnMapping/dataRepresentation/dataRepresentationColumnMapping";
+import { IDataRepresentation } from "./dataRepresentation/dataRepresentation";
+
+import {
+    IDataRepresentationAxis,
+    IDataRepresentationAxisWithScale,
+} from "./dataRepresentation/dataRepresentationAxis";
+
+import { DataRepresentationAxisValueType } from "./dataRepresentation/dataRepresentationAxisValueType";
+import { IDataRepresentationColumns } from "./dataRepresentation/dataRepresentationColumns";
+import { DataRepresentationScale } from "./dataRepresentation/dataRepresentationScale";
+import { IDataRepresentationSeries } from "./dataRepresentation/dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "./dataRepresentation/dataRepresentationSeriesSet";
+import { DataRepresentationSeriesUtils } from "./dataRepresentation/dataRepresentationSeriesUtils";
+import { DataRepresentationTypeEnum } from "./dataRepresentation/DataRepresentationType";
+
+import { NumericValueUtils } from "../../utils/numericValueUtils";
+
+import { SettingsState } from "../../services/state/settingsState";
+
+import {
+    SubtotalSettings,
+    SubtotalType,
+} from "../../settings/descriptors/subtotalSettings";
+
+import { IKPIIndicatorSettings } from "../../settings/descriptors/kpi/kpiIndicatorSettings";
+import { NumberSettingsBase } from "../../settings/descriptors/numberSettingsBase";
+import { LineStyle } from "../../settings/descriptors/sparklineSettings";
+
+import { SettingsPropertyBase } from "../../settings/descriptors/settingsPropertyBase";
+import { TableStyle } from "../../settings/descriptors/tableSettings";
+
+import { SeriesSettings } from "../../settings/seriesSettings";
+import { Settings } from "../../settings/settings";
+
+import { IConverter } from "../converter";
+import { IConverterOptions } from "../converterOptions";
+import { VarianceStrategy } from "./variance/varianceStrategy";
+
+import { actualValueColumn } from "../../columns/actualValueColumn";
+import { categoryColumn } from "../../columns/categoryColumn";
+import { comparisonValueColumn } from "../../columns/comparisonValueColumn";
+import { dateColumn } from "../../columns/dateColumn";
+import { hyperlinkColumn } from "../../columns/hyperlinkColumn";
+import { imageColumn } from "../../columns/imageColumn";
+import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
+import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
+import { sortOrderColumn } from "../../columns/sortOrderColumn";
+import { IVisualDataColumn } from "../../columns/visualDataColumn";
+import { IDataRepresentationPointSet } from "./dataRepresentation/dataRepresentationPointSet";
+
+export interface IHyperlinkSet {
     [metricName: string]: string;
 }
 
-export interface ColumnValue {
+export interface IColumnValue {
     value?: any;
     format?: string;
 }
 
-export interface ColumnValues {
+export interface IColumnValues {
     [columnName: string]: {
-        [displayName: string]: ColumnValue;
+        [displayName: string]: IColumnValue;
     };
 }
 
-export interface CategoryHyperlink {
+export interface ICategoryHyperlink {
     name: string;
     hyperlink: string;
     sortOrder: DataRepresentationAxisValueType;
     image: string;
 }
 
-export interface CurrentSeriesData {
-    dataRepresentation: DataRepresentation;
-    series: DataRepresentationSeries;
+export interface ICurrentSeriesData {
+    dataRepresentation: IDataRepresentation;
+    series: IDataRepresentationSeries;
 
     axisValue: DataRepresentationAxisValueType;
 
@@ -79,20 +132,54 @@ export interface CurrentSeriesData {
 }
 
 export interface IConverterStepOptions {
-    dataRepresentation: DataRepresentation;
-    columnValues: ColumnValues;
-    identities: DataViewScopeIdentity[];
+    dataRepresentation: IDataRepresentation;
+    columnValues: IColumnValues;
+    identities: powerbi.data.DataRepetitionSelector[]; // TODO: it used to be DataViewScopeIdentity
     identityQueryName: string;
-    columnMapping: DataRepresentationColumnMapping;
-    rows: DataViewTableRow[];
+    columnMapping: IDataRepresentationColumnMapping;
+    rows: powerbi.DataViewTableRow[];
     rowIndex: number;
     settings: Settings;
     settingsState: SettingsState;
     levels: string[];
-    viewMode: ViewMode;
+    viewMode: powerbi.ViewMode;
 }
 
-export abstract class DataConverter implements Converter<DataRepresentation> {
+export abstract class DataConverter implements IConverter<IDataRepresentation> {
+    public static applyYArguments(
+        axis: IDataRepresentationAxis,
+        value: number,
+    ): void {
+        if (!NumericValueUtils.isValueFinite(value)) {
+            return;
+        }
+
+        if (axis.min === undefined) {
+            axis.min = value;
+        }
+
+        if (axis.max === undefined) {
+            axis.max = value;
+        }
+
+        if (value < axis.min) {
+            axis.min = value;
+        }
+
+        if (value > axis.max) {
+            axis.max = value;
+        }
+    }
+
+    public static applyYArgumentsToAxisSet(
+        axisSet: IDataRepresentationAxis[],
+        value: number,
+    ): void {
+        axisSet.forEach((axis: IDataRepresentationAxis) => {
+            this.applyYArguments(axis, value);
+        });
+    }
+
     protected varianceStrategy: VarianceStrategy = new VarianceStrategy();
 
     protected seriesUtils: DataRepresentationSeriesUtils = new DataRepresentationSeriesUtils();
@@ -108,11 +195,11 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
     }
 
     public abstract deepSearchSeries(
-        seriesSet: DataRepresentationSeriesSet,
-        levels: string[]
-    ): DataRepresentationSeries;
+        seriesSet: IDataRepresentationSeriesSet,
+        levels: string[],
+    ): IDataRepresentationSeries;
 
-    public convert(options: ConverterOptions): DataRepresentation {
+    public convert(options: IConverterOptions): IDataRepresentation {
         const {
             dataView,
             columnMapping,
@@ -123,15 +210,15 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
         this.amountOfFilledSeries = 0;
 
-        const dataRepresentation: DataRepresentation = this.getDefaultData();
+        const dataRepresentation: IDataRepresentation = this.getDefaultData();
 
         if (!this.isDataViewValid(dataView)) {
             return dataRepresentation;
         }
 
-        const xAxisMetadataColumn: DataViewMetadataColumn = this.getColumnByRoleName(
+        const xAxisMetadataColumn: powerbi.DataViewMetadataColumn = this.getColumnByRoleName(
             dataView.table.columns,
-            dateColumn.name
+            dateColumn.name,
         );
 
         dataRepresentation.columns = this.getColumns(
@@ -174,14 +261,14 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
         const defaultUnmappedCategoryName: string = settings.table.getDefaultUnmappedCategoryName();
 
-        dataView.table.rows.forEach((row: DataViewTableRow, rowIndex: number) => {
-            const columnValues: ColumnValues = this.getColumnValues(dataView.table.columns, row);
+        dataView.table.rows.forEach((row: powerbi.DataViewTableRow, rowIndex: number) => {
+            const columnValues: IColumnValues = this.getColumnValues(dataView.table.columns, row);
 
-            const categorySet: CategoryHyperlink[] = this.parseCategorySet(columnValues, defaultUnmappedCategoryName);
+            const categorySet: ICategoryHyperlink[] = this.parseCategorySet(columnValues, defaultUnmappedCategoryName);
 
             dataRepresentation.seriesDeep = Math.max(
                 dataRepresentation.seriesDeep,
-                categorySet.length
+                categorySet.length,
             );
 
             this.applyCategorySet(
@@ -192,22 +279,22 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                 !settings.table.isDefaultSortOrderByName(),
             );
 
-            const levels: string[] = categorySet.map((categoryHyperlink: CategoryHyperlink) => {
+            const levels: string[] = categorySet.map((categoryHyperlink: ICategoryHyperlink) => {
                 return categoryHyperlink.name;
             });
 
             this.converterStep({
-                dataRepresentation,
-                columnValues,
                 columnMapping,
-                rowIndex,
-                settings,
-                settingsState,
-                levels,
-                viewMode,
-                rows: dataView.table.rows,
+                columnValues,
+                dataRepresentation,
                 identities: dataView.table.identity || [],
                 identityQueryName: dataView.table.columns[0].queryName,
+                levels,
+                rowIndex,
+                rows: dataView.table.rows,
+                settings,
+                settingsState,
+                viewMode,
             });
         });
 
@@ -219,7 +306,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
             settings.table.style,
             settings,
             dataRepresentation.type,
-            dataRepresentation.y
+            dataRepresentation.y,
         );
 
         settings.hideDescriptors(dataRepresentation.seriesDeep);
@@ -229,475 +316,34 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
     protected abstract converterStep(options: IConverterStepOptions): void;
 
-    private postProcess(
-        seriesArray: DataRepresentationSeries[],
-        subtotalSettings: SubtotalSettings,
-        tableStyle: TableStyle,
-        settings: Settings,
-        type: DataRepresentationTypeEnum,
-        baseAxis: DataRepresentationAxis,
-    ): DataRepresentationSeries[] {
-        let filteredSeries: DataRepresentationSeries[] = [];
-        let areThereAnyFilledSeries: boolean = false;
-
-        seriesArray.forEach((series: DataRepresentationSeries, seriesIndex: number) => {
-            if (series.hasBeenFilled) {
-                this.updateYScale(series, baseAxis);
-
-                this.updateXScale(
-                    series,
-                    type,
-                );
-
-                areThereAnyFilledSeries = true;
-
-                if (series.settings && series.settings.metricName) {
-                    if (series.hyperlink) {
-                        series.settings.metricName.hideCommonProperties();
-                        settings.metricName.updateHyperlinkVisibility(true);
-                    }
-
-                    if (series.image) {
-                        settings.metricName.updateImageVisibility(true);
-                    }
-                }
-
-                filteredSeries.push(series);
-            } else {
-                series.children = this.postProcess(
-                    series.children,
-                    subtotalSettings,
-                    tableStyle,
-                    settings,
-                    type,
-                    baseAxis
-                );
-
-                if (subtotalSettings.show) {
-                    this.countSubtotal(series, subtotalSettings.type);
-                }
-
-                if (series.children && series.children.length) {
-                    filteredSeries.push(series);
-                }
-            }
-        });
-
-        filteredSeries = this.seriesUtils.sortSeriesBySortOrder(filteredSeries, settings.table.sortOrder);
-
-        if (areThereAnyFilledSeries) {
-            filteredSeries.forEach((series: DataRepresentationSeries) => {
-                if (series.hasBeenFilled) {
-                    if ((tableStyle === TableStyle.AlternatingMetrics || tableStyle === TableStyle.BoldHeaderAndAlternatingMetrics)
-                        && this.amountOfFilledSeries % 2
-                    ) {
-                        series.settings.applyAlternativeBackgroundColor();
-                    }
-
-                    this.amountOfFilledSeries++;
-                }
-            });
-        }
-
-        return filteredSeries;
-    }
-
-    private countSubtotal(series: DataRepresentationSeries, type: SubtotalType): void {
-        if (!series
-            || !series.children
-            || !series.children.length
-        ) {
-            return;
-        }
-
-        series.children.forEach((childSeries: DataRepresentationSeries) => {
-            const {
-                currentValue,
-                comparisonValue,
-                secondComparisonValue,
-            } = childSeries;
-
-            switch (type) {
-                case SubtotalType.CountOfItems: {
-                    series.currentValue = this.countValues(series.currentValue, currentValue);
-                    series.comparisonValue = this.countValues(series.comparisonValue, comparisonValue);
-                    series.secondComparisonValue = this.countValues(series.secondComparisonValue, secondComparisonValue);
-
-                    break;
-                }
-                case SubtotalType.SumOfItems:
-                default: {
-                    series.currentValue = this.addValues(series.currentValue, currentValue);
-                    series.comparisonValue = this.addValues(series.comparisonValue, comparisonValue);
-                    series.secondComparisonValue = this.addValues(series.secondComparisonValue, secondComparisonValue);
-
-                    break;
-                }
-            }
-        });
-    }
-
-    private addValues(currentSum: number, additionalValue: number): number {
-        if (NumericValueUtils.isValueFinite(additionalValue)) {
-            if (!NumericValueUtils.isValueFinite(currentSum)) {
-                currentSum = this.defaultValue;
-            }
-
-            return currentSum + additionalValue;
-        } else {
-            return currentSum;
-        }
-    }
-
-    private countValues(currentSum: number, currentValue: number): number {
-        if (NumericValueUtils.isValueFinite(currentValue)) {
-            if (!NumericValueUtils.isValueFinite(currentSum)) {
-                currentSum = this.defaultValue;
-            }
-
-            return currentSum + 1;
-        } else {
-            return currentSum;
-        }
-    }
-
-    private replaceTheFilledSeriesAtFirstLevel(
-        dataRepresentation: DataRepresentation,
-        defaultCategoryName: string
-    ): void {
-        if (dataRepresentation.seriesDeep <= 1) {
-            return;
-        }
-
-        const seriesArray: DataRepresentationSeries[] = [];
-
-        dataRepresentation.seriesArray
-            .forEach((series: DataRepresentationSeries, seriesIndex: number) => {
-                if (series && series.hasBeenFilled && series.level === 0) {
-                    delete dataRepresentation.series[series.name];
-
-                    if (defaultCategoryName) {
-                        const newSeries: DataRepresentationSeries = this.deepSeriesCreation(
-                            defaultCategoryName,
-                            dataRepresentation.series,
-                            seriesArray,
-                            dataRepresentation.seriesDeep - 1,
-                            0
-                        );
-
-                        series.level = newSeries.level + 1;
-
-                        newSeries.childrenSet[series.name] = series;
-                        newSeries.children.push(series);
-                    }
-                } else {
-                    seriesArray.push(series);
-                }
-            });
-
-        dataRepresentation.seriesArray = seriesArray;
-    }
-
-    private deepSeriesCreation(
-        name: string,
-        seriesSet: DataRepresentationSeriesSet,
-        seriesArray: DataRepresentationSeries[],
-        deep: number = 0,
-        level: number = 0
-    ): DataRepresentationSeries {
-
-        const series: DataRepresentationSeries = this.createOrGetExistingSeries(
-            name,
-            seriesSet,
-            seriesArray,
-            level,
-            undefined,
-            undefined,
-        );
-
-        const currentDeep: number = deep - 1;
-
-        if (currentDeep > 0) {
-            return this.deepSeriesCreation(name, series.childrenSet, series.children, currentDeep, level + 1);
-        }
-
-        return series;
-    }
-
-    private parseCategorySet(
-        columnValues: ColumnValues,
-        defaultCategoryName: string
-    ): CategoryHyperlink[] {
-        const categorySet: CategoryHyperlink[] = [];
-
-        if (columnValues[categoryColumn.name]) {
-            const hyperlinks: string[] = this.getValuesByColumnName(columnValues, hyperlinkColumn.name);
-            const sortOrders: DataRepresentationAxisValueType[] = this.getValuesByColumnName(columnValues, sortOrderColumn.name);
-            const images: string[] = this.getValuesByColumnName(columnValues, imageColumn.name);
-
-            Object.keys(columnValues[categoryColumn.name]).forEach((categoryName: string, categoryIndex: number) => {
-                const category: ColumnValue = columnValues[categoryColumn.name][categoryName];
-                const hyperlink: string = hyperlinks[categoryIndex] || null;
-                const sortOrder: DataRepresentationAxisValueType = sortOrders[categoryIndex] || null;
-                const image: string = images[categoryIndex] || null;
-
-                if (category && category.value !== undefined && category.value !== null) {
-                    categorySet.push({
-                        image,
-                        sortOrder,
-                        hyperlink,
-                        name: category.value,
-                    });
-                } else if (category
-                    && categorySet[0] !== undefined
-                    && categorySet[0] !== null
-                    && defaultCategoryName
-                ) {
-                    categorySet.push({
-                        image,
-                        sortOrder,
-                        hyperlink,
-                        name: defaultCategoryName,
-                    });
-                }
-            });
-        }
-
-        return categorySet.reverse();
-    }
-
-    private getValuesByColumnName<T>(
-        columnValues: ColumnValues,
-        name: string
-    ): T[] {
-        const column = columnValues[name];
-
-        if (!column) {
-            return [];
-        }
-
-        return Object.keys(column)
-            .map((columnName: string) => {
-                const columnValue: ColumnValue = column[columnName];
-
-                return (columnValue && columnValue.value) || null;
-            });
-    }
-
-    private applyCategorySet(
-        categorySet: CategoryHyperlink[],
-        seriesSet: DataRepresentationSeriesSet,
-        seriesArray: DataRepresentationSeries[],
-        misplacedCategory?: DataRepresentationSeries,
-        shouldUseSeriesIndexAsDefaultSortOrder: boolean = false,
-        level: number = 0
-    ): void {
-        const category: CategoryHyperlink = categorySet && categorySet[0];
-
-        if (!category) {
-            return;
-        }
-
-        let currentMisplacedCategory: DataRepresentationSeries = misplacedCategory;
-
-        if (level === 0) {
-            const metricName: CategoryHyperlink = categorySet
-                && categorySet.length
-                && categorySet[categorySet.length - 1];
-
-            if (metricName
-                && metricName.name !== null
-                && metricName.name !== undefined
-                && seriesSet[metricName.name]
-                && seriesSet[metricName.name].hasBeenFilled
-                && category
-                && category.name !== null
-                && category.name !== undefined
-            ) {
-                if (category.name !== metricName.name) {
-                    currentMisplacedCategory = seriesSet[metricName.name];
-
-                    delete seriesSet[metricName.name];
-
-                    const seriesIndex: number = seriesArray.indexOf(currentMisplacedCategory);
-
-                    if (seriesIndex > -1) {
-                        seriesArray.splice(seriesIndex, 1);
-                    }
-                } else {
-                    const existingSeries: DataRepresentationSeries = seriesSet[metricName.name];
-
-                    existingSeries.hyperlink = existingSeries.hyperlink || category.hyperlink;
-                }
-            }
-        }
-
-        const series: DataRepresentationSeries = misplacedCategory && misplacedCategory.name === category.name
-            ? this.applyExistingSeries(
-                category.name,
-                seriesSet,
-                seriesArray,
-                currentMisplacedCategory,
-                level,
-                category.hyperlink,
-                category.sortOrder,
-                category.image,
-            )
-            : this.createOrGetExistingSeries(
-                category.name,
-                seriesSet,
-                seriesArray,
-                level,
-                category.hyperlink,
-                category.sortOrder,
-                category.image,
-                shouldUseSeriesIndexAsDefaultSortOrder
-            );
-
-        this.applyCategorySet(
-            categorySet.slice(1),
-            series.childrenSet,
-            series.children,
-            currentMisplacedCategory,
-            shouldUseSeriesIndexAsDefaultSortOrder,
-            level + 1);
-    }
-
-    private createOrGetExistingSeries(
-        name: string,
-        seriesSet: DataRepresentationSeriesSet,
-        seriesArray: DataRepresentationSeries[],
-        level: number = 0,
-        hyperlink?: string,
-        sortOrder?: DataRepresentationAxisValueType,
-        image?: string,
-        shouldUseSeriesIndexAsDefaultSortOrder?: boolean
-    ): DataRepresentationSeries {
-        const existingSeries: DataRepresentationSeries = seriesSet[name];
-
-        if (existingSeries) {
-            this.updateSeriesProperties(
-                existingSeries,
-                level,
-                hyperlink,
-                sortOrder,
-                image
-            );
-
-            return existingSeries;
-        }
-
-        const currentSortOrder: DataRepresentationAxisValueType = NumericValueUtils.isValueDefined(sortOrder)
-            ? sortOrder
-            : shouldUseSeriesIndexAsDefaultSortOrder
-                ? seriesArray.length
-                : name;
-
-        const series: DataRepresentationSeries = {
-            name,
-            image,
-            level,
-            hyperlink,
-            children: [],
-            axisValues: [],
-            childrenSet: {},
-            sortOrder: currentSortOrder,
-        };
-
-        seriesSet[name] = series;
-        seriesArray.push(series);
-
-        return series;
-    }
-
-    private applyExistingSeries(
-        name: string,
-        seriesSet: DataRepresentationSeriesSet,
-        seriesArray: DataRepresentationSeries[],
-        series: DataRepresentationSeries,
-        level: number = 0,
-        hyperlink?: string,
-        sortOrder?: DataRepresentationAxisValueType,
-        image?: string,
-    ): DataRepresentationSeries {
-        this.updateSeriesProperties(
-            series,
-            level,
-            hyperlink,
-            sortOrder,
-            image
-        );
-
-        if (seriesSet[name]) {
-            return seriesSet[name];
-        }
-
-        seriesSet[name] = series;
-        seriesArray.push(series);
-
-        return series;
-    }
-
-    private updateSeriesProperties(
-        series: DataRepresentationSeries,
-        level: number = 0,
-        hyperlink?: string,
-        sortOrder?: DataRepresentationAxisValueType,
-        image?: string,
-    ): void {
-        series.hyperlink = hyperlink || series.hyperlink;
-        series.image = image || series.image;
-
-        if (NumericValueUtils.isValueDefined(sortOrder)) {
-            series.sortOrder = sortOrder;
-        }
-
-        if (NumericValueUtils.isValueFinite(level)) {
-            series.level = level;
-        }
-    }
-
-    private getColumns(
-        columns: DataViewMetadataColumn[],
-        visualColumns: VisualDataColumn[]
-    ): DataRepresentationColumns {
-        const columnSet = {};
-
-        visualColumns.forEach((column: VisualDataColumn) => {
-            const columnMetadata: DataViewMetadataColumn = this.getColumnByRoleName(columns, column.name);
-
-            if (columnMetadata) {
-                columnSet[column.name] = columnMetadata;
-            }
-        });
-
-        return columnSet;
-    }
-
-    protected getDefaultData(): DataRepresentation {
+    protected getDefaultData(): IDataRepresentation {
         return {
+            columns: {},
             isDataColumnBasedModel: this.isDataColumnBasedModel,
             series: {},
             seriesArray: [],
-            columns: {},
             seriesDeep: 0,
             type: DataRepresentationTypeEnum.None,
             y: {
+                max: undefined,
                 min: undefined,
-                max: undefined
             },
         };
     }
 
-    protected isDataViewValid(dataView: DataView): boolean {
+    protected isDataViewValid(dataView: powerbi.DataView): boolean {
         return !!(dataView
             && dataView.table
             && dataView.table.rows
-            && dataView.table.columns);
+            && dataView.table.columns
+        );
     }
 
-    protected getColumnByRoleName(columns: DataViewMetadataColumn[], roleName: string): DataViewMetadataColumn {
-        for (let column of columns) {
+    protected getColumnByRoleName(
+        columns: powerbi.DataViewMetadataColumn[],
+        roleName: string,
+    ): powerbi.DataViewMetadataColumn {
+        for (const column of columns) {
             if (column.roles && column.roles[roleName]) {
                 return column;
             }
@@ -706,7 +352,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         return undefined;
     }
 
-    protected getTypeOfColumn(column: DataViewMetadataColumn): DataRepresentationTypeEnum {
+    protected getTypeOfColumn(column: powerbi.DataViewMetadataColumn): DataRepresentationTypeEnum {
         if (column) {
             if (column.type.dateTime) {
                 return DataRepresentationTypeEnum.DateType;
@@ -720,11 +366,14 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         return DataRepresentationTypeEnum.None;
     }
 
-    protected getColumnValues(columns: DataViewMetadataColumn[], row: DataViewTableRow): ColumnValues {
-        const columnValues: ColumnValues = {};
+    protected getColumnValues(
+        columns: powerbi.DataViewMetadataColumn[],
+        row: powerbi.DataViewTableRow,
+    ): IColumnValues {
+        const columnValues: IColumnValues = {};
 
         row.forEach((value: any, valueIndex: number) => {
-            const column: DataViewMetadataColumn = columns[valueIndex];
+            const column: powerbi.DataViewMetadataColumn = columns[valueIndex];
 
             if (columns[valueIndex].roles) {
                 Object.keys(columns[valueIndex].roles)
@@ -735,7 +384,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
                         if (!columnValues[roleName][column.displayName]) {
                             columnValues[roleName][column.displayName] = {
-                                format: column.format
+                                format: column.format,
                             };
                         }
 
@@ -773,115 +422,10 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         return scale.domain(values, type);
     }
 
-    protected getSeriesByDisplayName(
-        seriesSet: DataRepresentationSeriesSet,
-        seriesArray: DataRepresentationSeries[],
-        levels: string[],
-        displayName: string,
-        identities: DataViewScopeIdentity[],
-        identityIndex: number,
-        identityQueryName: string,
-        rows: DataViewTableRow[],
-        defaultSettings: Settings,
-        settingsState: SettingsState,
-        type: DataRepresentationTypeEnum,
-        viewMode: ViewMode
-    ): DataRepresentationSeries {
-        let series: DataRepresentationSeries = this.deepSearchSeries(
-            seriesSet,
-            levels,
-        );
-
-        if (!series) {
-            series = this.createOrGetExistingSeries(
-                displayName,
-                seriesSet,
-                seriesArray,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                !defaultSettings.table.isDefaultSortOrderByName(),
-            );
-        }
-
-        if (series && !series.hasBeenFilled) {
-            const selectionId: SelectionId = SelectionId.createWithIdAndMeasure(
-                identities && identities[identityIndex],
-                identityQueryName
-            );
-
-            const settings: SeriesSettings = SeriesSettings.getDefault() as SeriesSettings;
-
-            for (const propertyName in settings) {
-                const descriptor: SettingsPropertyBase = settings[propertyName];
-                const defaultDescriptor: SettingsPropertyBase = defaultSettings[propertyName];
-
-                if (descriptor && descriptor.applyDefault && defaultDescriptor) {
-                    descriptor.applyDefault(defaultDescriptor);
-                }
-            }
-
-            const parsedObjects: DataViewObjects = (rows
-                && rows[identityIndex]
-                && rows[identityIndex].objects
-                && rows[identityIndex].objects[0])
-                || {};
-
-            const serializedObjects: DataViewObjects = settingsState.getSeriesSettings(series.name)
-                || parsedObjects
-                || {};
-
-            const shouldUseSerializedSeriesSettings: boolean = viewMode === ViewMode.View
-                || defaultSettings.table.keepSeriesSettingOnFilteringInEditMode;
-
-            const mergedObjects: DataViewObjects = shouldUseSerializedSeriesSettings
-                ? { ...serializedObjects }
-                : { ...parsedObjects };
-
-            settings.parseObjects(mergedObjects);
-
-            settings.asOfDate.parseByType(type);
-
-            settingsState.setSeriesSettings(
-                series.name,
-                settings
-            );
-
-            series.settings = settings;
-            series.selectionId = selectionId;
-            series.axisValue = undefined;
-            series.name = displayName;
-            series.points = [];
-            series.varianceSet = [];
-            series.kpiIndicatorIndex = NaN;
-            series.kpiIndicatorValue = NaN;
-            series.currentValue = NaN;
-            series.comparisonValue = NaN;
-            series.secondComparisonValue = NaN;
-            series.secondKPIIndicatorValue = NaN;
-
-            series.x = this.getDefaultAxis();
-            series.y = this.getDefaultAxis();
-
-            series.hasBeenFilled = true;
-        }
-
-        return series;
-    }
-
-    private getDefaultAxis(): DataRepresentationAxisWithScale {
-        return {
-            min: undefined,
-            max: undefined,
-            scale: DataRepresentationScale.create(),
-        };
-    }
-
     protected applyXArguments(
-        series: DataRepresentationSeries,
+        series: IDataRepresentationSeries,
         axisValue: DataRepresentationAxisValueType,
-        type: DataRepresentationTypeEnum
+        type: DataRepresentationTypeEnum,
     ): void {
         if (series.x.min === undefined) {
             series.x.min = axisValue;
@@ -923,8 +467,8 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
     }
 
     protected updateXScale(
-        series: DataRepresentationSeries,
-        type: DataRepresentationTypeEnum
+        series: IDataRepresentationSeries,
+        type: DataRepresentationTypeEnum,
     ): void {
         series.x.scale = this.getXAxisScale(
             series.x.scale,
@@ -935,8 +479,8 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
     }
 
     protected updateYScale(
-        series: DataRepresentationSeries,
-        commonAxis: DataRepresentationAxis
+        series: IDataRepresentationSeries,
+        commonAxis: IDataRepresentationAxis,
     ): void {
         if (series.settings && series.settings.sparklineSettings) {
             if (series.settings.sparklineSettings.shouldUseCommonScale) {
@@ -955,45 +499,34 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
 
         series.y.scale.domain(
             [series.y.min, series.y.max],
-            DataRepresentationTypeEnum.NumberType
+            DataRepresentationTypeEnum.NumberType,
         );
     }
 
-    public static applyYArguments(
-        axis: DataRepresentationAxis,
-        value: number
-    ): void {
-        if (!NumericValueUtils.isValueFinite(value)) {
-            return;
-        }
-
-        if (axis.min === undefined) {
-            axis.min = value;
-        }
-
-        if (axis.max === undefined) {
-            axis.max = value;
-        }
-
-        if (value < axis.min) {
-            axis.min = value;
-        }
-
-        if (value > axis.max) {
-            axis.max = value;
-        }
+    protected getPointSet(
+        name: string,
+        color: string,
+        thickness: number,
+        lineStyle: LineStyle,
+        settings: NumberSettingsBase,
+        isShown: boolean,
+    ): IDataRepresentationPointSet {
+        return {
+            color,
+            colors: [],
+            isShown,
+            kpiIndicatorIndexes: [],
+            lineStyle,
+            max: undefined,
+            min: undefined,
+            name,
+            points: [],
+            settings,
+            thickness,
+        };
     }
 
-    public static applyYArgumentsToAxisSet(
-        axisSet: DataRepresentationAxis[],
-        value: number
-    ): void {
-        axisSet.forEach((axis: DataRepresentationAxis) => {
-            this.applyYArguments(axis, value);
-        });
-    }
-
-    protected applyDataToCurrentSeries(data: CurrentSeriesData): void {
+    protected applyDataToCurrentSeries(data: ICurrentSeriesData): void {
         if (!data) {
             return;
         }
@@ -1046,7 +579,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                 series.settings.sparklineSettings.actualColor,
                 series.settings.sparklineSettings.actualThickness,
                 series.settings.sparklineSettings.actualLineStyle,
-                dataRepresentation.y
+                dataRepresentation.y,
             );
 
             series.comparisonValue = NumericValueUtils.isValueValid(comparisonValue)
@@ -1064,7 +597,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                     series.settings.sparklineSettings.targetColor,
                     series.settings.sparklineSettings.targetThickness,
                     series.settings.sparklineSettings.targetLineStyle,
-                    dataRepresentation.y
+                    dataRepresentation.y,
                 );
             }
 
@@ -1083,7 +616,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                     series.settings.sparklineSettings.secondComparisonValueColor,
                     series.settings.sparklineSettings.secondComparisonValueThickness,
                     series.settings.sparklineSettings.secondComparisonValueLineStyle,
-                    dataRepresentation.y
+                    dataRepresentation.y,
                 );
             }
 
@@ -1125,24 +658,24 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                 isKPIIndicatorValueSpecified,
                 kpiIndicatorValue,
                 series.currentValue,
-                series.comparisonValue
+                series.comparisonValue,
             );
 
             series.secondKPIIndicatorValue = this.getVariance(
                 isSecondKPIIndicatorValueSpecified,
                 secondKPIIndicatorValue,
                 series.currentValue,
-                series.secondComparisonValue
+                series.secondComparisonValue,
             );
 
             series.varianceSet[0] = this.updateVariance(
                 series.varianceSet[0],
-                series.kpiIndicatorValue
+                series.kpiIndicatorValue,
             );
 
             series.varianceSet[1] = this.updateVariance(
                 series.varianceSet[1],
-                series.secondKPIIndicatorValue
+                series.secondKPIIndicatorValue,
             );
         }
 
@@ -1151,6 +684,556 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         settings.kpiIndicatorValue.setColumnFormat(kpiIndicatorValueFormat);
         settings.secondComparisonValue.setColumnFormat(secondComparisonValueFormat);
         settings.secondKPIIndicatorValue.setColumnFormat(secondKPIIndicatorValueFormat);
+    }
+
+    protected getSeriesByDisplayName(
+        seriesSet: IDataRepresentationSeriesSet,
+        seriesArray: IDataRepresentationSeries[],
+        levels: string[],
+        displayName: string,
+        identities: powerbi.data.DataRepetitionSelector[],
+        identityIndex: number,
+        identityQueryName: string,
+        rows: powerbi.DataViewTableRow[],
+        defaultSettings: Settings,
+        settingsState: SettingsState,
+        type: DataRepresentationTypeEnum,
+        viewMode: powerbi.ViewMode,
+    ): IDataRepresentationSeries {
+        let series: IDataRepresentationSeries = this.deepSearchSeries(
+            seriesSet,
+            levels,
+        );
+
+        if (!series) {
+            series = this.createOrGetExistingSeries(
+                displayName,
+                seriesSet,
+                seriesArray,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                !defaultSettings.table.isDefaultSortOrderByName(),
+            );
+        }
+
+        if (series && !series.hasBeenFilled) {
+            const selectionId: powerbi.visuals.ISelectionId = null; /* SelectionId.createWithIdAndMeasure(
+                identities && identities[identityIndex],
+                identityQueryName
+            );*/
+
+            const settings: SeriesSettings = SeriesSettings.getDefault() as SeriesSettings;
+
+            for (const propertyName in settings) {
+                const descriptor: SettingsPropertyBase = settings[propertyName];
+                const defaultDescriptor: SettingsPropertyBase = defaultSettings[propertyName];
+
+                if (descriptor && descriptor.applyDefault && defaultDescriptor) {
+                    descriptor.applyDefault(defaultDescriptor);
+                }
+            }
+
+            const parsedObjects: powerbi.DataViewObjects = (rows
+                && rows[identityIndex]
+                && rows[identityIndex].objects
+                && rows[identityIndex].objects[0])
+                || {};
+
+            const serializedObjects: powerbi.DataViewObjects = settingsState.getSeriesSettings(series.name)
+                || parsedObjects
+                || {};
+
+            const shouldUseSerializedSeriesSettings: boolean = viewMode === powerbi.ViewMode.View
+                || defaultSettings.table.keepSeriesSettingOnFilteringInEditMode;
+
+            const mergedObjects: powerbi.DataViewObjects = shouldUseSerializedSeriesSettings
+                ? { ...serializedObjects }
+                : { ...parsedObjects };
+
+            settings.parseObjects(mergedObjects);
+
+            settings.asOfDate.parseByType(type);
+
+            settingsState.setSeriesSettings(
+                series.name,
+                settings,
+            );
+
+            series.settings = settings;
+            series.selectionId = selectionId;
+            series.axisValue = undefined;
+            series.name = displayName;
+            series.points = [];
+            series.varianceSet = [];
+            series.kpiIndicatorIndex = NaN;
+            series.kpiIndicatorValue = NaN;
+            series.currentValue = NaN;
+            series.comparisonValue = NaN;
+            series.secondComparisonValue = NaN;
+            series.secondKPIIndicatorValue = NaN;
+
+            series.x = this.getDefaultAxis();
+            series.y = this.getDefaultAxis();
+
+            series.hasBeenFilled = true;
+        }
+
+        return series;
+    }
+
+    private postProcess(
+        seriesArray: IDataRepresentationSeries[],
+        subtotalSettings: SubtotalSettings,
+        tableStyle: TableStyle,
+        settings: Settings,
+        type: DataRepresentationTypeEnum,
+        baseAxis: IDataRepresentationAxis,
+    ): IDataRepresentationSeries[] {
+        let filteredSeries: IDataRepresentationSeries[] = [];
+        let areThereAnyFilledSeries: boolean = false;
+
+        seriesArray.forEach((series: IDataRepresentationSeries, seriesIndex: number) => {
+            if (series.hasBeenFilled) {
+                this.updateYScale(series, baseAxis);
+
+                this.updateXScale(
+                    series,
+                    type,
+                );
+
+                areThereAnyFilledSeries = true;
+
+                if (series.settings && series.settings.metricName) {
+                    if (series.hyperlink) {
+                        series.settings.metricName.hideCommonProperties();
+                        settings.metricName.updateHyperlinkVisibility(true);
+                    }
+
+                    if (series.image) {
+                        settings.metricName.updateImageVisibility(true);
+                    }
+                }
+
+                filteredSeries.push(series);
+            } else {
+                series.children = this.postProcess(
+                    series.children,
+                    subtotalSettings,
+                    tableStyle,
+                    settings,
+                    type,
+                    baseAxis,
+                );
+
+                if (subtotalSettings.show) {
+                    this.countSubtotal(series, subtotalSettings.type);
+                }
+
+                if (series.children && series.children.length) {
+                    filteredSeries.push(series);
+                }
+            }
+        });
+
+        filteredSeries = this.seriesUtils.sortSeriesBySortOrder(filteredSeries, settings.table.sortOrder);
+
+        if (areThereAnyFilledSeries) {
+            filteredSeries.forEach((series: IDataRepresentationSeries) => {
+                if (series.hasBeenFilled) {
+                    if ((tableStyle === TableStyle.AlternatingMetrics || tableStyle === TableStyle.BoldHeaderAndAlternatingMetrics)
+                        && this.amountOfFilledSeries % 2
+                    ) {
+                        series.settings.applyAlternativeBackgroundColor();
+                    }
+
+                    this.amountOfFilledSeries++;
+                }
+            });
+        }
+
+        return filteredSeries;
+    }
+
+    private countSubtotal(series: IDataRepresentationSeries, type: SubtotalType): void {
+        if (!series
+            || !series.children
+            || !series.children.length
+        ) {
+            return;
+        }
+
+        series.children.forEach((childSeries: IDataRepresentationSeries) => {
+            const {
+                currentValue,
+                comparisonValue,
+                secondComparisonValue,
+            } = childSeries;
+
+            switch (type) {
+                case SubtotalType.CountOfItems: {
+                    series.currentValue = this.countValues(series.currentValue, currentValue);
+                    series.comparisonValue = this.countValues(series.comparisonValue, comparisonValue);
+                    series.secondComparisonValue = this.countValues(series.secondComparisonValue, secondComparisonValue);
+
+                    break;
+                }
+                case SubtotalType.SumOfItems:
+                default: {
+                    series.currentValue = this.addValues(series.currentValue, currentValue);
+                    series.comparisonValue = this.addValues(series.comparisonValue, comparisonValue);
+                    series.secondComparisonValue = this.addValues(series.secondComparisonValue, secondComparisonValue);
+
+                    break;
+                }
+            }
+        });
+    }
+
+    private addValues(currentSum: number, additionalValue: number): number {
+        if (NumericValueUtils.isValueFinite(additionalValue)) {
+            if (!NumericValueUtils.isValueFinite(currentSum)) {
+                currentSum = this.defaultValue;
+            }
+
+            return currentSum + additionalValue;
+        } else {
+            return currentSum;
+        }
+    }
+
+    private countValues(currentSum: number, currentValue: number): number {
+        if (NumericValueUtils.isValueFinite(currentValue)) {
+            if (!NumericValueUtils.isValueFinite(currentSum)) {
+                currentSum = this.defaultValue;
+            }
+
+            return currentSum + 1;
+        } else {
+            return currentSum;
+        }
+    }
+
+    private replaceTheFilledSeriesAtFirstLevel(
+        dataRepresentation: IDataRepresentation,
+        defaultCategoryName: string,
+    ): void {
+        if (dataRepresentation.seriesDeep <= 1) {
+            return;
+        }
+
+        const seriesArray: IDataRepresentationSeries[] = [];
+
+        dataRepresentation.seriesArray
+            .forEach((series: IDataRepresentationSeries, seriesIndex: number) => {
+                if (series && series.hasBeenFilled && series.level === 0) {
+                    delete dataRepresentation.series[series.name];
+
+                    if (defaultCategoryName) {
+                        const newSeries: IDataRepresentationSeries = this.deepSeriesCreation(
+                            defaultCategoryName,
+                            dataRepresentation.series,
+                            seriesArray,
+                            dataRepresentation.seriesDeep - 1,
+                            0,
+                        );
+
+                        series.level = newSeries.level + 1;
+
+                        newSeries.childrenSet[series.name] = series;
+                        newSeries.children.push(series);
+                    }
+                } else {
+                    seriesArray.push(series);
+                }
+            });
+
+        dataRepresentation.seriesArray = seriesArray;
+    }
+
+    private deepSeriesCreation(
+        name: string,
+        seriesSet: IDataRepresentationSeriesSet,
+        seriesArray: IDataRepresentationSeries[],
+        deep: number = 0,
+        level: number = 0,
+    ): IDataRepresentationSeries {
+
+        const series: IDataRepresentationSeries = this.createOrGetExistingSeries(
+            name,
+            seriesSet,
+            seriesArray,
+            level,
+            undefined,
+            undefined,
+        );
+
+        const currentDeep: number = deep - 1;
+
+        if (currentDeep > 0) {
+            return this.deepSeriesCreation(name, series.childrenSet, series.children, currentDeep, level + 1);
+        }
+
+        return series;
+    }
+
+    private parseCategorySet(
+        columnValues: IColumnValues,
+        defaultCategoryName: string,
+    ): ICategoryHyperlink[] {
+        const categorySet: ICategoryHyperlink[] = [];
+
+        if (columnValues[categoryColumn.name]) {
+            const hyperlinks: string[] = this.getValuesByColumnName(columnValues, hyperlinkColumn.name);
+            const sortOrders: DataRepresentationAxisValueType[] = this.getValuesByColumnName(columnValues, sortOrderColumn.name);
+            const images: string[] = this.getValuesByColumnName(columnValues, imageColumn.name);
+
+            Object.keys(columnValues[categoryColumn.name]).forEach((categoryName: string, categoryIndex: number) => {
+                const category: IColumnValue = columnValues[categoryColumn.name][categoryName];
+                const hyperlink: string = hyperlinks[categoryIndex] || null;
+                const sortOrder: DataRepresentationAxisValueType = sortOrders[categoryIndex] || null;
+                const image: string = images[categoryIndex] || null;
+
+                if (category && category.value !== undefined && category.value !== null) {
+                    categorySet.push({
+                        hyperlink,
+                        image,
+                        name: category.value,
+                        sortOrder,
+                    });
+                } else if (category
+                    && categorySet[0] !== undefined
+                    && categorySet[0] !== null
+                    && defaultCategoryName
+                ) {
+                    categorySet.push({
+                        hyperlink,
+                        image,
+                        name: defaultCategoryName,
+                        sortOrder,
+                    });
+                }
+            });
+        }
+
+        return categorySet.reverse();
+    }
+
+    private getValuesByColumnName<T>(
+        columnValues: IColumnValues,
+        name: string,
+    ): T[] {
+        const column = columnValues[name];
+
+        if (!column) {
+            return [];
+        }
+
+        return Object.keys(column)
+            .map((columnName: string) => {
+                const columnValue: IColumnValue = column[columnName];
+
+                return (columnValue && columnValue.value) || null;
+            });
+    }
+
+    private applyCategorySet(
+        categorySet: ICategoryHyperlink[],
+        seriesSet: IDataRepresentationSeriesSet,
+        seriesArray: IDataRepresentationSeries[],
+        misplacedCategory?: IDataRepresentationSeries,
+        shouldUseSeriesIndexAsDefaultSortOrder: boolean = false,
+        level: number = 0,
+    ): void {
+        const category: ICategoryHyperlink = categorySet && categorySet[0];
+
+        if (!category) {
+            return;
+        }
+
+        let currentMisplacedCategory: IDataRepresentationSeries = misplacedCategory;
+
+        if (level === 0) {
+            const metricName: ICategoryHyperlink = categorySet
+                && categorySet.length
+                && categorySet[categorySet.length - 1];
+
+            if (metricName
+                && metricName.name !== null
+                && metricName.name !== undefined
+                && seriesSet[metricName.name]
+                && seriesSet[metricName.name].hasBeenFilled
+                && category
+                && category.name !== null
+                && category.name !== undefined
+            ) {
+                if (category.name !== metricName.name) {
+                    currentMisplacedCategory = seriesSet[metricName.name];
+
+                    delete seriesSet[metricName.name];
+
+                    const seriesIndex: number = seriesArray.indexOf(currentMisplacedCategory);
+
+                    if (seriesIndex > -1) {
+                        seriesArray.splice(seriesIndex, 1);
+                    }
+                } else {
+                    const existingSeries: IDataRepresentationSeries = seriesSet[metricName.name];
+
+                    existingSeries.hyperlink = existingSeries.hyperlink || category.hyperlink;
+                }
+            }
+        }
+
+        const series: IDataRepresentationSeries = misplacedCategory && misplacedCategory.name === category.name
+            ? this.applyExistingSeries(
+                category.name,
+                seriesSet,
+                seriesArray,
+                currentMisplacedCategory,
+                level,
+                category.hyperlink,
+                category.sortOrder,
+                category.image,
+            )
+            : this.createOrGetExistingSeries(
+                category.name,
+                seriesSet,
+                seriesArray,
+                level,
+                category.hyperlink,
+                category.sortOrder,
+                category.image,
+                shouldUseSeriesIndexAsDefaultSortOrder,
+            );
+
+        this.applyCategorySet(
+            categorySet.slice(1),
+            series.childrenSet,
+            series.children,
+            currentMisplacedCategory,
+            shouldUseSeriesIndexAsDefaultSortOrder,
+            level + 1);
+    }
+
+    private createOrGetExistingSeries(
+        name: string,
+        seriesSet: IDataRepresentationSeriesSet,
+        seriesArray: IDataRepresentationSeries[],
+        level: number = 0,
+        hyperlink?: string,
+        sortOrder?: DataRepresentationAxisValueType,
+        image?: string,
+        shouldUseSeriesIndexAsDefaultSortOrder?: boolean,
+    ): IDataRepresentationSeries {
+        const existingSeries: IDataRepresentationSeries = seriesSet[name];
+
+        if (existingSeries) {
+            this.updateSeriesProperties(
+                existingSeries,
+                level,
+                hyperlink,
+                sortOrder,
+                image,
+            );
+
+            return existingSeries;
+        }
+
+        const currentSortOrder: DataRepresentationAxisValueType = NumericValueUtils.isValueDefined(sortOrder)
+            ? sortOrder
+            : shouldUseSeriesIndexAsDefaultSortOrder
+                ? seriesArray.length
+                : name;
+
+        const series: IDataRepresentationSeries = {
+            axisValues: [],
+            children: [],
+            childrenSet: {},
+            hyperlink,
+            image,
+            level,
+            name,
+            sortOrder: currentSortOrder,
+        };
+
+        seriesSet[name] = series;
+        seriesArray.push(series);
+
+        return series;
+    }
+
+    private applyExistingSeries(
+        name: string,
+        seriesSet: IDataRepresentationSeriesSet,
+        seriesArray: IDataRepresentationSeries[],
+        series: IDataRepresentationSeries,
+        level: number = 0,
+        hyperlink?: string,
+        sortOrder?: DataRepresentationAxisValueType,
+        image?: string,
+    ): IDataRepresentationSeries {
+        this.updateSeriesProperties(
+            series,
+            level,
+            hyperlink,
+            sortOrder,
+            image,
+        );
+
+        if (seriesSet[name]) {
+            return seriesSet[name];
+        }
+
+        seriesSet[name] = series;
+        seriesArray.push(series);
+
+        return series;
+    }
+
+    private updateSeriesProperties(
+        series: IDataRepresentationSeries,
+        level: number = 0,
+        hyperlink?: string,
+        sortOrder?: DataRepresentationAxisValueType,
+        image?: string,
+    ): void {
+        series.hyperlink = hyperlink || series.hyperlink;
+        series.image = image || series.image;
+
+        if (NumericValueUtils.isValueDefined(sortOrder)) {
+            series.sortOrder = sortOrder;
+        }
+
+        if (NumericValueUtils.isValueFinite(level)) {
+            series.level = level;
+        }
+    }
+
+    private getColumns(
+        columns: powerbi.DataViewMetadataColumn[],
+        visualColumns: IVisualDataColumn[],
+    ): IDataRepresentationColumns {
+        const columnSet = {};
+
+        visualColumns.forEach((column: IVisualDataColumn) => {
+            const columnMetadata: powerbi.DataViewMetadataColumn = this.getColumnByRoleName(columns, column.name);
+
+            if (columnMetadata) {
+                columnSet[column.name] = columnMetadata;
+            }
+        });
+
+        return columnSet;
+    }
+
+    private getDefaultAxis(): IDataRepresentationAxisWithScale {
+        return {
+            max: undefined,
+            min: undefined,
+            scale: DataRepresentationScale.create(),
+        };
     }
 
     private updateVariance(variances: number[], variance: number): number[] {
@@ -1165,7 +1248,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         isKPIIndicatorValueSpecified: boolean,
         kpiIndicatorValue: number,
         currentValue: number,
-        comparisonValue: number
+        comparisonValue: number,
     ): number {
         if (isKPIIndicatorValueSpecified && NumericValueUtils.isValueFinite(kpiIndicatorValue)) {
             return kpiIndicatorValue;
@@ -1177,7 +1260,7 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
     }
 
     private updatePointSet(
-        pointSet: DataRepresentationPointSet,
+        pointSet: IDataRepresentationPointSet,
         name: string,
         settings: NumberSettingsBase,
         isShown: boolean,
@@ -1186,16 +1269,16 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
         color: string,
         thickness: number,
         lineStyle: LineStyle,
-        y: DataRepresentationAxis
-    ): DataRepresentationPointSet {
-        const currentPointSet: DataRepresentationPointSet = pointSet
+        y: IDataRepresentationAxis,
+    ): IDataRepresentationPointSet {
+        const currentPointSet: IDataRepresentationPointSet = pointSet
             || this.getPointSet(
                 name,
                 color,
                 thickness,
                 lineStyle,
                 settings,
-                isShown
+                isShown,
             );
 
         currentPointSet.points.push({
@@ -1208,32 +1291,9 @@ export abstract class DataConverter implements Converter<DataRepresentation> {
                 currentPointSet,
                 y,
             ],
-            value
+            value,
         );
 
         return currentPointSet;
-    }
-
-    protected getPointSet(
-        name: string,
-        color: string,
-        thickness: number,
-        lineStyle: LineStyle,
-        settings: NumberSettingsBase,
-        isShown: boolean
-    ): DataRepresentationPointSet {
-        return {
-            name,
-            color,
-            settings,
-            isShown,
-            thickness,
-            lineStyle,
-            colors: [],
-            points: [],
-            kpiIndicatorIndexes: [],
-            min: undefined,
-            max: undefined,
-        };
     }
 }
