@@ -24,10 +24,15 @@
  *  THE SOFTWARE.
  */
 
-export interface OnScrollHandler {
-    (xOffset: number, yOffset: number, scrollbarWidth: number, scrollbarHeight: number): void;
-}
+import { IVisualComponentConstructorOptions } from "../../visualComponentConstructorOptions";
 
-export interface ScrollableConstructorOptions extends VisualComponentConstructorOptions {
+export type OnScrollHandler = (
+    xOffset: number,
+    yOffset: number,
+    scrollbarWidth: number,
+    scrollbarHeight: number,
+) => void;
+
+export interface IScrollableConstructorOptions extends IVisualComponentConstructorOptions {
     onScroll?: OnScrollHandler;
 }

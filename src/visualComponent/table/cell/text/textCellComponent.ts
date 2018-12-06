@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,208 +12,215 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import PixelConverter = jsCommon.PixelConverter;
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class TextCellComponent extends CellComponent {
-        private componentClassName: string = "textCellComponent";
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
 
-        private textSelector: ClassAndSelector = createClassAndSelector("textCellComponent_text");
-        private textHyperlinkClassName: string = "textCellComponent_text_hyperlink";
+import { IVisualComponentConstructorOptions } from "../../../visualComponentConstructorOptions";
+import { CellComponent } from "../cellComponent";
 
-        private imageSelector: ClassAndSelector = createClassAndSelector("textCellComponent_image");
+import { ITextCellRenderOptions } from "./textCellRenderOptions";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super(options);
+import { HyperlinkAdapter } from "../../../../hyperlink/hyperlinkAdapter";
+import { FontSettings } from "../../../../settings/descriptors/fontSettings";
 
-            this.element.classed(this.componentClassName, true);
+export class TextCellComponent extends CellComponent {
+    private componentClassName: string = "textCellComponent";
 
-            this.updateSize(this.width, this.height);
-        }
+    private textSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("textCellComponent_text");
+    private textHyperlinkClassName: string = "textCellComponent_text_hyperlink";
 
-        public render(options: TextCellRenderOptions): void {
-            const {
-                fontSettings: {
-                    alignment,
+    private imageSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("textCellComponent_image");
+
+    constructor(options: IVisualComponentConstructorOptions) {
+        super(options);
+
+        this.element.classed(this.componentClassName, true);
+
+        this.updateSize(this.width, this.height);
+    }
+
+    public render(options: ITextCellRenderOptions): void {
+        const {
+            fontSettings: {
+                alignment,
                 backgroundColor,
                 verticalAlignment,
-                },
-                order,
-            } = options;
+            },
+            order,
+        } = options;
 
-            this.updateOrder(order);
+        this.updateOrder(order);
 
-            this.updateBackgroundColor(
-                this.element,
-                backgroundColor
+        this.updateBackgroundColor(
+            this.element,
+            backgroundColor
+        );
+
+        this.updateAlignment(this.element, alignment, verticalAlignment);
+        this.renderElements(options);
+    }
+
+    protected renderImage(options: ITextCellRenderOptions): void {
+        const {
+            image,
+            hyperlink,
+            fontSettings,
+            hyperlinkAdapter,
+        } = options;
+
+        const isImageSpecified: boolean = !!image;
+
+        fontSettings.updateImageVisibility(isImageSpecified);
+
+        const imageSelection: Selection<any, string, any, any> = this.element
+            .selectAll(this.imageSelector.selectorName)
+            .data(isImageSpecified && fontSettings.shouldShowImage
+                ? [image]
+                : [],
             );
 
-            this.updateAlignment(this.element, alignment, verticalAlignment);
-            this.renderElements(options);
-        }
+        imageSelection
+            .exit()
+            .remove();
 
-        protected renderElements(options: TextCellRenderOptions): void {
-            this.applyFontSettings(options.fontSettings);
+        const mergedImageSelection = imageSelection
+            .enter()
+            .append("div")
+            .classed(this.imageSelector.className, true)
+            .merge(imageSelection);
 
-            this.renderImage(options);
-            this.renderText(options);
-        }
+        this.bindHyperlinkHandler(
+            mergedImageSelection,
+            hyperlink,
+            hyperlinkAdapter,
+        );
 
-        private applyFontSettings(fontSettings: FontSettings): void {
-            this.element.style({
-                "font-size": fontSettings
-                    ? PixelConverter.toString(PixelConverter.fromPointToPixel(fontSettings.textFontSize))
-                    : null,
-                "font-family": fontSettings ? fontSettings.fontFamily : null,
-            });
-        }
+        const width: string = fontSettings.imageIconWidth
+            ? pixelConverter.toString(fontSettings.imageIconWidth)
+            : null;
 
-        protected renderImage(options: TextCellRenderOptions): void {
-            const {
-                image,
-                hyperlink,
-                fontSettings,
-                hyperlinkAdapter,
-            } = options;
+        const height: string = fontSettings.imageIconWidth
+            ? pixelConverter.toString(fontSettings.imageIconHeight)
+            : null;
 
-            const isImageSpecified: boolean = !!image;
+        mergedImageSelection
+            .style("background-image", `url(${image})`)
+            .style("width", width)
+            .style("min-width", width)
+            .style("height", height)
+            .style("min-height", height);
+    }
 
-            fontSettings.updateImageVisibility(isImageSpecified);
+    protected renderText(options: ITextCellRenderOptions): void {
+        const {
+            image,
+            value,
+            hyperlink,
+            fontSettings,
+            hyperlinkAdapter,
+        } = options;
 
-            const imageSelection: D3.UpdateSelection = this.element
-                .selectAll(this.imageSelector.selector)
-                .data(isImageSpecified && fontSettings.shouldShowImage
-                    ? [image]
-                    : []
-                );
+        const isHyperlinkSpecified: boolean = !!hyperlink;
 
-            imageSelection
-                .enter()
-                .append("div")
-                .classed(this.imageSelector.class, true);
+        fontSettings.updateHyperlinkVisibility(isHyperlinkSpecified);
 
-            this.bindHyperlinkHandler(
-                imageSelection,
-                hyperlink,
-                hyperlinkAdapter
+        const textSelection: Selection<any, string, any, any> = this.element
+            .selectAll(this.textSelector.selectorName)
+            .data(value !== undefined
+                && value !== null
+                && (fontSettings.shouldShowLabel || (!image && !fontSettings.shouldShowLabel))
+                ? [value]
+                : [],
             );
 
-            const width: string = fontSettings.imageIconWidth
-                ? PixelConverter.toString(fontSettings.imageIconWidth)
-                : null;
+        textSelection
+            .exit()
+            .remove();
 
-            const height: string = fontSettings.imageIconWidth
-                ? PixelConverter.toString(fontSettings.imageIconHeight)
-                : null;
+        const mergedTextSelection = textSelection
+            .enter()
+            .append("div")
+            .classed(this.textSelector.className, true)
+            .merge(textSelection);
 
-            imageSelection
-                .style({
-                    "background-image": `url(${image})`,
-                    width,
-                    "min-width": width,
-                    height,
-                    "min-height": height,
-                });
+        this.bindHyperlinkHandler(
+            mergedTextSelection,
+            hyperlink,
+            hyperlinkAdapter,
+        );
 
-            imageSelection
-                .exit()
-                .remove();
+        mergedTextSelection
+            .text((textValue: string) => textValue)
+            .style("color", fontSettings.getColor(isHyperlinkSpecified))
+            .style("text-decoration", fontSettings.isTextUnderlined(isHyperlinkSpecified)
+                ? "underline"
+                : null,
+            )
+            .classed(this.textHyperlinkClassName, isHyperlinkSpecified)
+            .classed(this.boldClassName, fontSettings && fontSettings.isBold)
+            .classed(this.italicClassName, fontSettings && fontSettings.isItalic);
+
+        this.updateTextWrapping(mergedTextSelection, fontSettings.wrapText);
+    }
+
+    protected bindHyperlinkHandler(
+        element: D3.Selection,
+        hyperlink: string,
+        hyperlinkAdapter: HyperlinkAdapter,
+    ): void {
+        if (!element) {
+            return;
         }
 
-        protected renderText(options: TextCellRenderOptions): void {
-            const {
-                image,
-                value,
-                hyperlink,
-                fontSettings,
-                hyperlinkAdapter,
-            } = options;
-
-            const isHyperlinkSpecified: boolean = !!hyperlink;
-
-            fontSettings.updateHyperlinkVisibility(isHyperlinkSpecified);
-
-            const textSelection: D3.UpdateSelection = this.element
-                .selectAll(this.textSelector.selector)
-                .data(value !== undefined
-                    && value !== null
-                    && (fontSettings.shouldShowLabel || (!image && !fontSettings.shouldShowLabel))
-                    ? [value]
-                    : []
-                );
-
-            textSelection
-                .enter()
-                .append("div")
-                .classed(this.textSelector.class, true);
-
-            this.bindHyperlinkHandler(
-                textSelection,
-                hyperlink,
-                hyperlinkAdapter
+        element
+            .attr({
+                title: hyperlink || null,
+            })
+            .on("click", !!hyperlink
+                ? this.openHyperlink.bind(this, hyperlinkAdapter, hyperlink)
+                : null,
             );
+    }
 
-            textSelection
-                .text((textValue: string) => textValue)
-                .style({
-                    "color": fontSettings.getColor(isHyperlinkSpecified),
-                    "text-decoration": fontSettings.isTextUnderlined(isHyperlinkSpecified)
-                        ? "underline"
-                        : null,
-                })
-                .classed(this.textHyperlinkClassName, isHyperlinkSpecified)
-                .classed(this.boldClassName, fontSettings && fontSettings.isBold)
-                .classed(this.italicClassName, fontSettings && fontSettings.isItalic);
-
-            this.updateTextWrapping(textSelection, fontSettings.wrapText);
-
-            textSelection
-                .exit()
-                .remove();
+    protected openHyperlink(hyperlinkAdapter: HyperlinkAdapter, hyperlink: string): void {
+        if (hyperlinkAdapter) {
+            hyperlinkAdapter.open(hyperlink);
         }
 
-        protected bindHyperlinkHandler(
-            element: D3.Selection,
-            hyperlink: string,
-            hyperlinkAdapter: HyperlinkAdapter
-        ): void {
-            if (!element) {
-                return;
-            }
+        const event: Event = require("d3").event;
 
-            element
-                .attr({
-                    title: hyperlink || null
-                })
-                .on("click", !!hyperlink
-                    ? this.openHyperlink.bind(this, hyperlinkAdapter, hyperlink)
-                    : null
-                );
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
         }
+    }
 
-        protected openHyperlink(hyperlinkAdapter: HyperlinkAdapter, hyperlink: string): void {
-            if (hyperlinkAdapter) {
-                hyperlinkAdapter.open(hyperlink);
-            }
+    protected renderElements(options: ITextCellRenderOptions): void {
+        this.applyFontSettings(options.fontSettings);
 
-            if (d3.event && d3.event.stopPropagation) {
-                d3.event.stopPropagation();
-            }
-        }
+        this.renderImage(options);
+        this.renderText(options);
+    }
+
+    private applyFontSettings(fontSettings: FontSettings): void {
+        this.element
+            .style("font-size", fontSettings
+                ? pixelConverter.toString(pixelConverter.fromPointToPixel(fontSettings.textFontSize))
+                : null,
+            )
+            .style("font-family", fontSettings ? fontSettings.fontFamily : null);
     }
 }

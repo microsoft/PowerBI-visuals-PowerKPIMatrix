@@ -24,7 +24,10 @@
  *  THE SOFTWARE.
  */
 
-export interface RowState extends VisualComponentStateBase {
+import { IVisualComponentStateBase } from "../../visualComponentStateBase";
+import 
+
+export interface IRowState extends IVisualComponentStateBase {
     name: string;
     cellSet: {
         [tableType: number]: CellState[];
@@ -33,6 +36,6 @@ export interface RowState extends VisualComponentStateBase {
     rowSet?: RowStateSet;
 }
 
-export interface RowStateSet extends VisualComponentStateBase {
-    [rowName: string]: RowState;
+export interface RowStateSet extends IVisualComponentStateBase {
+    [rowName: string]: IRowState;
 }
