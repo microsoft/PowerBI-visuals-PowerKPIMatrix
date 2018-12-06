@@ -24,12 +24,16 @@
  *  THE SOFTWARE.
  */
 
-export interface OnCellChangeHandler {
-    (width: number, height: number, cellIndex: number): void;
-}
+import { Selection } from "d3-selection";
 
-export interface VisualComponentConstructorOptions {
-    element?: D3.Selection;
+import { ModalWindowService } from "../services/modalWindowService";
+import { ScaleService } from "../services/scaleService";
+import { StateService } from "../services/state/stateService";
+
+export type OnCellChangeHandler = (width: number, height: number, cellIndex: number) => void;
+
+export interface IVisualComponentConstructorOptions {
+    element?: Selection<any, any, any, any>;
     scaleService?: ScaleService;
     stateService?: StateService;
     powerKPIModalWindowService?: ModalWindowService;

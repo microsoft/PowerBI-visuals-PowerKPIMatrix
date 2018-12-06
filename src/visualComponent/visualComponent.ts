@@ -24,13 +24,16 @@
  *  THE SOFTWARE.
  */
 
-export interface VisualComponent {
+import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOptionsBase";
+import { IVisualComponentStateBase } from "./visualComponentStateBase";
+
+export interface IVisualComponent {
     isShown?: boolean;
 
     /**
      * Renders the component
      */
-    render(options: VisualComponentRenderOptionsBase): void;
+    render(options: IVisualComponentRenderOptionsBase): void;
 
     /**
      * Remove its DOM elements
@@ -45,7 +48,7 @@ export interface VisualComponent {
     /**
      * Returns a state of the component. That is used for changeable components like dropdown
      */
-    getState?(): VisualComponentStateBase;
+    getState?(): IVisualComponentStateBase;
 
     hide?(): void;
 

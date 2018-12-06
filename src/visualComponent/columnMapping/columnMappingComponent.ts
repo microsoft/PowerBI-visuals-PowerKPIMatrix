@@ -24,134 +24,159 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class ColumnMappingComponent extends BaseContainerComponent {
-        private className: string = "columnMappingComponent";
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
 
-        private rootElement: D3.Selection;
-        private scrollableElement: D3.Selection;
+import { actualValueColumn } from "../../columns/actualValueColumn";
+import { comparisonValueColumn } from "../../columns/comparisonValueColumn";
+import { kpiIndicatorIndexColumn } from "../../columns/kpiIndicatorIndexColumn";
+import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
+import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorValueColumn } from "../../columns/secondKPIIndicatorValueColumn";
 
-        private rootElementSelector: ClassAndSelector = createClassAndSelector("columnMappingComponent_root");
-        private scrollableElementSelector: ClassAndSelector = createClassAndSelector("columnMappingComponent_scrollable");
+import { StateService } from "../../services/state/stateService";
 
-        private stateService: StateService;
+import { BaseContainerComponent } from "../baseContainerComponent";
+import { IVisualComponent } from "../visualComponent";
+import { IVisualComponentConstructorOptions } from "../visualComponentConstructorOptions";
+import { IVisualComponentRenderOptions } from "../visualComponentRenderOptions";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super();
+import { ColumnMappingColumnSelectorComponent } from "./columnMappingColumnSelectorComponent";
+import { ColumnMappingFooterComponent } from "./columnMappingFooterComponent";
+import { ColumnMappingHeaderComponent } from "./columnMappingHeaderComponent";
 
-            this.stateService = options.stateService;
+export class ColumnMappingComponent extends BaseContainerComponent {
+    private className: string = "columnMappingComponent";
 
-            this.element = options.element
-                .append("div")
-                .classed(this.className, true);
+    private rootElement: Selection<any, any, any, any>;
+    private scrollableElement: Selection<any, any, any, any>;
 
-            this.rootElement = this.element
-                .append("div")
-                .classed(this.rootElementSelector.class, true);
+    private rootElementSelector: CssConstants.ClassAndSelector
+        = CssConstants.createClassAndSelector("columnMappingComponent_root");
 
-            this.scrollableElement = this.rootElement
-                .append("div")
-                .classed(this.scrollableElementSelector.class, true);
+    private scrollableElementSelector: CssConstants.ClassAndSelector
+        = CssConstants.createClassAndSelector("columnMappingComponent_scrollable");
 
-            const header: VisualComponent = new ColumnMappingHeaderComponent({
-                element: this.rootElement,
-            });
+    private stateService: StateService;
 
-            const row: VisualComponent = new ColumnMappingColumnSelectorComponent({
-                element: this.scrollableElement,
-                title: "Select the Row to map to additional columns from your data model",
-                columns: [actualValueColumn],
-                onChange: (columnName: string, displayName: string, options: VisualComponentRenderOptions) => {
-                    if (!this.stateService.states.columnMapping) {
-                        return;
-                    }
+    constructor(options: IVisualComponentConstructorOptions) {
+        super();
 
-                    this.stateService.states.columnMapping
-                        .setRow(displayName)
-                        .setCurrentRowName(displayName);
+        this.stateService = options.stateService;
 
-                    this.render(options);
-                },
-                getSelectedValueByColumnName: (columnName: string, values: string[]) => {
-                    if (!this.stateService.states.columnMapping.isCurrentRowSet()) {
-                        const defaultValue: string = values[0];
+        this.element = options.element
+            .append("div")
+            .classed(this.className, true);
 
-                        this.stateService.states.columnMapping.setCurrentRowName(defaultValue);
+        this.rootElement = this.element
+            .append("div")
+            .classed(this.rootElementSelector.className, true);
 
-                        return defaultValue;
-                    }
+        this.scrollableElement = this.rootElement
+            .append("div")
+            .classed(this.scrollableElementSelector.className, true);
 
-                    return undefined;
+        const header: IVisualComponent = new ColumnMappingHeaderComponent({
+            element: this.rootElement,
+        });
+
+        const row: IVisualComponent = new ColumnMappingColumnSelectorComponent({
+            columns: [actualValueColumn],
+            element: this.scrollableElement,
+            getSelectedValueByColumnName: (columnName: string, values: string[]) => {
+                if (!this.stateService.states.columnMapping.isCurrentRowSet()) {
+                    const defaultValue: string = values[0];
+
+                    this.stateService.states.columnMapping.setCurrentRowName(defaultValue);
+
+                    return defaultValue;
                 }
-            });
 
-            const columns: VisualComponent = new ColumnMappingColumnSelectorComponent({
-                element: this.scrollableElement,
-                title: "Link to the associated columns from your data model",
-                columns: [
-                    comparisonValueColumn,
-                    kpiIndicatorIndexColumn,
-                    kpiIndicatorValueColumn,
-                    secondComparisonValueColumn,
-                    secondKPIIndicatorValueColumn,
-                ],
-                onChange: (columnName: string, displayName: string) => {
-                    if (!this.stateService.states.columnMapping) {
-                        return;
-                    }
-
-                    const rowName: string = row.getState()[actualValueColumn.displayName as string];
-
-                    this.stateService.states.columnMapping
-                        .setRow(rowName)
-                        .setCurrentRowName(rowName)
-                        .setColumn(columnName, displayName);
-                },
-                getSelectedValueByColumnName: (columnName: string) => {
-                    return this.stateService.states.columnMapping.getSelectedValueByColumnName(columnName);
+                return undefined;
+            },
+            onChange: (
+                columnName: string,
+                displayName: string,
+                onChangeOptions: IVisualComponentRenderOptions,
+            ) => {
+                if (!this.stateService.states.columnMapping) {
+                    return;
                 }
-            });
 
-            const footer: VisualComponent = new ColumnMappingFooterComponent({
-                element: this.rootElement,
-                buttons: [
-                    {
-                        buttonText: "Apply",
-                        onClick: this.onApply.bind(this)
-                    }
-                ]
-            });
+                this.stateService.states.columnMapping
+                    .setRow(displayName)
+                    .setCurrentRowName(displayName);
 
-            this.components = [
-                header,
-                row,
-                columns,
-                footer
-            ];
+                this.render(onChangeOptions);
+            },
+
+            title: "Select the Row to map to additional columns from your data model",
+        });
+
+        const columns: IVisualComponent = new ColumnMappingColumnSelectorComponent({
+            columns: [
+                comparisonValueColumn,
+                kpiIndicatorIndexColumn,
+                kpiIndicatorValueColumn,
+                secondComparisonValueColumn,
+                secondKPIIndicatorValueColumn,
+            ],
+            element: this.scrollableElement,
+            getSelectedValueByColumnName: (columnName: string) => {
+                return this.stateService.states.columnMapping.getSelectedValueByColumnName(columnName);
+            },
+            onChange: (columnName: string, displayName: string) => {
+                if (!this.stateService.states.columnMapping) {
+                    return;
+                }
+
+                const rowName: string = row.getState()[actualValueColumn.displayName as string];
+
+                this.stateService.states.columnMapping
+                    .setRow(rowName)
+                    .setCurrentRowName(rowName)
+                    .setColumn(columnName, displayName);
+            },
+            title: "Link to the associated columns from your data model",
+
+        });
+
+        const footer: IVisualComponent = new ColumnMappingFooterComponent({
+            buttons: [
+                {
+                    buttonText: "Apply",
+                    onClick: this.onApply.bind(this),
+                },
+            ],
+            element: this.rootElement,
+        });
+
+        this.components = [
+            header,
+            row,
+            columns,
+            footer,
+        ];
+    }
+
+    public render(options: IVisualComponentRenderOptions): void {
+        if (options.isAdvancedEditModeTurnedOn) {
+            this.show();
+        } else {
+            this.hide();
         }
 
-        render(options: VisualComponentRenderOptions): void {
-            if (options.isAdvancedEditModeTurnedOn) {
-                this.show();
-            } else {
-                this.hide();
-            }
+        super.render(options);
+    }
 
-            super.render(options);
-        }
+    public destroy(): void {
+        this.stateService = null;
 
-        public destroy(): void {
-            this.stateService = null;
+        super.destroy();
+    }
 
-            super.destroy();
-        }
-
-        private onApply(): void {
-            this.stateService.save(true);
-        }
+    private onApply(): void {
+        this.stateService.save(true);
     }
 }

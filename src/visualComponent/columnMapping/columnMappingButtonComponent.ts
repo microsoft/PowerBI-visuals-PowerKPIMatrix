@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,61 +12,64 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class ColumnMappingButtonComponent extends BaseComponent {
-        private className: string = "columnMappingButtonComponent";
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
 
-        private buttonSelector: ClassAndSelector = createClassAndSelector("columnMappingButtonComponent_button");
+import { BaseComponent } from "../baseComponent";
+import { IVisualComponentRenderOptionsBase } from "../VisualComponentRenderOptionsBase";
 
-        private onClick: (options: VisualComponentRenderOptionsBase) => void;
-        private buttonText: string;
+import { IColumnMappingButtonConstructorOptions } from "./columnMappingButtonConstructorOptions";
 
-        constructor(options: ColumnMappingButtonConstructorOptions) {
-            super();
+export class ColumnMappingButtonComponent extends BaseComponent {
+    private className: string = "columnMappingButtonComponent";
 
-            this.onClick = options.onClick;
-            this.buttonText = options.buttonText;
+    private buttonSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("columnMappingButtonComponent_button");
 
-            this.element = options.element
-                .append("div")
-                .classed(this.className, true);
-        }
+    private onClick: (options: IVisualComponentRenderOptionsBase) => void;
+    private buttonText: string;
 
-        public render(options: VisualComponentRenderOptionsBase): void {
-            const buttonSelection: D3.UpdateSelection = this.element
-                .selectAll(this.buttonSelector.selector)
-                .data([this.buttonText]);
+    constructor(options: IColumnMappingButtonConstructorOptions) {
+        super();
 
-            buttonSelection
-                .enter()
-                .append("button")
-                .classed(this.buttonSelector.class, true);
+        this.onClick = options.onClick;
+        this.buttonText = options.buttonText;
 
-            buttonSelection
-                .text((value: string) => [value])
-                .on("click", () => {
-                    this.onClick(options);
-                });
+        this.element = options.element
+            .append("div")
+            .classed(this.className, true);
+    }
 
-            buttonSelection
-                .exit()
-                .remove();
-        }
+    public render(options: IVisualComponentRenderOptionsBase): void {
+        const buttonSelection: Selection<any, string, any, any> = this.element
+            .selectAll(this.buttonSelector.selectorName)
+            .data([this.buttonText]);
+
+        buttonSelection
+            .enter()
+            .append("button")
+            .classed(this.buttonSelector.className, true)
+            .merge(buttonSelection)
+            // .text((value: string) => [value]) TODO
+            .text((value: string) => value)
+            .on("click", () => {
+                this.onClick(options);
+            });
+
+        buttonSelection
+            .exit()
+            .remove();
     }
 }

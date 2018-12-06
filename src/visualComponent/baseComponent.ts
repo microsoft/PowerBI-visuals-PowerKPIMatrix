@@ -24,11 +24,21 @@
  *  THE SOFTWARE.
  */
 
-export abstract class BaseComponent implements VisualComponent {
+import { Selection } from "d3-selection";
+
+import { IVisualComponent } from "./visualComponent";
+import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOptionsBase";
+
+import {
+    HorizontalTextAlignment,
+    VerticalTextAlignment,
+} from "../settings/descriptors/fontSettings";
+
+export abstract class BaseComponent implements IVisualComponent {
     protected italicClassName: string = "italicStyle";
     protected boldClassName: string = "boldStyle";
 
-    protected element: D3.Selection;
+    protected element: Selection<any, any, any, any>;
 
     private isComponentShown: boolean = true;
 
@@ -37,7 +47,7 @@ export abstract class BaseComponent implements VisualComponent {
 
     private wrapTextClassNamePrefix: string = "text";
 
-    public abstract render(options: VisualComponentRenderOptionsBase): void;
+    public abstract render(options: IVisualComponentRenderOptionsBase): void;
 
     public clear(): void {
         if (!this.element) {
@@ -93,22 +103,21 @@ export abstract class BaseComponent implements VisualComponent {
         this.updateElementOrder(this.element, order);
     }
 
-    protected updateElementOrder(element: D3.Selection, order: number): void {
+    protected updateElementOrder(element: Selection<any, any, any, any>, order: number): void {
         if (!element) {
             return;
         }
 
         const browserSpecificOrder: number = order + 1;
 
-        element.style({
-            "-webkit-box-ordinal-group": browserSpecificOrder,
-            "-ms-flex-order": order,
-            order,
-        });
+        element
+            .style("-webkit-box-ordinal-group", browserSpecificOrder)
+            .style("-ms-flex-order", order)
+            .style("order", order);
     }
 
     protected updateAlignment(
-        element: D3.Selection,
+        element: Selection<any, any, any, any>,
         horizontalAlignment: HorizontalTextAlignment,
         verticalAlignment: VerticalTextAlignment,
     ): void {

@@ -24,22 +24,16 @@
  *  THE SOFTWARE.
  */
 
-export abstract class LazyComponent implements VisualComponent {
-    constructor(private options: VisualComponentConstructorOptions) { }
+import { IVisualComponent } from "./visualComponent";
+import { IVisualComponentConstructorOptions } from "./visualComponentConstructorOptions";
+import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOptionsBase";
 
-    private _instance: VisualComponent;
+export abstract class LazyComponent implements IVisualComponent {
+    private _instance: IVisualComponent;
 
-    protected abstract createInstance(options: VisualComponentConstructorOptions): VisualComponent;
+    constructor(private options: IVisualComponentConstructorOptions) { }
 
-    private get component() {
-        if (!this._instance) {
-            this._instance = this.createInstance(this.options);
-        }
-
-        return this._instance;
-    }
-
-    public render(options: VisualComponentRenderOptionsBase): void {
+    public render(options: IVisualComponentRenderOptionsBase): void {
         this.component.render(options);
     }
 
@@ -53,5 +47,15 @@ export abstract class LazyComponent implements VisualComponent {
         }
 
         this._instance = null;
+    }
+
+    protected abstract createInstance(options: IVisualComponentConstructorOptions): IVisualComponent;
+
+    private get component() {
+        if (!this._instance) {
+            this._instance = this.createInstance(this.options);
+        }
+
+        return this._instance;
     }
 }

@@ -24,13 +24,12 @@
  *  THE SOFTWARE.
  */
 
-import { IVisualDataColumn } from "../../columns/visualDataColumn";
-import { IVisualComponentConstructorOptions } from "../visualComponentConstructorOptions";
-import { IVisualComponentRenderOptionsBase } from "../visualComponentRenderOptionsBase";
+import { LazyComponent } from "./lazyComponent";
+import { RootComponent } from "./rootComponent";
+import { IVisualComponentConstructorOptions } from "./visualComponentConstructorOptions";
 
-export interface IColumnMappingColumnSelectorConstructorOptions extends IVisualComponentConstructorOptions {
-    title: string;
-    columns: IVisualDataColumn[];
-    getSelectedValueByColumnName(columnName: string, values: string[]): string;
-    onChange(columnName: string, displayName: string, options: IVisualComponentRenderOptionsBase): void;
+export class LazyRootComponent extends LazyComponent {
+    protected createInstance(options: IVisualComponentConstructorOptions): RootComponent {
+        return new RootComponent(options);
+    }
 }

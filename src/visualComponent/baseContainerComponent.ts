@@ -24,17 +24,21 @@
  *  THE SOFTWARE.
  */
 
-export abstract class BaseContainerComponent extends BaseComponent {
-    protected components: VisualComponent[] = [];
+import { BaseComponent } from "./baseComponent";
+import { IVisualComponent } from "./visualComponent";
+import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOptionsBase";
 
-    public render(options: VisualComponentRenderOptionsBase): void {
-        this.components.forEach((component: VisualComponent) => {
+export abstract class BaseContainerComponent extends BaseComponent {
+    protected components: IVisualComponent[] = [];
+
+    public render(options: IVisualComponentRenderOptionsBase): void {
+        this.components.forEach((component: IVisualComponent) => {
             component.render(options);
         });
     }
 
     public clear(): void {
-        this.components.forEach((component: VisualComponent) => {
+        this.components.forEach((component: IVisualComponent) => {
             component.clear();
         });
 
@@ -42,7 +46,7 @@ export abstract class BaseContainerComponent extends BaseComponent {
     }
 
     public destroy(): void {
-        this.components.forEach((component: VisualComponent) => {
+        this.components.forEach((component: IVisualComponent) => {
             component.destroy();
         });
 

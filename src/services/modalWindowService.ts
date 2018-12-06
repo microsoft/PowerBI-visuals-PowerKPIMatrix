@@ -26,7 +26,7 @@
 
 export interface IModalWindowServiceInitOptions {
     element: D3.Selection;
-    componentCreators: ((options: VisualComponentConstructorOptions) => VisualComponent)[];
+    componentCreators: Array<((options: VisualComponentConstructorOptions) => VisualComponent)>;
 }
 
 export class ModalWindowService extends BaseContainerComponent {

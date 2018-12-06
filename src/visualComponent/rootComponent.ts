@@ -24,17 +24,26 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
+
+import { BaseContainerComponent } from "./baseContainerComponent";
+import { ColumnMappingComponent } from "./columnMapping/columnMappingComponent";
+import { TableComponent } from "./table/tableComponent";
+import { IVisualComponentConstructorOptions } from "./visualComponentConstructorOptions";
+import { IVisualComponentRenderOptions } from "./visualComponentRenderOptions";
+
 export class RootComponent extends BaseContainerComponent {
     private className: string = "powerKPIMatrix_rootComponent";
 
-    constructor(options: VisualComponentConstructorOptions) {
+    constructor(options: IVisualComponentConstructorOptions) {
         super();
 
         this.element = options.element
             .append("div")
             .classed(this.className, true);
 
-        const componentOptions: VisualComponentConstructorOptions = {
+        const componentOptions: IVisualComponentConstructorOptions = {
             ...options,
             element: this.element,
         };
@@ -45,7 +54,7 @@ export class RootComponent extends BaseContainerComponent {
         ];
     }
 
-    public render(options: VisualComponentRenderOptions): void {
+    public render(options: IVisualComponentRenderOptions): void {
         const { viewport } = options;
 
         this.updateViewport(viewport);
@@ -53,16 +62,9 @@ export class RootComponent extends BaseContainerComponent {
         super.render(options);
     }
 
-    private updateViewport(viewport: IViewport): void {
-        this.element.style({
-            width: PixelConverter.toString(viewport.width),
-            height: PixelConverter.toString(viewport.height)
-        });
-    }
-}
-
-export class LazyRootComponent extends LazyComponent {
-    protected createInstance(options: VisualComponentConstructorOptions): RootComponent {
-        return new RootComponent(options);
+    private updateViewport(viewport: powerbi.IViewport): void {
+        this.element
+            .style("width", pixelConverter.toString(viewport.width))
+            .style("height", pixelConverter.toString(viewport.height));
     }
 }

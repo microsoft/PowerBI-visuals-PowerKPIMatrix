@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,109 +12,118 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class ColumnMappingGroupComponent extends BaseContainerComponent {
-        private className: string = "columnMappingGroupComponent";
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
 
-        private titleContainerSelector: ClassAndSelector = createClassAndSelector("columnMappingGroupComponent_titleContainer");
-        private titleSelector: ClassAndSelector = createClassAndSelector("columnMappingGroupComponent_title");
+import { BaseContainerComponent } from "../baseContainerComponent";
+import { IVisualComponent } from "../visualComponent";
+import { IVisualComponentConstructorOptions } from "../visualComponentConstructorOptions";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super();
+import { ColumnMappingDropDownComponent } from "./columnMappingDropDownComponent";
+import { IColumnMappingDropDownComponentState } from "./columnMappingDropDownComponentState";
+import { IColumnMappingGroupRenderOptions } from "./columnMappingGroupRenderOptions";
 
-            this.components = [];
+export class ColumnMappingGroupComponent extends BaseContainerComponent {
+    private className: string = "columnMappingGroupComponent";
 
-            this.element = options.element
-                .append("div")
-                .classed(this.className, true);
-        }
+    private titleContainerSelector: CssConstants.ClassAndSelector
+        = CssConstants.createClassAndSelector("columnMappingGroupComponent_titleContainer");
 
-        public render(options: ColumnMappingGroupRenderOptions): void {
-            this.renderTitle(options.title);
-            this.renderComponents(options);
-        }
+    private titleSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("columnMappingGroupComponent_title");
 
-        private renderComponents(options: ColumnMappingGroupRenderOptions): void {
-            this.components
-                .splice(options.groups.length)
-                .forEach((component: VisualComponent) => {
-                    component.clear();
-                    component.destroy();
+    constructor(options: IVisualComponentConstructorOptions) {
+        super();
+
+        this.components = [];
+
+        this.element = options.element
+            .append("div")
+            .classed(this.className, true);
+    }
+
+    public render(options: IColumnMappingGroupRenderOptions): void {
+        this.renderTitle(options.title);
+        this.renderComponents(options);
+    }
+
+    public getState(): IColumnMappingDropDownComponentState {
+        const state: IColumnMappingDropDownComponentState = {};
+
+        if (this.components) {
+            this.components.forEach((component: IVisualComponent) => {
+                const componentState: IColumnMappingDropDownComponentState = component.getState() as IColumnMappingDropDownComponentState;
+
+                Object.keys(componentState).forEach((name: string) => {
+                    state[name] = componentState[name];
                 });
-
-            if (this.components.length < options.groups.length) {
-                for (let index: number = this.components.length; index < options.groups.length; index++) {
-                    this.components.push(new ColumnMappingDropDownComponent({ element: this.element }));
-                }
-            }
-
-            this.components.forEach((component: VisualComponent, index: number) => {
-                component.render(options.groups[index]);
             });
         }
 
-        private renderTitle(title: string): void {
-            const titleContainerSelection: D3.UpdateSelection = this.element
-                .selectAll(this.titleContainerSelector.selector)
-                .data(title ? [title] : []);
+        return state;
+    }
 
-            titleContainerSelection
-                .enter()
-                .append("div")
-                .classed(this.titleContainerSelector.class, true);
+    private renderComponents(options: IColumnMappingGroupRenderOptions): void {
+        this.components
+            .splice(options.groups.length)
+            .forEach((component: IVisualComponent) => {
+                component.clear();
+                component.destroy();
+            });
 
-            const titleSelection: D3.UpdateSelection = titleContainerSelection
-                .selectAll(this.titleSelector.selector)
-                .data(data => [data]);
-
-            titleSelection
-                .enter()
-                .append("div")
-                .classed(this.titleSelector.class, true);
-
-            titleSelection
-                .text((title: string) => title)
-                .attr("title", (title: string) => title);
-
-            titleSelection
-                .exit()
-                .remove();
-
-            titleContainerSelection
-                .exit()
-                .remove();
-        }
-
-        public getState(): ColumnMappingDropDownComponentState {
-            const state: ColumnMappingDropDownComponentState = {};
-
-            if (this.components) {
-                this.components.forEach((component: VisualComponent) => {
-                    const componentState: ColumnMappingDropDownComponentState = component.getState() as ColumnMappingDropDownComponentState;
-
-                    Object.keys(componentState).forEach((name: string) => {
-                        state[name] = componentState[name];
-                    });
-                });
+        if (this.components.length < options.groups.length) {
+            for (let index: number = this.components.length; index < options.groups.length; index++) {
+                this.components.push(new ColumnMappingDropDownComponent({ element: this.element }));
             }
-
-            return state;
         }
+
+        this.components.forEach((component: IVisualComponent, index: number) => {
+            component.render(options.groups[index]);
+        });
+    }
+
+    private renderTitle(title: string): void {
+        const titleContainerSelection: Selection<any, string, any, any> = this.element
+            .selectAll(this.titleContainerSelector.selectorName)
+            .data(title ? [title] : []);
+
+        titleContainerSelection
+            .exit()
+            .remove();
+
+        const mergedTitleContainerSelection = titleContainerSelection
+            .enter()
+            .append("div")
+            .classed(this.titleContainerSelector.className, true)
+            .merge(titleContainerSelection);
+
+        const titleSelection: Selection<any, string, any, any> = mergedTitleContainerSelection
+            .selectAll(this.titleSelector.selectorName)
+            .data((data) => [data]);
+
+        titleSelection
+            .exit()
+            .remove();
+
+        titleSelection
+            .enter()
+            .append("div")
+            .classed(this.titleSelector.className, true)
+            .merge(titleSelection)
+            .text((text: string) => text)
+            .attr("title", (titleAttr: string) => titleAttr);
+
     }
 }
