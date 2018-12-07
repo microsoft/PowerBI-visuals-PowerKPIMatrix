@@ -26,34 +26,80 @@
 
 import "../styles/styles.less";
 
+import {
+    select as d3Select,
+    Selection,
+} from "d3-selection";
+
 import powerbi from "powerbi-visuals-api";
 
+import { actualValueColumn } from "./columns/actualValueColumn";
+import { comparisonValueColumn } from "./columns/comparisonValueColumn";
+import { rowBasedMetricNameColumn } from "./columns/rowBasedMetricNameColumn";
+import { secondComparisonValueColumn } from "./columns/secondComparisonValueColumn";
+
+import { ColumnSetConverter } from "./converter/columnSet/columnSetConverter";
+import { IDataRepresentationColumnSet } from "./converter/columnSet/dataRepresentation/dataRepresentationColumnSet";
+import { IConverter } from "./converter/converter";
+import { IConverterOptions } from "./converter/converterOptions";
+import { IDataRepresentation } from "./converter/data/dataRepresentation/dataRepresentation";
+import { IDataRepresentationSeries } from "./converter/data/dataRepresentation/dataRepresentationSeries";
+import { DataDirector } from "./converter/data/director/dataDirector";
+
+import { ColumnBasedModelConverter } from "./converter/data/columnBasedModel/columnBasedModelConverter";
+import { RowBasedModelConverter } from "./converter/data/rowBasedModel/rowBasedModelConverter";
+
+import { IVisualComponent } from "./visualComponent/visualComponent";
+import { IVisualComponentConstructorOptions } from "./visualComponent/visualComponentConstructorOptions";
+import { IVisualComponentRenderOptions } from "./visualComponent/visualComponentRenderOptions";
+
+import { ModalWindowService } from "./services/modalWindowService";
+import { ScaleService } from "./services/scaleService";
+import { ColumnMappingState } from "./services/state/columnMappingState";
+import { SettingsState } from "./services/state/settingsState";
+import { StateService } from "./services/state/stateService";
+import { TableInternalState } from "./services/state/tableInternalState";
+
+import {
+    ISettingsServiceItem,
+    SettingsService,
+} from "./services/settingsService";
+
+import { LazyRootComponent } from "./visualComponent/lazyRootComponent";
+
+import { HyperlinkAdapter } from "./hyperlink/hyperlinkAdapter";
+
+import { NumberSettingsBase } from "./settings/descriptors/numberSettingsBase";
+import { SettingsPropertyBase } from "./settings/descriptors/settingsPropertyBase";
+import { SparklineSettings } from "./settings/descriptors/sparklineSettings";
+import { Settings } from "./settings/settings";
+
 export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
-    private columnSetConverter: Converter<DataRepresentationColumnSet>;
-    private dataDirector: DataDirector<DataRepresentation>;
+    private columnSetConverter: IConverter<IDataRepresentationColumnSet>;
+    private dataDirector: DataDirector<IDataRepresentation>;
     private stateService: StateService;
 
     private hyperlinkAdapter: HyperlinkAdapter;
 
-    private converterOptions: ConverterOptions;
-    private renderOptions: VisualComponentRenderOptions;
+    private converterOptions: IConverterOptions;
+    private renderOptions: IVisualComponentRenderOptions;
 
     private scaleService: ScaleService;
     private settingsService: SettingsService;
     private powerKPIModalWindowService: ModalWindowService;
 
-    private component: VisualComponent;
+    private component: IVisualComponent;
 
-    private rootElement: D3.Selection;
+    private rootElement: Selection<any, any, any, any>;
 
-    constructor(options: powerbi.extensibility.visual.VisualConstructorOptions) {
+    constructor(constructorOptions: powerbi.extensibility.visual.VisualConstructorOptions) {
         this.columnSetConverter = new ColumnSetConverter();
 
         this.stateService = new StateService(
             {
                 columnMapping: new ColumnMappingState(),
-                table: new TableInternalState(),
                 settings: new SettingsState(),
+                table: new TableInternalState(),
             },
             this.saveState.bind(this),
         );
@@ -66,21 +112,22 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.dataDirector = new DataDirector(
             rowBasedMetricNameColumn,
             new RowBasedModelConverter(),
-            new ColumnBasedModelConverter()
+            new ColumnBasedModelConverter(),
         );
 
-        // const { style, host } = options;
+        const { host } = constructorOptions;
 
-        this.rootElement = d3.select(options.element);
+        this.rootElement = d3Select(constructorOptions.element);
 
         this.scaleService.element = this.rootElement.node();
 
-        this.settingsService.host = options.host;
-        this.hyperlinkAdapter.host = options.host;
+        this.settingsService.host = constructorOptions.host;
+        this.hyperlinkAdapter.host = constructorOptions.host;
 
         this.powerKPIModalWindowService = new ModalWindowService({
             componentCreators: [
-                (options: VisualComponentConstructorOptions) => {
+                (options: IVisualComponentConstructorOptions) => {
+                    options = options; // TODLO
                     // return new PowerKPIComponent({
                     //     ...options,
                     //     host,
@@ -96,8 +143,10 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.component = new LazyRootComponent({
             element: this.rootElement,
             powerKPIModalWindowService: this.powerKPIModalWindowService,
+            rootElement: this.rootElement,
             scaleService: this.scaleService,
             stateService: this.stateService,
+            tooltipService: host.tooltipService,
         });
     }
 
@@ -119,19 +168,19 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.stateService.parse(settings.internalState);
 
         this.converterOptions = {
-            dataView,
-            viewport,
-            settings,
             columnMapping: this.stateService.states.columnMapping.getColumnMapping(),
+            dataView,
+            settings,
             settingsState: this.stateService.states.settings,
             viewMode: options.viewMode,
+            viewport,
         };
 
-        const columnSet: DataRepresentationColumnSet = this.columnSetConverter.convert(this.converterOptions);
+        const columnSet: IDataRepresentationColumnSet = this.columnSetConverter.convert(this.converterOptions);
 
         this.stateService.states.columnMapping.applyDefaultRows(columnSet[actualValueColumn.name]);
 
-        const dataRepresentation: DataRepresentation = this.dataDirector.convert(this.converterOptions);
+        const dataRepresentation: IDataRepresentation = this.dataDirector.convert(this.converterOptions);
 
         const isAdvancedEditModeTurnedOn: boolean = options.editMode === powerbi.EditMode.Advanced
             && dataRepresentation.isDataColumnBasedModel;
@@ -148,7 +197,7 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
              * Please visit https://pbix.visualstudio.com/DefaultCollection/PaaS/_workitems/edit/21334 to find out more about this issue
              */
             this.settingsService.save([{
-                objectName: "internalState",
+                objectName: "editButtonHack",
                 properties: {
                     "_#_apply_a_workaround_for_edit_mode_issue_#_": `${Math.random()}`,
                 },
@@ -195,13 +244,19 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.component = null;
     }
 
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {
-        let instances: VisualObjectInstance[] = (this.renderOptions
+    public enumerateObjectInstances(options: powerbi.EnumerateVisualObjectInstancesOptions): powerbi.VisualObjectInstanceEnumeration {
+        const instances: powerbi.VisualObjectInstance[] = (this.renderOptions
             && this.renderOptions.settings
-            && (Settings.enumerateObjectInstances(this.renderOptions.settings, options) as VisualObjectInstanceEnumerationObject).instances)
+            && (Settings.enumerateObjectInstances(
+                this.renderOptions.settings,
+                options,
+            ) as powerbi.VisualObjectInstanceEnumerationObject).instances)
             || [];
 
-        const enumerationBuilder: ObjectEnumerationBuilder = new ObjectEnumerationBuilder();
+        const enumerationObject: powerbi.VisualObjectInstanceEnumerationObject = {
+            containers: [],
+            instances: [],
+        };
 
         const { objectName } = options;
 
@@ -216,58 +271,52 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
             case "secondKPIIndicatorValue":
             case "metricSpecific": {
                 this.enumerateSettings(
-                    enumerationBuilder,
+                    enumerationObject,
                     objectName,
                     this.getSettings.bind(this));
                 break;
             }
             case "sparklineSettings": {
                 this.enumerateSettings(
-                    enumerationBuilder,
+                    enumerationObject,
                     objectName,
                     this.getSparklineSettingsProperties.bind(this));
                 break;
             }
         }
 
-        const instance: VisualObjectInstanceEnumeration = enumerationBuilder.complete();
+        enumerationObject.instances.push(...instances);
 
-        if (!instance || !instance.instances) {
-            return instances;
-        }
-
-        instance.instances.push(...instances);
-
-        return instance;
+        return enumerationObject;
     }
 
     private enumerateSettings(
-        enumerationBuilder: ObjectEnumerationBuilder,
+        enumerationObject: powerbi.VisualObjectInstanceEnumerationObject,
         objectName: string,
         getSettings: (
             settings: SettingsPropertyBase,
-            areExtraPropertiesSpecified?: boolean
-        ) => { [propertyName: string]: DataViewPropertyValue }
+            areExtraPropertiesSpecified?: boolean,
+        ) => { [propertyName: string]: powerbi.DataViewPropertyValue },
     ): void {
         this.applySettings(
             objectName,
             "[All Metrics]",
             null,
-            enumerationBuilder,
+            enumerationObject,
             getSettings(this.renderOptions.settings[objectName], true));
 
         this.enumerateSettingsDeep(
             this.renderOptions.data.seriesArray,
             objectName,
-            enumerationBuilder,
+            enumerationObject,
             getSettings);
     }
 
     private getSettings(
         settings: SettingsPropertyBase,
-        areExtraPropertiesSpecified: boolean = false
-    ): { [propertyName: string]: DataViewPropertyValue } {
-        const properties: { [propertyName: string]: DataViewPropertyValue; } = {};
+        areExtraPropertiesSpecified: boolean = false,
+    ): { [propertyName: string]: powerbi.DataViewPropertyValue } {
+        const properties: { [propertyName: string]: powerbi.DataViewPropertyValue; } = {};
 
         for (const descriptor in settings) {
             if (!areExtraPropertiesSpecified
@@ -297,79 +346,77 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
     private applySettings(
         objectName: string,
         displayName: string,
-        selector: Selector,
-        enumerationBuilder: ObjectEnumerationBuilder,
-        properties: { [propertyName: string]: DataViewPropertyValue }
+        selector: powerbi.data.Selector,
+        enumerationObject: powerbi.VisualObjectInstanceEnumerationObject,
+        properties: { [propertyName: string]: powerbi.DataViewPropertyValue },
     ): void {
-        enumerationBuilder.pushContainer({ displayName });
+        const containerIdx = enumerationObject.containers.push({ displayName }) - 1;
 
-        const instance: VisualObjectInstance = {
-            selector,
+        enumerationObject.instances.push({
+            containerIdx,
             objectName,
             properties,
-        };
-
-        enumerationBuilder.pushInstance(instance);
-        enumerationBuilder.popContainer();
+            selector,
+        });
     }
 
     private enumerateSettingsDeep(
         seriesArray: IDataRepresentationSeries[],
         objectName: string,
-        enumerationBuilder: ObjectEnumerationBuilder,
+        enumerationObject: powerbi.VisualObjectInstanceEnumerationObject,
         getSettings: (
             settings: SettingsPropertyBase,
-            areExtraPropertiesSpecified?: boolean
-        ) => { [propertyName: string]: DataViewPropertyValue }
+            areExtraPropertiesSpecified?: boolean,
+        ) => { [propertyName: string]: powerbi.DataViewPropertyValue },
     ): void {
-        for (let series of seriesArray) {
+        for (const series of seriesArray) {
             if (series.hasBeenFilled) {
                 this.applySettings(
                     objectName,
                     series.name,
                     series.selectionId.getSelector(),
-                    enumerationBuilder,
+                    enumerationObject,
                     getSettings(series.settings[objectName]));
             } else if (series.children && series.children.length) {
-                this.enumerateSettingsDeep(series.children, objectName, enumerationBuilder, getSettings);
+                this.enumerateSettingsDeep(series.children, objectName, enumerationObject, getSettings);
             }
         }
     }
 
     private getSparklineSettingsProperties(
         settings: SparklineSettings,
-        areExtraPropertiesSpecified: boolean = false
-    ): { [propertyName: string]: DataViewPropertyValue } {
-        const properties: { [propertyName: string]: DataViewPropertyValue; } = {};
+        areExtraPropertiesSpecified: boolean = false,
+    ): { [propertyName: string]: powerbi.DataViewPropertyValue } {
+        const properties: { [propertyName: string]: powerbi.DataViewPropertyValue; } = {};
 
         if (areExtraPropertiesSpecified) {
-            properties["show"] = settings.show;
-            properties["label"] = settings.label;
-            properties["order"] = settings.order;
+            properties.show = settings.show;
+            properties.label = settings.label;
+            properties.order = settings.order;
         }
 
-        properties["isActualVisible"] = settings.isActualVisible;
+        properties.isActualVisible = settings.isActualVisible;
 
         if (settings.isActualVisible) {
-            properties["shouldActualUseKPIColors"] = settings.shouldActualUseKPIColors;
+            properties.shouldActualUseKPIColors = settings.shouldActualUseKPIColors;
         }
 
-        properties["actualColor"] = settings.actualColor;
-        properties["actualThickness"] = settings.actualThickness;
-        properties["actualLineStyle"] = settings.actualLineStyle;
+        properties.actualColor = settings.actualColor;
+        properties.actualThickness = settings.actualThickness;
+        properties.actualLineStyle = settings.actualLineStyle;
 
         if (this.renderOptions.data.columns[comparisonValueColumn.name]) {
-            properties["isTargetVisible"] = settings.isTargetVisible;
-            properties["targetColor"] = settings.targetColor;
-            properties["targetThickness"] = settings.targetThickness;
-            properties["targetLineStyle"] = settings.targetLineStyle;
+            properties.isTargetVisible = settings.isTargetVisible;
+            properties.targetColor = settings.targetColor;
+            properties.targetThickness = settings.targetThickness;
+            properties.targetLineStyle = settings.targetLineStyle;
         }
 
         if (this.renderOptions.data.columns[secondComparisonValueColumn.name]) {
-            properties["isSecondComparisonValueVisible"] = settings.isSecondComparisonValueVisible;
-            properties["secondComparisonValueColor"] = settings.secondComparisonValueColor;
-            properties["secondComparisonValueThickness"] = settings.secondComparisonValueThickness;
-            properties["secondComparisonValueLineStyle"] = settings.secondComparisonValueLineStyle;
+            properties.isSecondComparisonValueVisible = settings.isSecondComparisonValueVisible;
+            properties.secondComparisonValueColor = settings.secondComparisonValueColor;
+            properties.secondComparisonValueThickness = settings.secondComparisonValueThickness;
+            properties.secondComparisonValueLineStyle = settings.secondComparisonValueLineStyle;
         }
 
         properties.backgroundColor = settings.backgroundColor;

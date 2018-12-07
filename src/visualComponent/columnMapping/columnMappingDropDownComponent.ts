@@ -193,7 +193,7 @@ export class ColumnMappingDropDownComponent extends BaseComponent {
             .text((value: string) => value);
 
         if (options.selectedValue !== undefined) {
-            (selectBoxSelection.node() as HTMLSelectElement).value = options.selectedValue;
+            (mergedSelectBoxSelection.node() as HTMLSelectElement).value = options.selectedValue;
         }
     }
 

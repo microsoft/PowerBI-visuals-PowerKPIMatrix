@@ -79,6 +79,10 @@
         }
       }
     },
+    "editButtonHack": {
+      "displayName": "Edit Button Hack",
+      "properties": {}
+    },
     "title": {
       "displayName": "Title",
       "properties": {}
@@ -2698,15 +2702,13 @@
       "properties": {
         "type": {
           "type": {
-            "enumeration": {
-              "allMembers": [{
-                "value": 0,
-                "displayName": "Row-based KPIs"
-              }, {
-                "value": 1,
-                "displayName": "Column-based KPIs"
-              }]
-            }
+            "enumeration": [{
+              "value": "0",
+              "displayName": "Row-based KPIs"
+            }, {
+              "value": "1",
+              "displayName": "Column-based KPIs"
+            }]
           },
           "displayName": "Type"
         },

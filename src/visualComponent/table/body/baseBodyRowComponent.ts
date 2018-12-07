@@ -32,7 +32,7 @@ import { IVisualComponentConstructorOptions } from "../../visualComponentConstru
 import { CellComponent } from "../cell/cellComponent";
 import { ICellState } from "../cell/cellState";
 import { ICollapserCellConstructorOptions } from "../cell/collapser/collapserCellConstructorOptions";
-import { RowComponent } from "../row/RowComponent";
+import { RowComponent } from "../row/rowComponent";
 import { IBodyRowConstructorOptions } from "./bodyRowConstructorOptions";
 import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
 
@@ -74,7 +74,7 @@ export abstract class BaseBodyRowComponent extends RowComponent {
         };
 
         this.cellOptions = {
-            ...options,
+            ...options as ICollapserCellConstructorOptions,
             element: this.containerElement,
         };
     }

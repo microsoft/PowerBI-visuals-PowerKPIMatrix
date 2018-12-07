@@ -26,13 +26,7 @@
 
 import { TableBaseComponent } from "../tableBaseComponent";
 
-import { ICellState } from "../cell/cellState";
-import { OnCellSizeChangeHandler } from "../row/rowComponentConstructorOptions";
 import { IRowStateSet } from "../row/rowState";
-
-import { ModalWindowService } from "../../../services/modalWindowService";
-import { ScaleService } from "../../../services/scaleService";
-import { StateService } from "../../../services/state/stateService";
 
 import { IVisualComponent } from "../../visualComponent";
 import { IVisualComponentRenderOptions } from "../../visualComponentRenderOptions";
@@ -43,44 +37,22 @@ import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
 import { IDataRepresentationSeries } from "../../../converter/data/dataRepresentation/dataRepresentationSeries";
 
 import { ScrollUtils } from "../../../utils/scrollUtils";
+import { IBodyRowConstructorOptions } from "./bodyRowConstructorOptions";
 
 export class BodyComponent extends TableBaseComponent {
     private className: string = "bodyComponent";
 
-    private getCellStatesHandler: () => ICellState[];
-
-    private onSaveState: () => void;
-    private onCellSizeChange: OnCellSizeChangeHandler;
-
-    private scaleService: ScaleService;
-    private stateService: StateService;
-
-    private powerKPIModalWindowService: ModalWindowService;
-
-    private defaultMargin: number;
-
-    constructor(options: IBodyConstructorOptions) {
+    constructor(private constructorOptions: IBodyConstructorOptions) {
         super();
 
-        this.getCellStatesHandler = options.getCellStates;
-
-        this.onSaveState = options.onSaveState;
-        this.onCellSizeChange = options.onCellSizeChange;
-        this.powerKPIModalWindowService = options.powerKPIModalWindowService;
-
-        this.scaleService = options.scaleService;
-        this.stateService = options.stateService;
-
-        this.defaultMargin = options.defaultMargin;
-
-        this.element = options.element
+        this.element = constructorOptions.element
             .append("div")
             .classed(this.className, true)
-            .on("scroll", options.onScroll
+            .on("scroll", constructorOptions.onScroll
                 ? () => {
                     const element: HTMLDivElement = require("d3").event.target as HTMLDivElement;
 
-                    options.onScroll(
+                    constructorOptions.onScroll(
                         element.scrollLeft,
                         element.scrollTop,
                         element.offsetWidth - element.clientWidth,
@@ -115,19 +87,20 @@ export class BodyComponent extends TableBaseComponent {
         if (this.components.length < seriesArray.length) {
             for (let index: number = this.components.length; index < seriesArray.length; index++) {
                 this.components.push(new BodyRowComponent({
-                    cellStates: this.getCellStatesHandler && this.getCellStatesHandler() || [],
-                    defaultMargin: this.defaultMargin,
+                    ...this.constructorOptions as unknown as IBodyRowConstructorOptions,
+                    cellStates: this.constructorOptions.getCellStates && this.constructorOptions.getCellStates() || [],
                     element: this.element,
-                    onCellSizeChange: this.onCellSizeChange,
-                    onSaveState: this.onSaveState,
-                    powerKPIModalWindowService: this.powerKPIModalWindowService,
-                    scaleService: this.scaleService,
-                    stateService: this.stateService,
+                    // defaultMargin: this.defaultMargin,
+                    // onCellSizeChange: this.onCellSizeChange,
+                    // onSaveState: this.onSaveState,
+                    // powerKPIModalWindowService: this.powerKPIModalWindowService,
+                    // scaleService: this.scaleService,
+                    // stateService: this.stateService,
                 }));
             }
         }
 
-        const rowStateSet: IRowStateSet = this.stateService.states.table.getRowStateSet();
+        const rowStateSet: IRowStateSet = this.constructorOptions.stateService.states.table.getRowStateSet();
 
         seriesArray.forEach((series: IDataRepresentationSeries, rowIndex: number) => {
             const rowRenderOptions: IBodyRowRenderOptions = {

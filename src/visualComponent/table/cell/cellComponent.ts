@@ -71,22 +71,20 @@ export class CellComponent extends BaseContainerComponent {
             return;
         }
 
-        const styleObject: any = {};
+        const widthStr: string = width !== undefined && width !== null
+            ? pixelConverter.toString(width)
+            : null;
 
-        styleObject.width
-            = styleObject["min-width"]
-            = styleObject["max-width"]
-            = width !== undefined && width !== null
-                ? pixelConverter.toString(width)
-                : null;
+        const heightStr: string = height !== undefined && height !== null
+            ? pixelConverter.toString(height)
+            : null;
 
-        styleObject.height
-            = styleObject["min-height"]
-            = styleObject["max-height"]
-            = height !== undefined && height !== null
-                ? pixelConverter.toString(height)
-                : null;
-
-        this.element.style(styleObject);
+        this.element
+            .style("width", widthStr)
+            .style("min-width", widthStr)
+            .style("max-width", widthStr)
+            .style("height", heightStr)
+            .style("min-height", heightStr)
+            .style("max-height", heightStr);
     }
 }

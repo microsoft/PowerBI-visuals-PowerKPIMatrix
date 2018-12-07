@@ -80,7 +80,8 @@ export class ReferenceDotsComponent extends BaseComponent {
         const mergedDotGroupSelection: Selection<any, IDataRepresentationSeries, any, any> = dotGroupSelection
             .enter()
             .append("g")
-            .classed(this.dotsSelector.className, true);
+            .classed(this.dotsSelector.className, true)
+            .merge(dotGroupSelection);
 
         const dotSelection: Selection<any, IDataRepresentationPointSet, any, any> = mergedDotGroupSelection
             .selectAll(this.dotSelector.selectorName)

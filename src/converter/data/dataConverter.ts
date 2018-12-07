@@ -40,7 +40,7 @@ import { DataRepresentationScale } from "./dataRepresentation/dataRepresentation
 import { IDataRepresentationSeries } from "./dataRepresentation/dataRepresentationSeries";
 import { IDataRepresentationSeriesSet } from "./dataRepresentation/dataRepresentationSeriesSet";
 import { DataRepresentationSeriesUtils } from "./dataRepresentation/dataRepresentationSeriesUtils";
-import { DataRepresentationTypeEnum } from "./dataRepresentation/DataRepresentationType";
+import { DataRepresentationTypeEnum } from "./dataRepresentation/dataRepresentationType";
 
 import { NumericValueUtils } from "../../utils/numericValueUtils";
 
@@ -388,7 +388,11 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
                             };
                         }
 
-                        columnValues[roleName][column.displayName].value = value;
+                        if (column.type && column.type.dateTime && typeof value === "string") {
+                            columnValues[roleName][column.displayName].value = new Date(value);
+                        } else {
+                            columnValues[roleName][column.displayName].value = value;
+                        }
                     });
             }
         });

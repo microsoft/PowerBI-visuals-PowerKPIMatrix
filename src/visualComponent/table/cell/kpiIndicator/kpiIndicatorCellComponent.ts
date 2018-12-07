@@ -36,7 +36,7 @@ import {
 
 import { HorizontalTextAlignment } from "../../../../settings/descriptors/fontSettings";
 import { IVisualComponentConstructorOptions } from "../../../visualComponentConstructorOptions";
-import { TextCellComponent } from "../text/TextCellComponent";
+import { TextCellComponent } from "../text/textCellComponent";
 import { IKPIIndicatorCellRenderOptions } from "./kpiIndicatorCellRenderOptions";
 
 export class KPIIndicatorCellComponent extends TextCellComponent {

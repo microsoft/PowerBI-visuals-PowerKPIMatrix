@@ -98,11 +98,11 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
     private tabularViewCellConstructors = [CollapserCellComponent];
 
-    constructor(options: IBodyRowConstructorOptions) {
-        super(options);
+    constructor(constructorOptions: IBodyRowConstructorOptions) {
+        super(constructorOptions);
 
         this.cellOptions.onChangeHandler = this.changeContainerStateAndKeepState.bind(this);
-        this.powerKPIModalWindowService = options.powerKPIModalWindowService;
+        this.powerKPIModalWindowService = constructorOptions.powerKPIModalWindowService;
     }
 
     public render(options: IBodyRowRenderOptions): void {
@@ -408,7 +408,8 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             this.initCells(
                 cellConstructors,
                 this.bodyOptions,
-                this.cellOptions);
+                this.cellOptions,
+            );
 
             this.initSubRows(
                 cellsLength,

@@ -69,15 +69,15 @@ export class TableComponent extends TableBaseComponent {
         this.stateService = options.stateService;
 
         const headerRowComponent: HeaderRowComponent = new HeaderRowComponent({
+            ...options,
             defaultMargin: this.defaultMargin,
             element: this.element,
             onCellSizeChange: this.updateSizeOfCellByIndex.bind(this),
             onSaveState: this.onSaveState.bind(this),
-            scaleService: options.scaleService,
-            stateService: options.stateService,
         });
 
         const bodyComponent: BodyComponent = new BodyComponent({
+            ...options,
             defaultMargin: this.defaultMargin,
             element: this.element,
             getCellStates: () => {
@@ -88,9 +88,6 @@ export class TableComponent extends TableBaseComponent {
             onScroll: (headerRowComponent as HeaderRowComponent)
                 .scrollTo
                 .bind(headerRowComponent),
-            powerKPIModalWindowService: options.powerKPIModalWindowService,
-            scaleService: options.scaleService,
-            stateService: options.stateService,
         });
 
         this.headerRowComponent = headerRowComponent;

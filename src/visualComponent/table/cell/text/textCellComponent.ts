@@ -178,7 +178,7 @@ export class TextCellComponent extends CellComponent {
     }
 
     protected bindHyperlinkHandler(
-        element: D3.Selection,
+        element: Selection<any, any, any, any>,
         hyperlink: string,
         hyperlinkAdapter: HyperlinkAdapter,
     ): void {
@@ -187,9 +187,7 @@ export class TextCellComponent extends CellComponent {
         }
 
         element
-            .attr({
-                title: hyperlink || null,
-            })
+            .attr("title", hyperlink || null)
             .on("click", !!hyperlink
                 ? this.openHyperlink.bind(this, hyperlinkAdapter, hyperlink)
                 : null,
