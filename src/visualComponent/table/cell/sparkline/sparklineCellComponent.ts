@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,350 +12,371 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export class SparklineCellComponent extends CellContainerComponent {
-        private extraClassName: string = "sparklineCellComponent";
-        private svgClassName: string = "sparklineCellComponent_svg";
+import powerbi from "powerbi-visuals-api";
 
-        private svgElement: D3.Selection;
-        private mainGroupElement: D3.Selection;
+import { Selection } from "d3-selection";
 
-        private scaleService: ScaleService;
-        private renderOptions: SparklineCellRenderOptions;
+import { CellContainerComponent } from "../cellContainerComponent";
 
-        private positions: number[];
+import { DataRepresentationAxisValueType } from "../../../../converter/data/dataRepresentation/dataRepresentationAxisValueType";
+import { DataRepresentationPointFilter } from "../../../../converter/data/dataRepresentation/dataRepresentationPointFilter";
+import { IDataRepresentationPointSet } from "../../../../converter/data/dataRepresentation/dataRepresentationPointSet";
+import { DataRepresentationScale } from "../../../../converter/data/dataRepresentation/dataRepresentationScale";
+import { IDataRepresentationSeries } from "../../../../converter/data/dataRepresentation/dataRepresentationSeries";
+import { ScaleService } from "../../../../services/scaleService";
+import { IVisualComponent } from "../../../visualComponent";
+import { IVisualComponentConstructorOptions } from "../../../visualComponentConstructorOptions";
 
-        private dynamicComponents: VisualComponent[];
+import { IDynamicComponentRenderOptions } from "./dynamic/dynamicComponentRenderOptions";
+import { ReferenceDotsComponent } from "./dynamic/referenceDotsComponent";
+import { TooltipComponent } from "./dynamic/tooltipComponent";
+import { VerticalReferenceLineComponent } from "./dynamic/verticalReferenceLineComponent";
+import { LineComponent } from "./lineComponent";
+import { ILineRenderOptions } from "./lineRenderOptions";
+import { ISparklineCellRenderOptions } from "./sparklineCellRenderOptions";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super(options);
+export class SparklineCellComponent extends CellContainerComponent {
+    private extraClassName: string = "sparklineCellComponent";
+    private svgClassName: string = "sparklineCellComponent_svg";
 
-            this.scaleService = options.scaleService;
+    private svgElement: Selection<any, any, any, any>;
+    private mainGroupElement: Selection<any, any, any, any>;
 
-            this.element.classed(this.extraClassName, true);
+    private scaleService: ScaleService;
+    private renderOptions: ISparklineCellRenderOptions;
 
-            this.svgElement = this.element
-                .append("svg")
-                .classed(this.svgClassName, true);
+    private positions: number[];
 
-            this.mainGroupElement = this.svgElement.append("g");
+    private dynamicComponents: IVisualComponent[];
 
-            this.updateSize(this.width, this.height);
+    constructor(options: IVisualComponentConstructorOptions) {
+        super(options);
 
-            this.bindEvents(this.svgElement);
+        this.scaleService = options.scaleService;
 
-            const dynamicOptions: VisualComponentConstructorOptions = {
-                element: this.svgElement,
-                scaleService: options.scaleService,
-                stateService: options.stateService
-            };
+        this.element.classed(this.extraClassName, true);
 
-            this.dynamicComponents = [
-                new VerticalReferenceLineComponent(dynamicOptions),
-                new ReferenceDotsComponent(dynamicOptions),
-                TooltipComponent.instance(),
-            ];
-        }
+        this.svgElement = this.element
+            .append("svg")
+            .classed(this.svgClassName, true);
 
-        private bindEvents(element: D3.Selection): void {
-            element.on("mousemove", () => this.pointerMoveEvent(this.renderOptions));
-            element.on("touchmove", () => this.pointerMoveEvent(this.renderOptions));
+        this.mainGroupElement = this.svgElement.append("g");
 
-            element.on("mouseleave", () => this.pointerLeaveHandler());
-            element.on("touchend", () => this.pointerLeaveHandler());
-        }
+        this.updateSize(this.width, this.height);
 
-        private pointerMoveEvent(options: SparklineCellRenderOptions): void {
-            const event: MouseEvent | TouchEvent = d3.event as any;
+        this.bindEvents(this.svgElement);
 
-            let offsetX: number = Number.MAX_VALUE;
-            let offsetY: number = Number.MAX_VALUE;
+        const dynamicOptions: IVisualComponentConstructorOptions = {
+            ...options,
+            element: this.svgElement,
+        };
 
-            let originalXPosition: number = Number.MAX_VALUE;
-            let originalYPosition: number = Number.MAX_VALUE;
+        this.dynamicComponents = [
+            new VerticalReferenceLineComponent(dynamicOptions),
+            new ReferenceDotsComponent(dynamicOptions),
+            new TooltipComponent(dynamicOptions),
+        ];
+    }
 
-            const viewportScale: IViewport = this.scaleService.getScale();
+    public render(options: ISparklineCellRenderOptions): void {
+        this.renderOptions = options;
 
-            const elementRect: ClientRect = this.element
-                .node()
-                .getBoundingClientRect();
+        const {
+            order,
+            series,
+            offset,
+            series: {
+                settings,
+            },
+        } = options;
 
-            switch (event.type) {
-                case "mousemove": {
-                    offsetX = (event as MouseEvent).offsetX;
-                    offsetY = (event as MouseEvent).offsetY;
+        this.updateOrder(order);
 
-                    originalXPosition = (event as MouseEvent).pageX;
-                    originalYPosition = elementRect.top + offsetY;
+        this.updateBackgroundColor(
+            this.element,
+            settings.sparklineSettings.backgroundColor,
+        );
 
-                    break;
-                }
-                case "touchmove": {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
+        const viewport: powerbi.IViewport = this.getViewport();
 
-                    const touch: TouchEvent = event as TouchEvent;
-
-                    if (touch && touch.touches && touch.touches[0]) {
-                        originalXPosition = touch.touches[0].pageX;
-                        originalYPosition = touch.touches[0].pageY;
-
-                        offsetX = (originalXPosition - elementRect.left) / viewportScale.width;
-                        offsetY = (originalYPosition - elementRect.top);
-                    }
-
-                    break;
-                }
-            }
-
-            this.renderDynamicComponentByPosition(
-                offsetX,
-                offsetY,
-                originalXPosition,
-                originalYPosition,
-                viewportScale,
-                options
-            );
-        }
-
-        private pointerLeaveHandler(): void {
-            this.clearDynamicComponents();
-        }
-
-        private clearDynamicComponents(): void {
-            this.clearComponents(this.dynamicComponents);
-        }
-
-        private clearComponents(components: VisualComponent[]): void {
-            components.forEach((component: VisualComponent) => {
-                component.clear();
+        const filteredPoints: IDataRepresentationPointSet[] = series.points
+            .filter((pointSet: IDataRepresentationPointSet, pointSetIndex: number) => {
+                return pointSet && pointSet.isShown;
             });
+
+        this.positions = this.getPositions(
+            viewport,
+            series.x.scale,
+            series.axisValues,
+            offset,
+        );
+
+        const amountOfLines: number = filteredPoints.length;
+
+        this.components
+            .splice(amountOfLines)
+            .forEach((component: IVisualComponent) => {
+                component.clear();
+                component.destroy();
+            });
+
+        if (this.components.length < amountOfLines) {
+            for (let index: number = this.components.length; index < amountOfLines; index++) {
+                this.components.push(new LineComponent({
+                    dataPointFilter: DataRepresentationPointFilter.create(),
+                    element: this.mainGroupElement,
+                }));
+            }
         }
 
-        private renderDynamicComponentByPosition(
-            offsetX: number,
-            offsetY: number,
-            xPosition: number,
-            yPosition: number,
-            scale: IViewport,
-            baseOptions: SparklineCellRenderOptions
-        ) {
-            const { series } = baseOptions;
-
-            const amountOfPoints: number = series.axisValues.length;
-
-            let dataPointIndex: number = this.getIndexByPosition(offsetX);
-
-            dataPointIndex = Math.min(Math.max(0, dataPointIndex), amountOfPoints);
-
-            const axisValue: DataRepresentationAxisValueType = series.axisValues[dataPointIndex];
-
-            const particularSeries: IDataRepresentationSeries = {
-                axisValue,
+        filteredPoints.forEach((pointSet: IDataRepresentationPointSet, index: number) => {
+            this.components[index].render({
+                offset,
+                points: pointSet,
+                viewport,
                 x: series.x,
                 y: series.y,
-                children: [],
-                childrenSet: null,
-                name: series.name,
-                level: series.level,
-                settings: series.settings,
-                axisValues: [axisValue],
-            };
+            } as ILineRenderOptions);
+        });
+    }
 
-            particularSeries.points = series.points
-                .map((pointSet: DataRepresentationPointSet) => {
-                    return {
-                        ...pointSet,
-                        points: [pointSet.points[dataPointIndex]],
-                        colors: [pointSet.colors[dataPointIndex]],
-                        kpiIndicatorIndexes: [pointSet.kpiIndicatorIndexes[dataPointIndex]],
-                    };
-                });
+    public updateSize(width: number, height: number): void {
+        super.updateSize(width, height);
 
-            particularSeries.varianceSet = series.varianceSet.map((variances: number[]) => {
-                return [variances[dataPointIndex]];
-            });
+        if (this.renderOptions) {
+            this.render(this.renderOptions);
+        }
+    }
 
-            const dynamicOptions: DynamicComponentRenderOptions = {
-                scale,
-                y: baseOptions.y,
-                order: baseOptions.order,
-                series: particularSeries,
-                offset: baseOptions.offset,
-                viewport: this.getViewport(),
-                metadata: baseOptions.metadata,
-                settings: baseOptions.settings,
-                position: {
-                    x: xPosition,
-                    offsetX,
-                    y: yPosition,
-                    offsetY,
-                },
-                kpiIndicatorIndex: baseOptions.kpiIndicatorIndex,
-                kpiIndicatorSettings: baseOptions.kpiIndicatorSettings,
-            };
+    public clear(): void {
+        this.svgElement
+            .selectAll("*")
+            .remove();
 
-            this.dynamicComponents.forEach((component: VisualComponent) => {
-                component.render(dynamicOptions);
-            });
+        super.clear();
+    }
+
+    public destroy(): void {
+        this.renderOptions = null;
+
+        if (this.svgElement) {
+            this.svgElement.remove();
         }
 
-        public render(options: SparklineCellRenderOptions): void {
-            this.renderOptions = options;
+        this.mainGroupElement = null;
 
-            const {
-                order,
-                series,
-                offset,
-                series: {
-                    settings,
-                },
-            } = options;
+        super.destroy();
+    }
 
-            this.updateOrder(order);
-
-            this.updateBackgroundColor(
-                this.element,
-                settings.sparklineSettings.backgroundColor
-            );
-
-            const viewport: IViewport = this.getViewport();
-
-            const filteredPoints: DataRepresentationPointSet[] = series.points
-                .filter((pointSet: DataRepresentationPointSet, pointSetIndex: number) => {
-                    return pointSet && pointSet.isShown;
-                });
-
-            this.positions = this.getPositions(
-                viewport,
-                series.x.scale,
-                series.axisValues,
-                offset
-            );
-
-            const amountOfLines: number = filteredPoints.length;
-
-            this.components
-                .splice(amountOfLines)
-                .forEach((component: VisualComponent) => {
-                    component.clear();
-                    component.destroy();
-                });
-
-            if (this.components.length < amountOfLines) {
-                for (let index: number = this.components.length; index < amountOfLines; index++) {
-                    this.components.push(new LineComponent({
-                        element: this.mainGroupElement,
-                        dataPointFilter: DataRepresentationPointFilter.create(),
-                    }));
-                }
-            }
-
-            filteredPoints.forEach((pointSet: DataRepresentationPointSet, index: number) => {
-                this.components[index].render({
-                    offset,
-                    viewport,
-                    x: series.x,
-                    y: series.y,
-                    points: pointSet,
-                } as LineRenderOptions);
-            });
-        }
-
-        private getIndexByPosition(position: number): number {
-            if (!this.positions) {
-                return NaN;
-            }
-
-            const length: number = this.positions.length;
-
-            for (let index: number = 0; index < length; index++) {
-                const condition: boolean =
-                    (index === 0
-                        && position <= this.positions[index])
-                    || (index === 0
-                        && this.positions[index + 1] !== undefined
-                        && position <= this.positions[index] + (this.positions[index + 1] - this.positions[index]) / 2)
-                    || (index === length - 1
-                        && position >= this.positions[index])
-                    || (index === length - 1
-                        && this.positions[index - 1] !== undefined
-                        && position >= this.positions[index] - (this.positions[index] - this.positions[index - 1]) / 2)
-                    || (this.positions[index - 1] !== undefined
-                        && this.positions[index] !== undefined
-                        && this.positions[index + 1] !== undefined
-                        && (position >= (this.positions[index] - Math.abs(this.positions[index] - this.positions[index - 1]) / 2))
-                        && (position <= (this.positions[index] + Math.abs(this.positions[index + 1] - this.positions[index]) / 2)));
-
-                if (condition) {
-                    return index;
-                }
-            }
-
+    private getIndexByPosition(position: number): number {
+        if (!this.positions) {
             return NaN;
         }
 
-        private getViewport(): IViewport {
-            return {
-                width: this.width,
-                height: this.height,
-            };
+        const length: number = this.positions.length;
+
+        for (let index: number = 0; index < length; index++) {
+            const condition: boolean =
+                (index === 0
+                    && position <= this.positions[index])
+                || (index === 0
+                    && this.positions[index + 1] !== undefined
+                    && position <= this.positions[index] + (this.positions[index + 1] - this.positions[index]) / 2)
+                || (index === length - 1
+                    && position >= this.positions[index])
+                || (index === length - 1
+                    && this.positions[index - 1] !== undefined
+                    && position >= this.positions[index] - (this.positions[index] - this.positions[index - 1]) / 2)
+                || (this.positions[index - 1] !== undefined
+                    && this.positions[index] !== undefined
+                    && this.positions[index + 1] !== undefined
+                    && (position >= (this.positions[index] - Math.abs(this.positions[index] - this.positions[index - 1]) / 2))
+                    && (position <= (this.positions[index] + Math.abs(this.positions[index + 1] - this.positions[index]) / 2)));
+
+            if (condition) {
+                return index;
+            }
         }
 
-        private getPositions(
-            viewport: IViewport,
-            originalScale: DataRepresentationScale,
-            points: DataRepresentationAxisValueType[],
-            offset: number
-        ): number[] {
-            const scale: DataRepresentationScale = originalScale
-                .copy()
-                .range([offset, viewport.width - offset]);
+        return NaN;
+    }
 
-            return points.map((value: DataRepresentationAxisValueType) => {
-                return scale.scale(value);
+    private getViewport(): powerbi.IViewport {
+        return {
+            height: this.height,
+            width: this.width,
+        };
+    }
+
+    private getPositions(
+        viewport: powerbi.IViewport,
+        originalScale: DataRepresentationScale,
+        points: DataRepresentationAxisValueType[],
+        offset: number,
+    ): number[] {
+        const scale: DataRepresentationScale = originalScale
+            .copy()
+            .range([offset, viewport.width - offset]);
+
+        return points.map((value: DataRepresentationAxisValueType) => {
+            return scale.scale(value);
+        });
+    }
+
+    private bindEvents(element: Selection<any, any, any, any>): void {
+        element.on("mousemove", () => this.pointerMoveEvent(this.renderOptions));
+        element.on("touchmove", () => this.pointerMoveEvent(this.renderOptions));
+
+        element.on("mouseleave", () => this.pointerLeaveHandler());
+        element.on("touchend", () => this.pointerLeaveHandler());
+    }
+
+    private pointerMoveEvent(options: ISparklineCellRenderOptions): void {
+        const event: MouseEvent | TouchEvent = require("d3").event as any;
+
+        let offsetX: number = Number.MAX_VALUE;
+        let offsetY: number = Number.MAX_VALUE;
+
+        let originalXPosition: number = Number.MAX_VALUE;
+        let originalYPosition: number = Number.MAX_VALUE;
+
+        const viewportScale: powerbi.IViewport = this.scaleService.getScale();
+
+        const elementRect: ClientRect = this.element
+            .node()
+            .getBoundingClientRect();
+
+        switch (event.type) {
+            case "mousemove": {
+                offsetX = (event as MouseEvent).offsetX;
+                offsetY = (event as MouseEvent).offsetY;
+
+                originalXPosition = (event as MouseEvent).pageX;
+                originalYPosition = elementRect.top + offsetY;
+
+                break;
+            }
+            case "touchmove": {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                const touch: TouchEvent = event as TouchEvent;
+
+                if (touch && touch.touches && touch.touches[0]) {
+                    originalXPosition = touch.touches[0].pageX;
+                    originalYPosition = touch.touches[0].pageY;
+
+                    offsetX = (originalXPosition - elementRect.left) / viewportScale.width;
+                    offsetY = (originalYPosition - elementRect.top);
+                }
+
+                break;
+            }
+        }
+
+        this.renderDynamicComponentByPosition(
+            offsetX,
+            offsetY,
+            originalXPosition,
+            originalYPosition,
+            viewportScale,
+            options,
+        );
+    }
+
+    private pointerLeaveHandler(): void {
+        this.clearDynamicComponents();
+    }
+
+    private clearDynamicComponents(): void {
+        this.clearComponents(this.dynamicComponents);
+    }
+
+    private clearComponents(components: IVisualComponent[]): void {
+        components.forEach((component: IVisualComponent) => {
+            component.clear();
+        });
+    }
+
+    private renderDynamicComponentByPosition(
+        offsetX: number,
+        offsetY: number,
+        xPosition: number,
+        yPosition: number,
+        scale: powerbi.IViewport,
+        baseOptions: ISparklineCellRenderOptions,
+    ) {
+        const { series } = baseOptions;
+
+        const amountOfPoints: number = series.axisValues.length;
+
+        let dataPointIndex: number = this.getIndexByPosition(offsetX);
+
+        dataPointIndex = Math.min(Math.max(0, dataPointIndex), amountOfPoints);
+
+        const axisValue: DataRepresentationAxisValueType = series.axisValues[dataPointIndex];
+
+        const particularSeries: IDataRepresentationSeries = {
+            axisValue,
+            axisValues: [axisValue],
+            children: [],
+            childrenSet: null,
+            level: series.level,
+            name: series.name,
+            settings: series.settings,
+            x: series.x,
+            y: series.y,
+        };
+
+        particularSeries.points = series.points
+            .map((pointSet: IDataRepresentationPointSet) => {
+                return {
+                    ...pointSet,
+                    colors: [pointSet.colors[dataPointIndex]],
+                    kpiIndicatorIndexes: [pointSet.kpiIndicatorIndexes[dataPointIndex]],
+                    points: [pointSet.points[dataPointIndex]],
+                };
             });
-        }
 
-        public updateSize(width: number, height: number): void {
-            super.updateSize(width, height);
+        particularSeries.varianceSet = series.varianceSet.map((variances: number[]) => {
+            return [variances[dataPointIndex]];
+        });
 
-            if (this.renderOptions) {
-                this.render(this.renderOptions);
-            }
-        }
+        const dynamicOptions: IDynamicComponentRenderOptions = {
+            kpiIndicatorIndex: baseOptions.kpiIndicatorIndex,
+            kpiIndicatorSettings: baseOptions.kpiIndicatorSettings,
+            metadata: baseOptions.metadata,
+            offset: baseOptions.offset,
+            order: baseOptions.order,
+            position: {
+                offsetX,
+                offsetY,
+                x: xPosition,
+                y: yPosition,
+            },
+            scale,
+            series: particularSeries,
+            settings: baseOptions.settings,
+            viewport: this.getViewport(),
+            y: baseOptions.y,
 
-        public clear(): void {
-            this.svgElement
-                .selectAll("*")
-                .remove();
+        };
 
-            super.clear();
-        }
-
-        public destroy(): void {
-            this.renderOptions = null;
-
-            if (this.svgElement) {
-                this.svgElement.remove();
-            }
-
-            this.mainGroupElement = null;
-
-            super.destroy();
-        }
+        this.dynamicComponents.forEach((component: IVisualComponent) => {
+            component.render(dynamicOptions);
+        });
     }
 }

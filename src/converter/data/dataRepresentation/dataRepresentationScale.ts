@@ -36,6 +36,10 @@ import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueTy
 import { DataRepresentationTypeEnum } from "./dataRepresentationType";
 
 export class DataRepresentationScale {
+    public get type(): DataRepresentationTypeEnum {
+        return this.scaleType;
+    }
+
     public get isCategorical(): boolean {
         return this.isCategoricalScale;
     }
@@ -43,8 +47,10 @@ export class DataRepresentationScale {
     public static create(): DataRepresentationScale {
         return new DataRepresentationScale();
     }
+
     private isCategoricalScale: boolean = false;
     private baseScale: DataRepresentationAxisScale;
+    private scaleType: DataRepresentationTypeEnum;
 
     private constructor(
         scale: DataRepresentationAxisScale = null,
@@ -59,6 +65,7 @@ export class DataRepresentationScale {
         scaleType: DataRepresentationTypeEnum,
     ): DataRepresentationScale {
         let scale: DataRepresentationAxisScale;
+
         if (values && values.length) {
             switch (scaleType) {
                 case DataRepresentationTypeEnum.DateType: {
@@ -76,6 +83,8 @@ export class DataRepresentationScale {
                 }
             }
         }
+
+        this.scaleType = scaleType;
 
         if (scale) {
             (scale as ScalePoint<DataRepresentationAxisValueType>).domain(values);

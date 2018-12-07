@@ -24,128 +24,137 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import PixelConverter = jsCommon.PixelConverter;
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class KPIIndicatorCellComponent extends TextCellComponent {
-        private componentExtraClassName: string = "kpiIndicatorCellComponent";
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
 
-        private indicatorClassName: ClassAndSelector = createClassAndSelector("kpiIndicatorCellComponent_indicator");
+import {
+    IKPIIndicatorSettings,
+    KPIIndicatorPosition,
+} from "../../../../settings/descriptors/kpi/kpiIndicatorSettings";
 
-        private glyphClassName: string = "powerKPIMatrix_glyphIcon";
+import { HorizontalTextAlignment } from "../../../../settings/descriptors/fontSettings";
+import { IVisualComponentConstructorOptions } from "../../../visualComponentConstructorOptions";
+import { TextCellComponent } from "../text/TextCellComponent";
+import { IKPIIndicatorCellRenderOptions } from "./kpiIndicatorCellRenderOptions";
 
-        private kpiIndicatorPositionLeftClassName: string = "kpiIndicatorPosition_left";
-        private kpiIndicatorPositionRightClassName: string = "kpiIndicatorPosition_right";
+export class KPIIndicatorCellComponent extends TextCellComponent {
+    private componentExtraClassName: string = "kpiIndicatorCellComponent";
 
-        private kpiIndicatorRowDirectionClassName: string = "kpiIndicatorRowDirectionClassName";
-        private kpiIndicatorColumnDirectionClassName: string = "kpiIndicatorColumnDirectionClassName";
+    private indicatorClassName: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("kpiIndicatorCellComponent_indicator");
 
-        private kpiStatusHorizontalAlignmentCenterClassName: string = "kpiStatus_horizontalAlignment_center";
+    private glyphClassName: string = "powerKPIMatrix_glyphIcon";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super(options);
+    private kpiIndicatorPositionLeftClassName: string = "kpiIndicatorPosition_left";
+    private kpiIndicatorPositionRightClassName: string = "kpiIndicatorPosition_right";
 
-            this.element.classed(this.componentExtraClassName, true);
+    private kpiIndicatorRowDirectionClassName: string = "kpiIndicatorRowDirectionClassName";
+    private kpiIndicatorColumnDirectionClassName: string = "kpiIndicatorColumnDirectionClassName";
 
-            this.updateSize(this.width, this.height);
+    private kpiStatusHorizontalAlignmentCenterClassName: string = "kpiStatus_horizontalAlignment_center";
+
+    constructor(options: IVisualComponentConstructorOptions) {
+        super(options);
+
+        this.element.classed(this.componentExtraClassName, true);
+
+        this.updateSize(this.width, this.height);
+    }
+
+    public render(options: IKPIIndicatorCellRenderOptions): void {
+        const kpiIndicatorSettings: IKPIIndicatorSettings = options
+            .kpiIndicatorSettings
+            .getCurrentKPI(options.kpiIndicatorIndex);
+
+        options.fontSettings.kpiColor = kpiIndicatorSettings && kpiIndicatorSettings.color;
+
+        this.updateElementsDirection(options.kpiIndicatorSettings.shouldWrap);
+        this.updatePosition(options.kpiIndicatorSettings.position);
+
+        this.renderIndicator(options, kpiIndicatorSettings);
+
+        const value: string = options.fontSettings.isShown
+            ? options.value
+            : undefined;
+
+        super.render({
+            fontSettings: options.fontSettings,
+            order: options.order,
+            value,
+        });
+
+        this.applyCenterAlignment(
+            options.kpiIndicatorSettings.isShown
+            &&
+            options.fontSettings.isShown
+            &&
+            options.fontSettings.alignment === HorizontalTextAlignment.center,
+        );
+    }
+
+    private applyCenterAlignment(shouldApply: boolean): void {
+        if (!this.element) {
+            return;
         }
 
-        public render(options: KPIIndicatorCellRenderOptions): void {
-            const kpiIndicatorSettings: IKPIIndicatorSettings = options
-                .kpiIndicatorSettings
-                .getCurrentKPI(options.kpiIndicatorIndex);
+        this.element.classed(
+            this.kpiStatusHorizontalAlignmentCenterClassName,
+            shouldApply,
+        );
+    }
 
-            options.fontSettings.kpiColor = kpiIndicatorSettings && kpiIndicatorSettings.color;
+    private updateElementsDirection(shouldUseColumnDirection: boolean): void {
+        if (!this.element) {
+            return;
+        }
 
-            this.updateElementsDirection(options.kpiIndicatorSettings.shouldWrap);
-            this.updatePosition(options.kpiIndicatorSettings.position);
+        this.element
+            .classed(this.kpiIndicatorColumnDirectionClassName, shouldUseColumnDirection)
+            .classed(this.kpiIndicatorRowDirectionClassName, !shouldUseColumnDirection);
+    }
 
-            this.renderIndicator(options, kpiIndicatorSettings);
+    private updatePosition(position: KPIIndicatorPosition): void {
+        if (!this.element) {
+            return;
+        }
 
-            const value: string = options.fontSettings.isShown
-                ? options.value
-                : undefined;
+        this.element
+            .classed(this.kpiIndicatorPositionLeftClassName, position === KPIIndicatorPosition.left)
+            .classed(this.kpiIndicatorPositionRightClassName, position === KPIIndicatorPosition.right);
+    }
 
-            super.render({
-                value,
-                order: options.order,
-                fontSettings: options.fontSettings,
-            });
+    private renderIndicator(
+        options: IKPIIndicatorCellRenderOptions,
+        kpiIndicatorSettings: IKPIIndicatorSettings,
+    ): void {
+        const nodeSelection: Selection<any, any[], any, any> = this.element
+            .selectAll(this.indicatorClassName.selectorName)
+            .data(options.kpiIndicatorSettings.isShown ? [[]] : []);
 
-            this.applyCenterAlignment(
-                options.kpiIndicatorSettings.isShown
-                &&
-                options.fontSettings.isShown
-                &&
-                options.fontSettings.alignment === HorizontalTextAlignment.center
+        nodeSelection
+            .exit()
+            .remove();
+
+        const mergedNodeSelection: Selection<any, any[], any, any> = nodeSelection
+            .enter()
+            .append("div")
+            .merge(nodeSelection);
+
+        const className: string = kpiIndicatorSettings.shape
+            ? `${this.indicatorClassName.className} ${this.glyphClassName} ${kpiIndicatorSettings.shape}`
+            : `${this.indicatorClassName.className}`;
+
+        mergedNodeSelection
+            .attr("class", className)
+            .style("color", kpiIndicatorSettings.color)
+            .style(
+                "font-size",
+                pixelConverter.toString(
+                    pixelConverter.fromPointToPixel(options.kpiIndicatorSettings.textFontSize),
+                ),
             );
-        }
 
-        private applyCenterAlignment(shouldApply: boolean): void {
-            if (!this.element) {
-                return;
-            }
-
-            this.element.classed(
-                this.kpiStatusHorizontalAlignmentCenterClassName,
-                shouldApply
-            );
-        }
-
-        private updateElementsDirection(shouldUseColumnDirection: boolean): void {
-            if (!this.element) {
-                return;
-            }
-
-            this.element
-                .classed(this.kpiIndicatorColumnDirectionClassName, shouldUseColumnDirection)
-                .classed(this.kpiIndicatorRowDirectionClassName, !shouldUseColumnDirection);
-        }
-
-        private updatePosition(position: KPIIndicatorPosition): void {
-            if (!this.element) {
-                return;
-            }
-
-            this.element
-                .classed(this.kpiIndicatorPositionLeftClassName, position === KPIIndicatorPosition.left)
-                .classed(this.kpiIndicatorPositionRightClassName, position === KPIIndicatorPosition.right);
-        }
-
-        private renderIndicator(
-            options: KPIIndicatorCellRenderOptions,
-            kpiIndicatorSettings: IKPIIndicatorSettings
-        ): void {
-            const nodeSelection: D3.UpdateSelection = this.element
-                .selectAll(this.indicatorClassName.selector)
-                .data(options.kpiIndicatorSettings.isShown ? [[]] : []);
-
-            nodeSelection
-                .enter()
-                .append("div");
-
-            const className: string = kpiIndicatorSettings.shape
-                ? `${this.indicatorClassName.class} ${this.glyphClassName} ${kpiIndicatorSettings.shape}`
-                : `${this.indicatorClassName.class}`;
-
-            nodeSelection
-                .attr({
-                    "class": className,
-                })
-                .style({
-                    color: kpiIndicatorSettings.color,
-                    "font-size": PixelConverter.toString(
-                        PixelConverter.fromPointToPixel(options.kpiIndicatorSettings.textFontSize)),
-                });
-
-            this.updateTextWrapping(nodeSelection, options.fontSettings.wrapText);
-
-            nodeSelection
-                .exit()
-                .remove();
-        }
+        this.updateTextWrapping(mergedNodeSelection, options.fontSettings.wrapText);
     }
 }

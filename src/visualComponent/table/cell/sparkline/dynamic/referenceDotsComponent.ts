@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,94 +12,96 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon.CssConstants
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class ReferenceDotsComponent extends BaseComponent {
-        private className: string = "referenceDotsComponent";
-        private dotsSelector: ClassAndSelector = createClassAndSelector("dots");
-        private dotSelector: ClassAndSelector = createClassAndSelector("dot");
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
 
-        private dataPointFilter: DataRepresentationPointFilter = DataRepresentationPointFilter.create();
+import { DataRepresentationPointFilter } from "../../../../../converter/data/dataRepresentation/dataRepresentationPointFilter";
+import { IDataRepresentationPointSet } from "../../../../../converter/data/dataRepresentation/dataRepresentationPointSet";
+import { DataRepresentationScale } from "../../../../../converter/data/dataRepresentation/dataRepresentationScale";
+import { IDataRepresentationSeries } from "../../../../../converter/data/dataRepresentation/dataRepresentationSeries";
+import { BaseComponent } from "../../../../baseComponent";
+import { IVisualComponentConstructorOptions } from "../../../../visualComponentConstructorOptions";
 
-        private radiusFactor: number = 1.4;
+import { IDynamicComponentRenderOptions } from "./dynamicComponentRenderOptions";
 
-        constructor(options: VisualComponentConstructorOptions) {
-            super();
+export class ReferenceDotsComponent extends BaseComponent {
+    private className: string = "referenceDotsComponent";
+    private dotsSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("dots");
+    private dotSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("dot");
 
-            this.element = options.element
-                .append("g")
-                .classed(this.className, true);
-        }
+    private dataPointFilter: DataRepresentationPointFilter = DataRepresentationPointFilter.create();
 
-        public render(options: DynamicComponentRenderOptions): void {
-            const {
-                series,
-                offset,
-                viewport,
-            } = options;
+    private radiusFactor: number = 1.4;
 
-            const xScale: DataRepresentationScale = series.x.scale
-                .copy()
-                .range([offset, viewport.width - offset]);
+    constructor(options: IVisualComponentConstructorOptions) {
+        super();
 
-            const yScale: DataRepresentationScale = series.y.scale
-                .copy()
-                .range([viewport.height - offset, offset]);
+        this.element = options.element
+            .append("g")
+            .classed(this.className, true);
+    }
 
-            const dotGroupSelection: D3.UpdateSelection = this.element
-                .selectAll(this.dotsSelector.selector)
-                .data(series ? [series] : []);
+    public render(options: IDynamicComponentRenderOptions): void {
+        const {
+            series,
+            offset,
+            viewport,
+        } = options;
 
-            dotGroupSelection
-                .enter()
-                .append("g")
-                .classed(this.dotsSelector.class, true);
+        const xScale: DataRepresentationScale = series.x.scale
+            .copy()
+            .range([offset, viewport.width - offset]);
 
-            const dotSelection: D3.UpdateSelection = dotGroupSelection
-                .selectAll(this.dotSelector.selector)
-                .data((series: IDataRepresentationSeries) => {
-                    return series.points.filter((pointSet: DataRepresentationPointSet) => {
-                        return pointSet.isShown && this.dataPointFilter.filter(pointSet.points || []).length > 0;
-                    });
+        const yScale: DataRepresentationScale = series.y.scale
+            .copy()
+            .range([viewport.height - offset, offset]);
+
+        const dotGroupSelection: Selection<any, IDataRepresentationSeries, any, any> = this.element
+            .selectAll(this.dotsSelector.selectorName)
+            .data(series ? [series] : []);
+
+        dotGroupSelection
+            .exit()
+            .remove();
+
+        const mergedDotGroupSelection: Selection<any, IDataRepresentationSeries, any, any> = dotGroupSelection
+            .enter()
+            .append("g")
+            .classed(this.dotsSelector.className, true);
+
+        const dotSelection: Selection<any, IDataRepresentationPointSet, any, any> = mergedDotGroupSelection
+            .selectAll(this.dotSelector.selectorName)
+            .data((dataSeries: IDataRepresentationSeries) => {
+                return dataSeries.points.filter((pointSet: IDataRepresentationPointSet) => {
+                    return pointSet.isShown && this.dataPointFilter.filter(pointSet.points || []).length > 0;
                 });
+            });
 
-            dotSelection
-                .enter()
-                .append("circle")
-                .classed(this.dotSelector.class, true);
+        dotSelection
+            .exit()
+            .remove();
 
-            dotSelection
-                .attr({
-                    cx: (pointSet: DataRepresentationPointSet) => xScale.scale(pointSet.points[0].axisValue),
-                    cy: (pointSet: DataRepresentationPointSet) => yScale.scale(pointSet.points[0].value),
-                    r: (pointSet: DataRepresentationPointSet) => pointSet.thickness * this.radiusFactor
-                })
-                .style({
-                    fill: (pointSet: DataRepresentationPointSet) => (pointSet.colors && pointSet.colors[0]) || pointSet.color
-                });
-
-            dotSelection
-                .exit()
-                .remove();
-
-            dotGroupSelection
-                .exit()
-                .remove();
-        }
+        dotSelection
+            .enter()
+            .append("circle")
+            .classed(this.dotSelector.className, true)
+            .merge(dotSelection)
+            .attr("cx", (pointSet: IDataRepresentationPointSet) => xScale.scale(pointSet.points[0].axisValue))
+            .attr("cy", (pointSet: IDataRepresentationPointSet) => yScale.scale(pointSet.points[0].value))
+            .attr("r", (pointSet: IDataRepresentationPointSet) => pointSet.thickness * this.radiusFactor)
+            .style("fill", (pointSet: IDataRepresentationPointSet) => (pointSet.colors && pointSet.colors[0]) || pointSet.color);
     }
 }

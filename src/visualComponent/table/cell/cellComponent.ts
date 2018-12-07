@@ -24,17 +24,22 @@
  *  THE SOFTWARE.
  */
 
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
+
+import { BaseContainerComponent } from "../../baseContainerComponent";
+import { IVisualComponentConstructorOptions } from "../../visualComponentConstructorOptions";
+import { ICellState } from "./cellState";
+
 export class CellComponent extends BaseContainerComponent {
-
-    private className: string = "cellComponent";
-
     protected minWidth: number = 20;
     protected width: number = 120;
 
     protected minHeight: number = 20;
     protected height: number = 55;
 
-    constructor(options: VisualComponentConstructorOptions) {
+    private className: string = "cellComponent";
+
+    constructor(options: IVisualComponentConstructorOptions) {
         super();
 
         this.element = options.element
@@ -54,6 +59,13 @@ export class CellComponent extends BaseContainerComponent {
         this.updateSizeOfElement(this.width, this.height);
     }
 
+    public getState(): ICellState {
+        return {
+            height: this.height,
+            width: this.width,
+        };
+    }
+
     protected updateSizeOfElement(width: number, height: number): void {
         if (!this.element) {
             return;
@@ -61,27 +73,20 @@ export class CellComponent extends BaseContainerComponent {
 
         const styleObject: any = {};
 
-        styleObject["width"]
+        styleObject.width
             = styleObject["min-width"]
             = styleObject["max-width"]
             = width !== undefined && width !== null
-                ? PixelConverter.toString(width)
+                ? pixelConverter.toString(width)
                 : null;
 
-        styleObject["height"]
+        styleObject.height
             = styleObject["min-height"]
             = styleObject["max-height"]
             = height !== undefined && height !== null
-                ? PixelConverter.toString(height)
+                ? pixelConverter.toString(height)
                 : null;
 
         this.element.style(styleObject);
-    }
-
-    public getState(): CellState {
-        return {
-            width: this.width,
-            height: this.height,
-        };
     }
 }

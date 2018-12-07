@@ -26,6 +26,8 @@
 
 import { Selection } from "d3-selection";
 
+import powerbi from "powerbi-visuals-api";
+
 import { ModalWindowService } from "../services/modalWindowService";
 import { ScaleService } from "../services/scaleService";
 import { StateService } from "../services/state/stateService";
@@ -34,6 +36,8 @@ export type OnCellChangeHandler = (width: number, height: number, cellIndex: num
 
 export interface IVisualComponentConstructorOptions {
     element?: Selection<any, any, any, any>;
+    rootElement?: Selection<any, any, any, any>;
+    tooltipService?: powerbi.extensibility.ITooltipService;
     scaleService?: ScaleService;
     stateService?: StateService;
     powerKPIModalWindowService?: ModalWindowService;

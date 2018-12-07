@@ -24,8 +24,8 @@
  *  THE SOFTWARE.
  */
 
-import { DataRepresentationPoint } from "./dataRepresentationPoint";
-import { DataRepresentationPointGradientColor } from "./dataRepresentationPointGradientColor";
+import { IDataRepresentationPoint } from "./dataRepresentationPoint";
+import { IDataRepresentationPointGradientColor } from "./dataRepresentationPointGradientColor";
 
 export class DataRepresentationPointFilter {
     public static create(): DataRepresentationPointFilter {
@@ -42,7 +42,7 @@ export class DataRepresentationPointFilter {
         DataRepresentationPointFilter.instance = this;
     }
 
-    public isPointValid(point: DataRepresentationPoint): boolean {
+    public isPointValid(point: IDataRepresentationPoint): boolean {
         return point
             && point.value !== null
             && point.value !== undefined
@@ -50,10 +50,10 @@ export class DataRepresentationPointFilter {
     }
 
     public groupAndFilterByColor(
-        points: DataRepresentationPoint[],
+        points: IDataRepresentationPoint[],
         colors: string[],
         defaultColor: string,
-    ): DataRepresentationPointGradientColor[] {
+    ): IDataRepresentationPointGradientColor[] {
         if (!colors || !colors.length) {
             return [{
                 color: defaultColor,
@@ -61,11 +61,11 @@ export class DataRepresentationPointFilter {
             }];
         }
 
-        const gradientSet: DataRepresentationPointGradientColor[] = [];
+        const gradientSet: IDataRepresentationPointGradientColor[] = [];
 
         colors.forEach((color: string, colorIndex: number) => {
-            const currentGradient: DataRepresentationPointGradientColor = gradientSet.slice(-1)[0];
-            const point: DataRepresentationPoint = points[colorIndex];
+            const currentGradient: IDataRepresentationPointGradientColor = gradientSet.slice(-1)[0];
+            const point: IDataRepresentationPoint = points[colorIndex];
 
             if (this.isPointValid(point)) {
                 if (!currentGradient) {
@@ -89,7 +89,7 @@ export class DataRepresentationPointFilter {
         return gradientSet;
     }
 
-    public filter(points: DataRepresentationPoint[]): DataRepresentationPoint[] {
-        return points.filter((point: DataRepresentationPoint) => this.isPointValid(point));
+    public filter(points: IDataRepresentationPoint[]): IDataRepresentationPoint[] {
+        return points.filter((point: IDataRepresentationPoint) => this.isPointValid(point));
     }
 }

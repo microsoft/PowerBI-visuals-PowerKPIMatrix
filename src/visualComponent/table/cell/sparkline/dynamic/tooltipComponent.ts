@@ -24,287 +24,302 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // powerbi.visuals.controls
-    import Rectangle = powerbi.visuals.controls.TouchUtils.Rectangle;
+import powerbi from "powerbi-visuals-api";
 
-    enum TooltipMarkerShapeEnum {
-        circle,
-        none
+import { valueFormatter } from "powerbi-visuals-utils-formattingutils";
+
+import { IVisualComponent } from "../../../../visualComponent";
+import { IVisualComponentConstructorOptions } from "../../../../visualComponentConstructorOptions";
+
+import { IDataRepresentationPointSet } from "../../../../../converter/data/dataRepresentation/dataRepresentationPointSet";
+import { NumberSettingsBase } from "../../../../../settings/descriptors/numberSettingsBase";
+import { FormattingUtils } from "../../../../../utils/formattingUtils";
+import { NumericValueUtils } from "../../../../../utils/numericValueUtils";
+
+import {
+    IKPIIndicatorSettings,
+    KPIIndicatorSettings,
+} from "../../../../../settings/descriptors/kpi/kpiIndicatorSettings";
+
+import { IDynamicComponentRenderOptions } from "./dynamicComponentRenderOptions";
+
+enum TooltipMarkerShapeEnum {
+    circle,
+    none,
+}
+
+interface IVisualTooltipDataItem extends powerbi.extensibility.VisualTooltipDataItem {
+    lineStyle?: string; // TODO: Extend PBI API
+    markerShape?: string; // TODO: Extend PBI API
+    lineColor?: string; // TODO: Extend PBI API
+}
+
+export class TooltipComponent implements IVisualComponent {
+    private extraYOffset: number = 5;
+
+    private transparentColor: string = "rgba(0,0,0,0)";
+
+    constructor(private constructorOptions: IVisualComponentConstructorOptions) { }
+
+    public render(options: IDynamicComponentRenderOptions): void {
+        if (!options) {
+            return;
+        }
+
+        const {
+            scale,
+            series,
+            position,
+            metadata,
+            viewport,
+        } = options;
+
+        const baseDataItems: IVisualTooltipDataItem[] = [];
+
+        if (NumericValueUtils.isValueDefined(series.axisValue)) {
+            const asOfDateFormatter: valueFormatter.IValueFormatter = FormattingUtils.getFormatterOfAxisValue(
+                series.x.min,
+                series.x.max,
+                series.x.scale.type,
+                metadata,
+                series.settings.asOfDate,
+            );
+
+            baseDataItems.push({
+                color: this.transparentColor,
+                displayName: "",
+                markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle),
+                value: asOfDateFormatter.format(series.axisValue),
+            });
+        }
+
+        this.addValueTooltip(
+            baseDataItems,
+            this.getVarianceTooltip(
+                series.varianceSet && series.varianceSet[0],
+                series.settings.kpiIndicatorValue,
+                series.points[0] && series.points[0].kpiIndicatorIndexes,
+                series.settings.kpiIndicator,
+            ),
+        );
+
+        this.addValueTooltip(
+            baseDataItems,
+            this.getVarianceTooltip(
+                series.varianceSet && series.varianceSet[1],
+                series.settings.secondKPIIndicatorValue,
+                null,
+                null,
+            ),
+        );
+
+        const additionalDataItems: IVisualTooltipDataItem[] = [];
+
+        series.points.forEach((pointSet: IDataRepresentationPointSet) => {
+            this.addValueTooltip(
+                additionalDataItems,
+                this.getValueTooltip(pointSet),
+            );
+        });
+
+        if (additionalDataItems && additionalDataItems.length) {
+            baseDataItems.push(
+                this.getTooltipSeparator(),
+                this.getTooltipSeparator(),
+            );
+
+            baseDataItems.push(...additionalDataItems);
+        }
+
+        const yOffset: number = position.y - position.offsetY;
+        const screenHeight: number = window.innerHeight;
+        const middleScreenHeight: number = screenHeight / 2;
+        const height: number = viewport.height * scale.height;
+
+        const isElementAboveOfMiddleOfScreen: boolean =
+            (
+                yOffset + (height / 2) < middleScreenHeight
+                && (yOffset + height) < middleScreenHeight
+            )
+            || yOffset < middleScreenHeight;
+
+        const coordinates: [number, number] = this.getCoordinates(
+            position.x,
+            position.y,
+        );
+
+        this.renderTooltip(
+            baseDataItems,
+            [
+                coordinates[0],
+                isElementAboveOfMiddleOfScreen ? 0 : screenHeight,
+            ],
+            0,
+            isElementAboveOfMiddleOfScreen
+                ? yOffset + height + this.extraYOffset
+                : screenHeight - yOffset + this.extraYOffset,
+        );
     }
 
-    export class TooltipComponent implements VisualComponent {
-        private static singletonInstance: TooltipComponent;
+    public clear(): void {
+        this.hide();
+    }
 
-        private tooltipComponent: ToolTipComponent;
-
-        private extraYOffset: number = 5;
-
-        private transparentColor: string = "rgba(0,0,0,0)";
-
-        constructor() {
-            try {
-                this.tooltipComponent = new ToolTipComponent({ hideArrow: true });
-            } catch (err) {
-                this.tooltipComponent = null;
-            }
+    public hide(): void {
+        if (!this.constructorOptions || !this.constructorOptions.tooltipService) {
+            return;
         }
 
-        public static instance(): TooltipComponent {
-            if (!TooltipComponent.singletonInstance) {
-                TooltipComponent.singletonInstance = new TooltipComponent();
-            }
+        this.constructorOptions.tooltipService.hide({
+            immediately: true,
+            isTouchEvent: false,
+        });
+    }
 
-            return TooltipComponent.singletonInstance;
+    public destroy(): void {
+        this.hide();
+    }
+
+    private getCoordinates(x: number, y: number): [number, number] {
+        if (!this.constructorOptions || !this.constructorOptions.rootElement) {
+            return [x, y];
         }
 
-        public render(options: DynamicComponentRenderOptions): void {
-            if (!options || !this.tooltipComponent) {
-                return;
-            }
+        const rootNode: HTMLElement = this.constructorOptions.rootElement.node();
 
-            const {
-                scale,
-                series,
-                position,
-                metadata,
-                viewport,
-            } = options;
+        const rect: ClientRect = rootNode.getBoundingClientRect();
 
-            const baseDataItems: TooltipDataItem[] = [];
+        return [
+            x - rect.left - rootNode.clientLeft,
+            y - rect.top - rootNode.clientTop,
+        ];
+    }
 
-            if (NumericValueUtils.isValueDefined(series.axisValue)) {
-                const asOfDateFormatter: IValueFormatter = FormattingUtils.getFormatterOfAxisValue(
-                    series.x.min,
-                    series.x.max,
-                    series.x.scale.type,
-                    metadata,
-                    series.settings.asOfDate
-                );
+    private getTooltipSeparator(): IVisualTooltipDataItem {
+        return {
+            color: this.transparentColor,
+            displayName: "   ",
+            markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.none),
+            value: "",
+        };
+    }
 
-                baseDataItems.push({
-                    displayName: "",
-                    color: this.transparentColor,
-                    value: asOfDateFormatter.format(series.axisValue),
-                    markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle)
-                });
-            }
+    private addValueTooltip(
+        dataItems: IVisualTooltipDataItem[],
+        dataItem: IVisualTooltipDataItem,
+    ): void {
+        if (!dataItem) {
+            return;
+        }
 
-            this.addValueTooltip(
-                baseDataItems,
-                this.getVarianceTooltip(
-                    series.varianceSet && series.varianceSet[0],
-                    series.settings.kpiIndicatorValue,
-                    series.points[0] && series.points[0].kpiIndicatorIndexes,
-                    series.settings.kpiIndicator
-                )
-            );
+        dataItems.push(dataItem);
+    }
 
-            this.addValueTooltip(
-                baseDataItems,
-                this.getVarianceTooltip(
-                    series.varianceSet && series.varianceSet[1],
-                    series.settings.secondKPIIndicatorValue,
-                    null,
-                    null
-                )
-            );
+    private getVarianceTooltip(
+        varianceSet: number[],
+        settings: NumberSettingsBase,
+        kpiIndicatorIndexes: number[],
+        kpiIndicatorSettings: KPIIndicatorSettings,
+    ): IVisualTooltipDataItem {
+        const variance: number = varianceSet && varianceSet[0];
 
-            const additionalDataItems: TooltipDataItem[] = [];
+        if (!NumericValueUtils.isValueFinite(variance)) {
+            return null;
+        }
 
-            series.points.forEach((pointSet: DataRepresentationPointSet) => {
-                this.addValueTooltip(
-                    additionalDataItems,
-                    this.getValueTooltip(pointSet)
-                );
+        const kpiIndicatorValueFormatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
+            settings.displayUnits || variance || 0,
+            undefined,
+            undefined,
+            settings.precision,
+            settings.getFormat(),
+        );
+
+        let color: string = this.transparentColor;
+
+        if (kpiIndicatorSettings) {
+            const kpiIndicatorIndex: number = kpiIndicatorIndexes && kpiIndicatorIndexes[0];
+            const currentKPIIndicator: IKPIIndicatorSettings = kpiIndicatorSettings.getCurrentKPI(kpiIndicatorIndex);
+
+            color = (currentKPIIndicator && currentKPIIndicator.color) || color;
+        }
+
+        return {
+            color,
+            displayName: settings.label,
+            markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle),
+            value: FormattingUtils.getFormattedValue(
+                variance,
+                kpiIndicatorValueFormatter,
+            ),
+        };
+    }
+
+    private getValueTooltip(pointSet: IDataRepresentationPointSet): IVisualTooltipDataItem {
+        if (!pointSet
+            || !pointSet.settings
+            || !pointSet.points
+            || !pointSet.points[0]
+            || !NumericValueUtils.isValueFinite(pointSet.points[0].value)
+        ) {
+            return null;
+        }
+
+        const {
+            name,
+            settings,
+        } = pointSet;
+
+        const value: number = pointSet.points[0].value;
+
+        const formatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
+            settings.displayUnits || value || 0,
+            undefined,
+            undefined,
+            settings.precision,
+            settings.getFormat(),
+        );
+
+        return {
+            color: (pointSet.colors && pointSet.colors[0]) || pointSet.color || this.transparentColor,
+            displayName: name || settings.label,
+            markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle),
+            value: FormattingUtils.getFormattedValue(
+                value,
+                formatter,
+            ),
+        };
+    }
+
+    private renderTooltip(
+        dataItems: IVisualTooltipDataItem[],
+        coordinates: [number, number],
+        offsetX: number,
+        offsetY: number,
+    ): void {
+        if (!dataItems
+            || !dataItems.length
+            || !this.constructorOptions
+            || !this.constructorOptions.tooltipService
+        ) {
+            this.hide();
+        } else {
+            this.constructorOptions.tooltipService.show({
+                coordinates,
+                dataItems,
+                identities: [],
+                isTouchEvent: false,
             });
-
-            if (additionalDataItems && additionalDataItems.length) {
-                baseDataItems.push(
-                    this.getTooltipSeparator(),
-                    this.getTooltipSeparator(),
-                );
-
-                baseDataItems.push(...additionalDataItems);
-            }
-
-            const yOffset: number = position.y - position.offsetY;
-            const screenHeight: number = window.innerHeight;
-            const middleScreenHeight: number = screenHeight / 2;
-            const height: number = viewport.height * scale.height;
-
-            const isElementAboveOfMiddleOfScreen: boolean =
-                (
-                    yOffset + (height / 2) < middleScreenHeight
-                    && (yOffset + height) < middleScreenHeight
-                )
-                || yOffset < middleScreenHeight;
-
-            const rect: Rectangle = new Rectangle(
-                position.x,
-                isElementAboveOfMiddleOfScreen ? 0 : screenHeight,
-                0,
-                0
-            );
-
-            this.renderTooltip(
-                baseDataItems,
-                rect,
-                0,
-                isElementAboveOfMiddleOfScreen
-                    ? yOffset + height + this.extraYOffset
-                    : screenHeight - yOffset + this.extraYOffset
-            );
         }
+    }
 
-        private getTooltipSeparator(): TooltipDataItem {
-            return {
-                displayName: "   ",
-                value: "",
-                color: this.transparentColor,
-                markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.none)
-            };
-        }
+    // public get isShown(): boolean {
+    //     return this.tooltipComponent
+    //         && this.tooltipComponent.isTooltipComponentVisible
+    //         && this.tooltipComponent.isTooltipComponentVisible();
+    // }
 
-        private addValueTooltip(
-            dataItems: TooltipDataItem[],
-            dataItem: TooltipDataItem
-        ): void {
-            if (!dataItem) {
-                return;
-            }
-
-            dataItems.push(dataItem);
-        }
-
-        private getVarianceTooltip(
-            varianceSet: number[],
-            settings: NumberSettingsBase,
-            kpiIndicatorIndexes: number[],
-            kpiIndicatorSettings: KPIIndicatorSettings
-        ): TooltipDataItem {
-            const variance: number = varianceSet && varianceSet[0];
-
-            if (!NumericValueUtils.isValueFinite(variance)) {
-                return null;
-            }
-
-            const kpiIndicatorValueFormatter: IValueFormatter = FormattingUtils.getValueFormatter(
-                settings.displayUnits || variance || 0,
-                undefined,
-                undefined,
-                settings.precision,
-                settings.getFormat()
-            );
-
-            let color: string = this.transparentColor;
-
-            if (kpiIndicatorSettings) {
-                const kpiIndicatorIndex: number = kpiIndicatorIndexes && kpiIndicatorIndexes[0];
-                const currentKPIIndicator: IKPIIndicatorSettings = kpiIndicatorSettings.getCurrentKPI(kpiIndicatorIndex);
-
-                color = (currentKPIIndicator && currentKPIIndicator.color) || color;
-            }
-
-            return {
-                color,
-                displayName: settings.label,
-                value: FormattingUtils.getFormattedValue(
-                    variance,
-                    kpiIndicatorValueFormatter
-                ),
-                markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle),
-            };
-        }
-
-        private getValueTooltip(pointSet: DataRepresentationPointSet): TooltipDataItem {
-            if (!pointSet
-                || !pointSet.settings
-                || !pointSet.points
-                || !pointSet.points[0]
-                || !NumericValueUtils.isValueFinite(pointSet.points[0].value)
-            ) {
-                return null;
-            }
-
-            const {
-                name,
-                settings
-            } = pointSet;
-
-            const value: number = pointSet.points[0].value;
-
-            const formatter: IValueFormatter = FormattingUtils.getValueFormatter(
-                settings.displayUnits || value || 0,
-                undefined,
-                undefined,
-                settings.precision,
-                settings.getFormat()
-            );
-
-            return {
-                displayName: name || settings.label,
-                value: FormattingUtils.getFormattedValue(
-                    value,
-                    formatter
-                ),
-                markerShape: this.getTooltipMarkerShape(TooltipMarkerShapeEnum.circle),
-                color: (pointSet.colors && pointSet.colors[0]) || pointSet.color || this.transparentColor,
-            };
-        }
-
-        private renderTooltip(
-            dataItems: TooltipDataItem[],
-            rect: Rectangle,
-            offsetX: number,
-            offsetY: number
-        ): void {
-            if (!dataItems
-                || !dataItems.length
-                || !rect
-                || !this.tooltipComponent
-            ) {
-                this.hide();
-            } else {
-                this.tooltipComponent.setTooltipAppearanceOptions({
-                    offsetX,
-                    offsetY
-                });
-
-                this.tooltipComponent.show(dataItems, rect);
-            }
-        }
-
-        public get isShown(): boolean {
-            return this.tooltipComponent
-                && this.tooltipComponent.isTooltipComponentVisible
-                && this.tooltipComponent.isTooltipComponentVisible();
-        }
-
-        public clear(): void {
-            this.hide();
-        }
-
-        public hide(): void {
-            if (!this.isShown) {
-                return;
-            }
-
-            this.tooltipComponent.hide();
-        }
-
-        public destroy(): void {
-            if (!this.tooltipComponent) {
-                return;
-            }
-
-            this.hide();
-
-            this.tooltipComponent = null;
-        }
-
-        private getTooltipMarkerShape(markerShape: TooltipMarkerShapeEnum): string {
-            return TooltipMarkerShapeEnum[markerShape];
-        }
+    private getTooltipMarkerShape(markerShape: TooltipMarkerShapeEnum): string {
+        return TooltipMarkerShapeEnum[markerShape];
     }
 }

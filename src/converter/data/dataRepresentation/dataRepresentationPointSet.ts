@@ -28,13 +28,13 @@ import { NumberSettingsBase } from "../../../settings/descriptors/numberSettings
 import { LineStyle } from "../../../settings/descriptors/sparklineSettings";
 
 import { IDataRepresentationAxis } from "./dataRepresentationAxis";
-import { DataRepresentationPoint } from "./dataRepresentationPoint";
+import { IDataRepresentationPoint } from "./dataRepresentationPoint";
 
 export interface IDataRepresentationPointSet extends IDataRepresentationAxis {
     name: string;
     settings: NumberSettingsBase;
     isShown: boolean;
-    points: DataRepresentationPoint[];
+    points: IDataRepresentationPoint[];
     color: string;
     colors: string[];
     kpiIndicatorIndexes: number[];

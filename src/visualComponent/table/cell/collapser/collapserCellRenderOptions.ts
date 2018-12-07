@@ -24,9 +24,9 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    export interface CollapserCellRenderOptions extends TextCellRenderOptions {
-        isShown: boolean;
-        isExpandCollapseShown: boolean;
-    }
+import { ITextCellRenderOptions } from "../text/textCellRenderOptions";
+
+export interface ICollapserCellRenderOptions extends ITextCellRenderOptions {
+    isShown: boolean;
+    isExpandCollapseShown: boolean;
 }

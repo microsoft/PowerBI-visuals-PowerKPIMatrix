@@ -24,66 +24,72 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import ClassAndSelector = jsCommon.CssConstants.ClassAndSelector;
-    import createClassAndSelector = jsCommon.CssConstants.createClassAndSelector;
+import { Selection } from "d3-selection";
 
-    export class CollapserCellComponent extends TextCellComponent {
-        private onChangeHandler: CollapserCellOnChangeHandler;
+import { CssConstants } from "powerbi-visuals-utils-svgutils";
 
-        private extraClassName: string = "collapserCellComponent";
+import { TextCellComponent } from "../text/textCellComponent";
 
-        private collapserSelector: ClassAndSelector = createClassAndSelector("collapserCellComponent_collapserSign");
+import {
+    CollapserCellOnChangeHandler,
+    ICollapserCellConstructorOptions,
+} from "./collapserCellConstructorOptions";
 
-        private glyphClassName: string = "powervisuals-glyph";
+import { ICollapserCellRenderOptions } from "./collapserCellRenderOptions";
 
-        private chevronDownClassName: string = "chevron-down";
-        private chevronUpClassName: string = "chevron-up";
+export class CollapserCellComponent extends TextCellComponent {
+    private onChangeHandler: CollapserCellOnChangeHandler;
 
-        constructor(options: CollapserCellConstructorOptions) {
-            super(options);
+    private extraClassName: string = "collapserCellComponent";
 
-            this.element.classed(this.extraClassName, true);
+    private collapserSelector: CssConstants.ClassAndSelector = CssConstants.createClassAndSelector("collapserCellComponent_collapserSign");
 
-            this.onChangeHandler = options.onChangeHandler;
-        }
+    private glyphClassName: string = "powervisuals-glyph";
 
-        public render(options: CollapserCellRenderOptions): void {
-            const {
-                isShown,
-                isExpandCollapseShown,
-            } = options;
+    private chevronDownClassName: string = "chevron-down";
+    private chevronUpClassName: string = "chevron-up";
 
-            super.render(options);
+    constructor(options: ICollapserCellConstructorOptions) {
+        super(options);
 
-            this.renderCollapser(isShown, isExpandCollapseShown);
-        }
+        this.element.classed(this.extraClassName, true);
 
-        private renderCollapser(state: boolean, isExpandCollapseShown: boolean): void {
-            const collapserSelection: D3.UpdateSelection = this.element
-                .selectAll(this.collapserSelector.selector)
-                .data(isExpandCollapseShown ? [state] : []);
+        this.onChangeHandler = options.onChangeHandler;
+    }
 
-            collapserSelection
-                .enter()
-                .append("div")
-                .classed(this.collapserSelector.class, true)
-                .classed(this.glyphClassName, true)
-                .on("click", (state: boolean) => {
-                    const newState: boolean = !state;
+    public render(options: ICollapserCellRenderOptions): void {
+        const {
+            isShown,
+            isExpandCollapseShown,
+        } = options;
 
-                    this.renderCollapser(newState, true);
-                    this.onChangeHandler(newState);
-                });
+        super.render(options);
 
-            collapserSelection
-                .classed(this.chevronDownClassName, !state)
-                .classed(this.chevronUpClassName, state);
+        this.renderCollapser(isShown, isExpandCollapseShown);
+    }
 
-            collapserSelection
-                .exit()
-                .remove();
-        }
+    private renderCollapser(state: boolean, isExpandCollapseShown: boolean): void {
+        const collapserSelection: Selection<any, boolean, any, any> = this.element
+            .selectAll(this.collapserSelector.selectorName)
+            .data(isExpandCollapseShown ? [state] : []);
+
+        collapserSelection
+            .exit()
+            .remove();
+
+        collapserSelection
+            .enter()
+            .append("div")
+            .classed(this.collapserSelector.className, true)
+            .classed(this.glyphClassName, true)
+            .on("click", (currentState: boolean) => {
+                const newState: boolean = !currentState;
+
+                this.renderCollapser(newState, true);
+                this.onChangeHandler(newState);
+            })
+            .merge(collapserSelection)
+            .classed(this.chevronDownClassName, !state)
+            .classed(this.chevronUpClassName, state);
     }
 }

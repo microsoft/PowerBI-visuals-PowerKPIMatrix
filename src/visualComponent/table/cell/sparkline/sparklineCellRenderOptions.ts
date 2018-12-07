@@ -24,10 +24,17 @@
  *  THE SOFTWARE.
  */
 
-export interface SparklineCellRenderOptions extends KPIIndicatorCellRenderOptionsBase {
+import powerbi from "powerbi-visuals-api";
+
+import { IDataRepresentationAxis } from "../../../../converter/data/dataRepresentation/dataRepresentationAxis";
+import { IDataRepresentationSeries } from "../../../../converter/data/dataRepresentation/dataRepresentationSeries";
+import { Settings } from "../../../../settings/settings";
+import { IKPIIndicatorCellRenderOptionsBase } from "../kpiIndicator/kpiIndicatorCellRenderOptions";
+
+export interface ISparklineCellRenderOptions extends IKPIIndicatorCellRenderOptionsBase {
     offset: number;
     settings: Settings;
     series: IDataRepresentationSeries;
-    metadata: DataViewMetadataColumn;
-    y: DataRepresentationAxis;
+    metadata: powerbi.DataViewMetadataColumn;
+    y: IDataRepresentationAxis;
 }

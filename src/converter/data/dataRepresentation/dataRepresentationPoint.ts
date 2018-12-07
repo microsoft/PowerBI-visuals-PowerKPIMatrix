@@ -26,7 +26,7 @@
 
 import { DataRepresentationAxisValueType } from "./dataRepresentationAxisValueType";
 
-export interface DataRepresentationPoint {
+export interface IDataRepresentationPoint {
     axisValue: DataRepresentationAxisValueType;
     value: number;
 }

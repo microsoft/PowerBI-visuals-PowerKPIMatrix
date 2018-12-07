@@ -32,6 +32,7 @@ import { IVisualComponentRenderOptionsBase } from "./visualComponentRenderOption
 import {
     HorizontalTextAlignment,
     VerticalTextAlignment,
+    WrapText,
 } from "../settings/descriptors/fontSettings";
 
 export abstract class BaseComponent implements IVisualComponent {
@@ -135,8 +136,8 @@ export abstract class BaseComponent implements IVisualComponent {
     }
 
     protected updateTextWrapping(
-        element: D3.Selection,
-        wrapText: WrapText
+        element: Selection<any, any, any, any>,
+        wrapText: WrapText,
     ): void {
         if (!element) {
             return;
@@ -148,7 +149,10 @@ export abstract class BaseComponent implements IVisualComponent {
             .classed(`${this.wrapTextClassNamePrefix}BreakWord `, wrapText === WrapText.BreakWord);
     }
 
-    protected updateBackgroundColor(element: D3.Selection, color: string): void {
+    protected updateBackgroundColor(
+        element: Selection<any, any, any, any>,
+        color: string,
+    ): void {
         if (!element) {
             return;
         }

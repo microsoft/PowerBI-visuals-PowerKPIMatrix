@@ -67,7 +67,7 @@ export class TextCellComponent extends CellComponent {
 
         this.updateBackgroundColor(
             this.element,
-            backgroundColor
+            backgroundColor,
         );
 
         this.updateAlignment(this.element, alignment, verticalAlignment);

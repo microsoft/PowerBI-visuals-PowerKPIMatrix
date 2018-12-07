@@ -24,9 +24,9 @@
  *  THE SOFTWARE.
  */
 
-import { DataRepresentationPoint } from "./dataRepresentationPoint";
+import { IDataRepresentationPoint } from "./dataRepresentationPoint";
 
-export interface DataRepresentationPointGradientColor {
+export interface IDataRepresentationPointGradientColor {
     color: string;
-    points: DataRepresentationPoint[];
+    points: IDataRepresentationPoint[];
 }
