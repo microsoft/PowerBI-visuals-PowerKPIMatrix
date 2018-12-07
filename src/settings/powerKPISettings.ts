@@ -28,65 +28,73 @@ import powerbi from "powerbi-visuals-api";
 
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 
-// TODO: include Power KPI
-export class PowerKPISettings /*extends BaseSettings*/ {
+import {
+    Settings as BasePowerKPISettings,
+} from "../../node_modules/powerbi-visuals-powerkpi/src/settings/settings";
+
+export class PowerKPISettings extends BasePowerKPISettings {
+    public static getObjectNameWithPrefix(objectName: string): string {
+        return `${this.Prefix}${objectName}`;
+    }
+
+    public static getObjectNameWithoutPrefix(objectName: string): string {
+        return objectName.replace(this.Prefix, "");
+    }
 
     public static enumerateObjectInstances(
         dataViewObjectParser: dataViewObjectsParser.DataViewObjectsParser,
         options: powerbi.EnumerateVisualObjectInstancesOptions,
     ): powerbi.VisualObjectInstanceEnumeration {
 
-        // const objectName: string = options && options.objectName
-        //     ? PowerKPIPrefixier.getObjectNameWithoutPrefix(options.objectName)
-        //     : "";
+        const objectName: string = options && options.objectName
+            ? this.getObjectNameWithoutPrefix(options.objectName)
+            : "";
 
-        // return super.enumerateObjectInstances(
-        //     dataViewObjectParser,
-        //     { objectName }
-        // );
-
-        return [];
+        return super.enumerateObjectInstances(
+            dataViewObjectParser,
+            { objectName },
+        );
     }
 
-    // private static InnumerablePrefix: RegExp = /^_/;
+    private static Prefix: string = "integratedPowerKPI_";
 
-    // public getProperties(): DataViewProperties {
-    //     let properties: DataViewProperties = {},
-    //         objectNames: string[] = Object.keys(this);
+    private static InnumerablePrefix: RegExp = /^_/;
 
-    //     objectNames.forEach((objectName: string) => {
-    //         if (this.isPropertyEnumerable(objectName)) {
-    //             let propertyNames: string[] = Object.keys(this[objectName]);
+    public getProperties() {
+        const properties = {};
 
-    //             properties[objectName] = {};
+        Object.keys(this).forEach((objectName: string) => {
+            if (this.isPropertyEnumerable(objectName)) {
+                const propertyNames: string[] = Object.keys(this[objectName]);
 
-    //             propertyNames.forEach((propertyName: string) => {
-    //                 if (this.isPropertyEnumerable(objectName)) {
-    //                     properties[objectName][propertyName] =
-    //                         this.createPropertyIdentifier(
-    //                             PowerKPIPrefixier.getObjectNameWithPrefix(objectName),
-    //                             propertyName
-    //                         );
-    //                 }
-    //             });
-    //         }
-    //     });
+                properties[objectName] = {};
 
-    //     return properties;
-    // }
+                propertyNames.forEach((propertyName: string) => {
+                    if (this.isPropertyEnumerable(objectName)) {
+                        properties[objectName][propertyName] =
+                            this.createPropertyIdentifier(
+                                PowerKPISettings.getObjectNameWithPrefix(objectName),
+                                propertyName,
+                            );
+                    }
+                });
+            }
+        });
 
-    // private isPropertyEnumerable(propertyName: string): boolean {
-    //     return !PowerKPISettings.InnumerablePrefix.test(propertyName);
-    // }
+        return properties;
+    }
 
-    // private createPropertyIdentifier(
-    //     objectName: string,
-    //     propertyName: string
-    // ): DataViewObjectPropertyIdentifier {
+    private isPropertyEnumerable(propertyName: string): boolean {
+        return !PowerKPISettings.InnumerablePrefix.test(propertyName);
+    }
 
-    //     return {
-    //         objectName,
-    //         propertyName
-    //     };
-    // }
+    private createPropertyIdentifier(
+        objectName: string,
+        propertyName: string,
+    ): powerbi.DataViewObjectPropertyIdentifier {
+        return {
+            objectName,
+            propertyName,
+        };
+    }
 }

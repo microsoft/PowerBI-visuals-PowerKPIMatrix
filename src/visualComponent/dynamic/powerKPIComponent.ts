@@ -36,10 +36,52 @@
 
 import powerbi from "powerbi-visuals-api";
 
+import { PowerKPI } from "../../../node_modules/powerbi-visuals-powerkpi/src/visual";
+
+import {
+    IDataRepresentationAxis as IDataRepresentationAxisPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentationAxis";
+
+import {
+    DataRepresentationScale as DataRepresentationScalePowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentationScale";
+
+import {
+    DataRepresentationPointFilter as DataRepresentationPointFilterPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentationPointFilter";
+
+import {
+    IDataRepresentationSeries as IDataRepresentationSeriesPoweKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentationSeries";
+
+import {
+    IDataRepresentationPoint as IDataRepresentationPointPoweKPI,
+    IDataRepresentationPointGradientColor as IDataRepresentationPointGradientColorPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentationPoint";
+
+import {
+    SeriesSettings as SeriesSettingsPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/settings/seriesSettings";
+
+import {
+    Settings as SettingsPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/settings/settings";
+
+import {
+    IDataRepresentation as IDataRepresentationPowerKPI,
+} from "../../../node_modules/powerbi-visuals-powerkpi/src/dataRepresentation/dataRepresentation";
+
 import { BaseComponent } from "../baseComponent";
 import { IVisualComponentConstructorOptions } from "../visualComponentConstructorOptions";
 
-import { SparklineCellRenderOptions } from "../table/cell/sparkline/sparklineCellRenderOptions";
+import { ISparklineCellRenderOptions } from "../table/cell/sparkline/sparklineCellRenderOptions";
+
+import { DataConverter } from "../../converter/data/dataConverter";
+import { IDataRepresentationAxis } from "../../converter/data/dataRepresentation/dataRepresentationAxis";
+import { IDataRepresentationPoint } from "../../converter/data/dataRepresentation/dataRepresentationPoint";
+import { IDataRepresentationPointSet } from "../../converter/data/dataRepresentation/dataRepresentationPointSet";
+
+import { NumericValueUtils } from "../../utils/numericValueUtils";
 
 export interface IPowerKPIConstructorOptions extends IVisualComponentConstructorOptions {
     style: powerbi.extensibility.IColorPalette;
@@ -47,219 +89,232 @@ export interface IPowerKPIConstructorOptions extends IVisualComponentConstructor
 }
 
 export class PowerKPIComponent extends BaseComponent {
-    // private instance: PowerKPI = new PowerKPI();
+    private instance: PowerKPI;
 
-    constructor(options: IPowerKPIConstructorOptions) {
+    constructor(private constructorOptions: IPowerKPIConstructorOptions) {
         super();
 
         const {
-            style,
             element,
             host,
-        } = options;
+        } = constructorOptions;
 
         this.element = element.append("div");
 
-        // this.instance.init({
-        //     element: $(this.element.node()),
-        //     host,
-        //     style,
-        //     viewport: null,
-        // });
+        try {
+            this.instance = new PowerKPI({
+                element: this.element.node(),
+                host,
+            });
+        }
+        catch (_) {
+            this.instance = null;
+        }
     }
 
-    public render(options: SparklineCellRenderOptions): void {
-        // if (!this.instance) {
-        //     return;
-        // }
+    public render(options: ISparklineCellRenderOptions): void {
+        if (!this.instance) {
+            return;
+        }
 
-        // this.instance.render(this.convertDataToPowerKPIFormat(options));
+        this.instance.render(this.convertDataToPowerKPIFormat(options));
     }
 
     public destroy(): void {
-        // if (this.instance) {
-        //     this.instance.destroy();
-        // }
+        if (this.instance) {
+            this.instance.destroy();
+        }
 
-        // this.instance = null;
+        this.instance = null;
 
         super.destroy();
     }
 
-    // private convertDataToPowerKPIFormat(options: SparklineCellRenderOptions): PowerKpiDataRepresentation {
-    //     const {
-    //         y,
-    //         series,
-    //         settings,
-    //         metadata,
-    //     } = options;
+    private convertDataToPowerKPIFormat(options: ISparklineCellRenderOptions): IDataRepresentationPowerKPI {
+        const {
+            y,
+            series,
+            settings,
+            metadata,
+        } = options;
 
-    //     const yAxis: DataRepresentationAxis = {
-    //         max: undefined,
-    //         min: undefined,
-    //     };
+        const yAxis: IDataRepresentationAxis = {
+            max: undefined,
+            min: undefined,
+        };
 
-    //     const powerKPISettings: PowerKPISettings = settings.powerKPISettings;
+        const powerKPISettings: SettingsPowerKPI = settings.powerKPISettings;
 
-    //     powerKPISettings.subtitle.titleText = series.name;
+        powerKPISettings.subtitle.titleText = series.name;
 
-    //     powerKPISettings.dateValueKPI.displayUnits = series.settings.asOfDate.displayUnits;
-    //     powerKPISettings.dateValueKPI.precision = series.settings.asOfDate.precision;
+        powerKPISettings.dateValueKPI.displayUnits = series.settings.asOfDate.displayUnits;
+        powerKPISettings.dateValueKPI.precision = series.settings.asOfDate.precision;
 
-    //     powerKPISettings.actualValueKPI.displayUnits = series.settings.currentValue.displayUnits;
-    //     powerKPISettings.actualValueKPI.precision = series.settings.currentValue.precision;
+        powerKPISettings.actualValueKPI.displayUnits = series.settings.currentValue.displayUnits;
+        powerKPISettings.actualValueKPI.precision = series.settings.currentValue.precision;
 
-    //     powerKPISettings.kpiIndicatorValue.displayUnits = series.settings.kpiIndicatorValue.displayUnits;
-    //     powerKPISettings.kpiIndicatorValue.precision = series.settings.kpiIndicatorValue.precision;
+        powerKPISettings.kpiIndicatorValue.displayUnits = series.settings.kpiIndicatorValue.displayUnits;
+        powerKPISettings.kpiIndicatorValue.precision = series.settings.kpiIndicatorValue.precision;
 
-    //     if (!powerKPISettings.tooltipVariance.label) {
-    //         powerKPISettings.tooltipVariance.label = settings.kpiIndicatorValue.label;
-    //     }
+        if (!powerKPISettings.tooltipVariance.label) {
+            powerKPISettings.tooltipVariance.label = settings.kpiIndicatorValue.label;
+        }
 
-    //     if (!powerKPISettings.secondTooltipVariance.label) {
-    //         powerKPISettings.secondTooltipVariance.label = settings.secondKPIIndicatorValue.label;
-    //     }
+        if (!powerKPISettings.secondTooltipVariance.label) {
+            powerKPISettings.secondTooltipVariance.label = settings.secondKPIIndicatorValue.label;
+        }
 
-    //     series.settings.kpiIndicator
-    //         .forEach((property: PropertyConfiguration, index: number, indexedName: string) => {
-    //             powerKPISettings.kpiIndicator[indexedName] = series.settings.kpiIndicator[indexedName];
-    //         });
+        series.settings.kpiIndicator.forEach((_, index: number, indexedName: string) => {
+            powerKPISettings.kpiIndicator[indexedName] = series.settings.kpiIndicator[indexedName];
+        });
 
-    //     powerKPISettings.parseSettings(options.viewport, series.x.scale.type);
+        powerKPISettings.parseSettings(options.viewport, series.x.scale.type);
 
-    //     const columnFormat: string = series.settings.asOfDate.columnFormat;
+        const columnFormat: string = series.settings.asOfDate.columnFormat;
 
-    //     powerKPISettings.dateValueKPI.setColumnFormat(columnFormat);
-    //     powerKPISettings.tooltipLabel.setColumnFormat(columnFormat);
+        powerKPISettings.dateValueKPI.setColumnFormat(columnFormat);
+        powerKPISettings.tooltipLabel.setColumnFormat(columnFormat);
 
-    //     if (series.settings.sparklineSettings.shouldUseCommonScale) {
-    //         yAxis.min = y.min;
-    //     } else if (NumericValueUtils.isValueFinite(powerKPISettings.yAxis.min)) {
-    //         yAxis.min = powerKPISettings.yAxis.min;
-    //     } else if (NumericValueUtils.isValueFinite(series.settings.sparklineSettings.yMin)) {
-    //         yAxis.min = series.settings.sparklineSettings.yMin;
-    //     }
+        if (series.settings.sparklineSettings.shouldUseCommonScale) {
+            yAxis.min = y.min;
+        } else if (NumericValueUtils.isValueFinite(powerKPISettings.yAxis.min)) {
+            yAxis.min = powerKPISettings.yAxis.min;
+        } else if (NumericValueUtils.isValueFinite(series.settings.sparklineSettings.yMin)) {
+            yAxis.min = series.settings.sparklineSettings.yMin;
+        }
 
-    //     if (series.settings.sparklineSettings.shouldUseCommonScale) {
-    //         yAxis.max = y.max;
-    //     } else if (NumericValueUtils.isValueFinite(powerKPISettings.yAxis.max)) {
-    //         yAxis.max = powerKPISettings.yAxis.max;
-    //     } else if (NumericValueUtils.isValueFinite(series.settings.sparklineSettings.yMax)) {
-    //         yAxis.max = series.settings.sparklineSettings.yMax;
-    //     }
+        if (series.settings.sparklineSettings.shouldUseCommonScale) {
+            yAxis.max = y.max;
+        } else if (NumericValueUtils.isValueFinite(powerKPISettings.yAxis.max)) {
+            yAxis.max = powerKPISettings.yAxis.max;
+        } else if (NumericValueUtils.isValueFinite(series.settings.sparklineSettings.yMax)) {
+            yAxis.max = series.settings.sparklineSettings.yMax;
+        }
 
-    //     const scaledYAxis: PowerKpiDataRepresentationAxis = {
-    //         min: undefined,
-    //         max: undefined,
-    //         format: series.settings.currentValue.getFormat(),
-    //         scale: PowerKpiDataRepresentationScale.create(),
-    //     };
+        const scaledYAxis: IDataRepresentationAxisPowerKPI = {
+            format: series.settings.currentValue.getFormat(),
+            max: undefined,
+            min: undefined,
+            scale: DataRepresentationScalePowerKPI.create(),
+        };
 
-    //     const pointFilter: PowerKpiDataRepresentationPointFilter = new PowerKpiDataRepresentationPointFilter();
+        const pointFilter: DataRepresentationPointFilterPowerKPI = new DataRepresentationPointFilterPowerKPI();
 
-    //     let maxThickness: number = 0;
+        let maxThickness: number = 0;
 
-    //     const powerKPISeries: PowerKpiDataRepresentationSeries[] = series.points
-    //         .map((pointSet: DataRepresentationPointSet, pointSetIndex: number) => {
-    //             const gradientPoints: PowerKpiDataRepresentationPointGradientColor[] = [];
+        const powerKPISeries: IDataRepresentationSeriesPoweKPI[] = series.points
+            .map((pointSet: IDataRepresentationPointSet, pointSetIndex: number) => {
+                const gradientPoints: IDataRepresentationPointGradientColorPowerKPI[] = [];
 
-    //             const points: PowerKpiDataRepresentationPoint[] = pointSet.points
-    //                 .map((point: DataRepresentationPoint, pointIndex: number) => {
-    //                     const powerKpiPoint: PowerKpiDataRepresentationPoint = {
-    //                         x: point.axisValue as any,
-    //                         y: point.value,
-    //                         kpiIndex: pointSet.kpiIndicatorIndexes[pointIndex],
-    //                         color: pointSet.colors[pointIndex] || pointSet.color,
-    //                     };
+                const points: IDataRepresentationPointPoweKPI[] = pointSet.points
+                    .map((point: IDataRepresentationPoint, pointIndex: number) => {
+                        const powerKpiPoint: IDataRepresentationPointPoweKPI = {
+                            color: pointSet.colors[pointIndex] || pointSet.color,
+                            kpiIndex: pointSet.kpiIndicatorIndexes[pointIndex],
+                            x: point.axisValue as any,
+                            y: point.value,
+                        };
 
-    //                     pointFilter.groupPointByColor(gradientPoints, powerKpiPoint, false);
+                        pointFilter.groupPointByColor(gradientPoints, powerKpiPoint, false);
 
-    //                     return powerKpiPoint;
-    //                 });
+                        return powerKpiPoint;
+                    });
 
-    //             const thickness: number = pointSet.thickness;
+                const thickness: number = pointSet.thickness;
 
-    //             maxThickness = Math.max(maxThickness, thickness);
+                maxThickness = Math.max(maxThickness, thickness);
 
-    //             DataConverter.applyYArguments(yAxis, pointSet.min as number);
-    //             DataConverter.applyYArguments(yAxis, pointSet.max as number);
+                DataConverter.applyYArguments(yAxis, pointSet.min as number);
+                DataConverter.applyYArguments(yAxis, pointSet.max as number);
 
-    //             const seriesSettings: PowerKpiSeriesSettings = PowerKpiSeriesSettings.getDefault() as PowerKpiSeriesSettings;
+                const seriesSettings: SeriesSettingsPowerKPI = SeriesSettingsPowerKPI.getDefault() as SeriesSettingsPowerKPI;
 
-    //             seriesSettings.line.fillColor = pointSet.color;
-    //             seriesSettings.line.lineStyle = pointSet.lineStyle;
-    //             seriesSettings.line.thickness = thickness;
+                seriesSettings.line.fillColor = pointSet.color;
+                seriesSettings.line.lineStyle = pointSet.lineStyle;
+                seriesSettings.line.thickness = thickness;
 
-    //             return {
-    //                 points,
-    //                 gradientPoints: gradientPoints,
-    //                 settings: seriesSettings,
-    //                 name: pointSet.name || pointSet.settings.label,
-    //                 identity: pointSetIndex === 0
-    //                     ? series.selectionId
-    //                     : SelectionId.createWithMeasure(`${pointSetIndex}`),
-    //                 current: {
-    //                     color: pointSet.color,
-    //                     x: series.axisValue,
-    //                     y: series.currentValue,
-    //                     index: series.kpiIndicatorIndex,
-    //                     kpiIndex: series.kpiIndicatorIndex,
-    //                 },
-    //                 format: pointSet.settings.getFormat(),
-    //                 y: scaledYAxis,
-    //                 selected: false,
-    //                 hasSelection: false,
-    //                 domain: {
-    //                     min: pointSet.min,
-    //                     max: pointSet.max,
-    //                 },
-    //             };
-    //         });
+                return {
+                    current: {
+                        color: pointSet.color,
+                        index: series.kpiIndicatorIndex,
+                        kpiIndex: series.kpiIndicatorIndex,
+                        x: series.axisValue,
+                        y: series.currentValue,
+                    },
+                    domain: {
+                        max: pointSet.max,
+                        min: pointSet.min,
+                    },
+                    format: pointSet.settings.getFormat(),
+                    gradientPoints,
+                    hasSelection: false,
+                    identity: pointSetIndex === 0
+                        ? series.selectionId
+                        : this.getSelectionId(`${pointSetIndex}`),
+                    name: pointSet.name || pointSet.settings.label,
+                    points,
+                    settings: seriesSettings,
 
-    //     scaledYAxis.scale.domain([yAxis.min, yAxis.max], series.y.scale.type);
-    //     scaledYAxis.min = yAxis.min as number;
-    //     scaledYAxis.max = yAxis.max as number;
+                    selected: false,
+                    y: scaledYAxis,
+                };
+            });
 
-    //     const margin: IMargin = powerKPISettings.dots.getMarginByThickness(
-    //         maxThickness,
-    //         {
-    //             top: 0,
-    //             right: 0,
-    //             bottom: 0,
-    //             left: 0
-    //         }
-    //     );
+        scaledYAxis.scale.domain([yAxis.min, yAxis.max], series.y.scale.type);
+        scaledYAxis.min = yAxis.min as number;
+        scaledYAxis.max = yAxis.max as number;
 
-    //     const powerKPIData: PowerKpiDataRepresentation = {
-    //         margin,
-    //         series: powerKPISeries,
-    //         sortedSeries: powerKPISeries,
-    //         groups: [{
-    //             series: powerKPISeries,
-    //             y: scaledYAxis,
-    //         }],
-    //         viewport: options.viewport,
-    //         x: {
-    //             name: series.settings.asOfDate.label,
-    //             type: series.x.scale.type,
-    //             metadata,
-    //             min: series.x.min as any,
-    //             max: series.x.max as any,
-    //             values: series.axisValues,
-    //             format: series.settings.asOfDate.getFormat(),
-    //             scale: PowerKpiDataRepresentationScale
-    //                 .create()
-    //                 .domain(series.x.scale.getDomain(), series.x.scale.type)
-    //         },
-    //         settings: powerKPISettings,
-    //         variance: [
-    //             series.kpiIndicatorValue,
-    //             series.secondKPIIndicatorValue,
-    //         ],
-    //         variances: series.varianceSet || [],
-    //     };
+        const margin = powerKPISettings.dots.getMarginByThickness(
+            maxThickness,
+            {
+                bottom: 0,
+                left: 0,
+                right: 0,
+                top: 0,
+            },
+        );
 
-    //     return powerKPIData;
-    // }
+        const powerKPIData: IDataRepresentationPowerKPI = {
+            groups: [{
+                series: powerKPISeries,
+                y: scaledYAxis,
+            }],
+            margin,
+            series: powerKPISeries,
+            settings: powerKPISettings,
+            sortedSeries: powerKPISeries,
+            variance: [
+                series.kpiIndicatorValue,
+                series.secondKPIIndicatorValue,
+            ],
+            variances: series.varianceSet || [],
+            viewport: options.viewport,
+            x: {
+                axisType: series.x.scale.type,
+                format: series.settings.asOfDate.getFormat(),
+                max: series.x.max as any,
+                metadata,
+                min: series.x.min as any,
+                name: series.settings.asOfDate.label,
+                scale: DataRepresentationScalePowerKPI
+                    .create()
+                    .domain(series.x.scale.getDomain(), series.x.scale.type),
+                values: series.axisValues,
+            },
+        };
+
+        return powerKPIData;
+    }
+
+    private getSelectionId(measureId: string): powerbi.visuals.ISelectionId {
+        if (!this.constructorOptions && !this.constructorOptions.host) {
+            return null;
+        }
+
+        return this.constructorOptions.host
+            .createSelectionIdBuilder()
+            .withMeasure(measureId)
+            .createSelectionId();
+    }
 
 }
