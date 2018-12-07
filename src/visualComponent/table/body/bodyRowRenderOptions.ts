@@ -33,15 +33,15 @@ import { HyperlinkAdapter } from "../../../hyperlink/hyperlinkAdapter";
 import { SeriesSettings } from "../../../settings/seriesSettings";
 import { Settings } from "../../../settings/settings";
 import { IVisualComponentRenderOptionsBase } from "../../visualComponentRenderOptionsBase";
-import { RowStateSet } from "../row/rowState";
+import { IRowStateSet } from "../row/rowState";
 
 export interface IBodyRowRenderOptions extends IVisualComponentRenderOptionsBase {
     series: IDataRepresentationSeries;
     settings: Settings;
     seriesSettings: SeriesSettings;
     hyperlinkAdapter: HyperlinkAdapter;
-    originRowStateSet: RowStateSet;
-    rowStateSet: RowStateSet;
+    originRowStateSet: IRowStateSet;
+    rowStateSet: IRowStateSet;
     seriesDeep: number;
     type: DataRepresentationTypeEnum;
     metadata: powerbi.DataViewMetadataColumn;

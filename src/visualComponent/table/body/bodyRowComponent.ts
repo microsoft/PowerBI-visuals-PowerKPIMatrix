@@ -24,6 +24,55 @@
  *  THE SOFTWARE.
  */
 
+import { valueFormatter } from "powerbi-visuals-utils-formattingutils";
+
+import { CategorySettings } from "../../../settings/descriptors/categorySettings";
+import { GridSettings } from "../../../settings/descriptors/gridSettings";
+import { NumberSettingsBase } from "../../../settings/descriptors/numberSettingsBase";
+import { TableType } from "../../../settings/descriptors/tableSettings";
+
+import {
+    IGeneratedCategory,
+    SettingsBase,
+} from "../../../settings/settingsBase";
+
+import {
+    BaseBodyRowComponent,
+    BodyRowComponentViewMode,
+} from "./baseBodyRowComponent";
+
+import { FormattingUtils } from "../../../utils/formattingUtils";
+
+import { IDataRepresentationSeries } from "../../../converter/data/dataRepresentation/dataRepresentationSeries";
+
+import { CollapsedBodyRowComponent } from "./collapsedBodyRowComponent";
+
+import { IBodyRowConstructorOptions } from "./bodyRowConstructorOptions";
+import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
+
+import { ModalWindowService } from "../../../services/modalWindowService";
+
+import { CellComponent } from "../cell/cellComponent";
+import { ICellState } from "../cell/cellState";
+import { CollapserCellComponent } from "../cell/collapser/collapserCellComponent";
+import { ICollapserCellRenderOptions } from "../cell/collapser/collapserCellRenderOptions";
+import { KPIIndicatorCellComponent } from "../cell/kpiIndicator/kpiIndicatorCellComponent";
+import { IKPIIndicatorCellRenderOptions } from "../cell/kpiIndicator/kpiIndicatorCellRenderOptions";
+import { SparklineCellComponent } from "../cell/sparkline/sparklineCellComponent";
+import { ISparklineCellRenderOptions } from "../cell/sparkline/sparklineCellRenderOptions";
+import { TextCellComponent } from "../cell/text/textCellComponent";
+import { ITextCellRenderOptions } from "../cell/text/textCellRenderOptions";
+
+import { BaseComponent } from "../../baseComponent";
+import { IVisualComponent } from "../../visualComponent";
+import { DraggableComponent } from "../draggable/draggableComponent";
+import { RowComponent } from "../row/rowComponent";
+
+import {
+    IRowState,
+    IRowStateSet,
+} from "../row/rowState";
+
 export class BodyRowComponent extends BaseBodyRowComponent {
     private isContainerShown: boolean = true;
 
@@ -34,7 +83,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
     private amountOfSubRows: number = 1;
 
     private powerKPIModalWindowService: ModalWindowService;
-    private powerKPIModalWindowServiceRenderData: SparklineCellRenderOptions;
+    private powerKPIModalWindowServiceRenderData: ISparklineCellRenderOptions;
 
     private cellConstructors = [
         TextCellComponent, // As of Date
@@ -49,16 +98,14 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
     private tabularViewCellConstructors = [CollapserCellComponent];
 
-    constructor(options: BodyRowConstructorOptions) {
+    constructor(options: IBodyRowConstructorOptions) {
         super(options);
 
         this.cellOptions.onChangeHandler = this.changeContainerStateAndKeepState.bind(this);
         this.powerKPIModalWindowService = options.powerKPIModalWindowService;
     }
 
-
-
-    public render(options: BodyRowRenderOptions): void {
+    public render(options: IBodyRowRenderOptions): void {
         const {
             series,
             settings,
@@ -70,7 +117,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         this.level = series.level;
         this.tableType = settings.table.type;
 
-        const rowState: RowState =
+        const rowState: IRowState =
             (rowStateSet && rowStateSet[this.name])
             ||
             (originRowStateSet && originRowStateSet[this.name]);
@@ -88,7 +135,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
                 isContainerShown,
                 rowState,
                 0,
-                0
+                0,
             );
 
             this.verticalDraggableComponents.forEach((component: DraggableComponent) => {
@@ -97,7 +144,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
             this.updateContainerGrid(this.tableType === TableType.RowBasedKPIS
                 ? settings.horizontalGrid
-                : settings.verticalGrid
+                : settings.verticalGrid,
             );
 
             this.changeContainerState(isContainerShown);
@@ -175,7 +222,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         }
     }
 
-    public getState(): RowState {
+    public getState(): IRowState {
         switch (this.viewMode) {
             case BodyRowComponentViewMode.common: {
                 return super.getState();
@@ -185,7 +232,6 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             }
         }
     }
-
 
     public destroy(): void {
         this.powerKPIModalWindowServiceRenderData = null;
@@ -248,7 +294,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         super.onChildrenSizeChange();
     }
 
-    private bindClickEventToOpenModalWindow(data: SparklineCellRenderOptions): void {
+    private bindClickEventToOpenModalWindow(data: ISparklineCellRenderOptions): void {
         this.powerKPIModalWindowServiceRenderData = data;
 
         const isInteractable: boolean = this.powerKPIModalWindowServiceRenderData
@@ -261,13 +307,13 @@ export class BodyRowComponent extends BaseBodyRowComponent {
                 ? () => {
                     this.powerKPIModalWindowService.render(this.powerKPIModalWindowServiceRenderData);
                 }
-                : null
+                : null,
             )
             .classed(this.bodyRowComponentClickActionClassName, isInteractable);
 
         if (this.powerKPIModalWindowService && this.powerKPIModalWindowService.isShown) {
-            const currentData: SparklineCellRenderOptions =
-                this.powerKPIModalWindowService.getRenderOptions() as SparklineCellRenderOptions;
+            const currentData: ISparklineCellRenderOptions =
+                this.powerKPIModalWindowService.getRenderOptions() as ISparklineCellRenderOptions;
 
             if (currentData
                 && this.powerKPIModalWindowServiceRenderData
@@ -293,14 +339,15 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
         const border: string = this.getStringRepresentationOfBorderByGridSettings(gridSettings);
 
-        this.containerElement.style({
-            "border-bottom": this.tableType === TableType.RowBasedKPIS
+        this.containerElement
+            .style("border-bottom", this.tableType === TableType.RowBasedKPIS
                 ? border
                 : null,
-            "border-right": this.tableType === TableType.ColumnBasedKPIS
+            )
+            .style("border-right", this.tableType === TableType.ColumnBasedKPIS
                 ? border
                 : null,
-        });
+            );
     }
 
     private updateComponentOrder(component: BaseComponent, order: number): void {
@@ -314,11 +361,11 @@ export class BodyRowComponent extends BaseBodyRowComponent {
     private initSubRows(
         preComponentsLength: number,
         subRowConstructor,
-        amountOfComponents: number
+        amountOfComponents: number,
     ): void {
         this.components
             .splice(preComponentsLength + amountOfComponents)
-            .forEach((component: VisualComponent) => {
+            .forEach((component: IVisualComponent) => {
                 component.clear();
                 component.destroy();
             });
@@ -335,10 +382,10 @@ export class BodyRowComponent extends BaseBodyRowComponent {
     }
 
     private renderContainer(
-        options: BodyRowRenderOptions,
+        options: IBodyRowRenderOptions,
         cellConstructors: any[],
         isContainerShown: boolean,
-        rowState: RowState,
+        rowState: IRowState,
         collapserIndex: number,
         collapserOrder: number,
     ): void {
@@ -366,30 +413,30 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             this.initSubRows(
                 cellsLength,
                 CollapsedBodyRowComponent,
-                this.amountOfSubRows
+                this.amountOfSubRows,
             );
 
             this.initSubRows(
                 this.amountOfSubRows + cellsLength,
                 BodyRowComponent,
-                options.series.children.length
+                options.series.children.length,
             );
         }
 
-        const category: GeneratedCategory = SettingsBase.getCategoryByIndex(series.level);
+        const category: IGeneratedCategory = SettingsBase.getCategoryByIndex(series.level);
 
         const fontSettings: CategorySettings = settings[category.name] || settings.metricName;
 
         this.components[collapserIndex].render({
             fontSettings,
+            hyperlink: series.hyperlink,
             hyperlinkAdapter,
             image: series.image,
-            value: series.name,
-            order: collapserOrder,
-            isShown: isContainerShown,
             isExpandCollapseShown: fontSettings.isExpandCollapseShown,
-            hyperlink: series.hyperlink,
-        } as CollapserCellRenderOptions);
+            isShown: isContainerShown,
+            order: collapserOrder,
+            value: series.name,
+        } as ICollapserCellRenderOptions);
 
         this.components[collapserIndex + this.amountOfSubRows].render(options);
 
@@ -404,21 +451,22 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         }
 
         options.series.children.forEach((childSeries: IDataRepresentationSeries, childSeriesIndex: number) => {
-            const component: BodyRowComponent = this.components[childSeriesIndex + cellConstructors.length + this.amountOfSubRows] as BodyRowComponent;
+            const component: BodyRowComponent
+                = this.components[childSeriesIndex + cellConstructors.length + this.amountOfSubRows] as BodyRowComponent;
 
             if (component) {
                 component.render({
-                    viewport,
-                    seriesDeep,
-                    originRowStateSet,
-                    y: options.y,
-                    type: options.type,
-                    series: childSeries,
-                    metadata: options.metadata,
-                    settings: options.settings,
-                    seriesSettings: options.seriesSettings,
-                    rowStateSet: rowState && rowState.rowSet,
                     hyperlinkAdapter: options.hyperlinkAdapter,
+                    metadata: options.metadata,
+                    originRowStateSet,
+                    rowStateSet: rowState && rowState.rowSet,
+                    series: childSeries,
+                    seriesDeep,
+                    seriesSettings: options.seriesSettings,
+                    settings: options.settings,
+                    type: options.type,
+                    viewport,
+                    y: options.y,
                 });
             }
         });
@@ -432,35 +480,35 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         this.containerElement.classed(this.rootContainerClassName, isContainer);
     }
 
-    private getContainerState(cellsLength: number): RowState {
-        const cells: CellState[] = this.components
+    private getContainerState(cellsLength: number): IRowState {
+        const cells: ICellState[] = this.components
             .slice(0, cellsLength)
             .map((component: CellComponent) => {
                 return component.getState();
             });
 
-        const rowSet: RowStateSet = {};
+        const rowSet: IRowStateSet = {};
 
         this.components
             .slice(cellsLength)
             .forEach((component: BodyRowComponent) => {
-                const state: RowState = component.getState();
+                const state: IRowState = component.getState();
 
                 rowSet[state.name] = state;
             });
 
         return {
             cellSet: { [this.tableType]: cells },
-            rowSet,
-            name: this.name,
             isShown: this.isContainerShown,
+            name: this.name,
+            rowSet,
         };
     }
 
     private updateContainerVisibility(
         originalVisibilities: boolean[],
         componentVisibilities: boolean[],
-        cellsLength: number
+        cellsLength: number,
     ): void {
         this.updateVisibilityOfComponents(
             originalVisibilities,
@@ -486,7 +534,6 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         this.destroyComponents();
     }
 
-
     private getWidthOfChildren(): number {
         return this.components.reduce((width: number, rowComponent: RowComponent) => {
             if (rowComponent && rowComponent.isShown && rowComponent.getWidth) {
@@ -509,7 +556,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
                 height: number,
                 component: BodyRowComponent,
                 componentIndex: number,
-                components: BaseBodyRowComponent[]
+                components: BaseBodyRowComponent[],
             ) => {
                 return height + component.getHeight(componentIndex !== components.length - 1 || shouldConsiderSplitter);
             }, 0);
@@ -530,25 +577,25 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             return;
         }
 
-        let cellConstructors = this.viewMode === BodyRowComponentViewMode.tabular
+        const cellConstructors = this.viewMode === BodyRowComponentViewMode.tabular
             ? this.tabularViewCellConstructors
             : [];
 
         this.changeComponentsState(
             this.components.slice(cellConstructors.length, cellConstructors.length + this.amountOfSubRows),
-            !state
+            !state,
         );
 
         this.changeComponentsState(
             this.components.slice(cellConstructors.length + this.amountOfSubRows),
-            state
+            state,
         );
 
         this.isContainerShown = state;
     }
 
-    private changeComponentsState(components: VisualComponent[], state: boolean) {
-        components.forEach((component: VisualComponent) => {
+    private changeComponentsState(components: IVisualComponent[], state: boolean) {
+        components.forEach((component: IVisualComponent) => {
             if (component) {
                 if (state) {
                     component.show();
@@ -559,7 +606,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         });
     }
 
-    private renderCells(options: BodyRowRenderOptions): void {
+    private renderCells(options: IBodyRowRenderOptions): void {
         const {
             y,
             series,
@@ -571,7 +618,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         } = options;
 
         // As of Date's formatter
-        const asOfDateFormatter: IValueFormatter = FormattingUtils.getFormatterOfAxisValue(
+        const asOfDateFormatter: valueFormatter.IValueFormatter = FormattingUtils.getFormatterOfAxisValue(
             series.x.min,
             series.x.max,
             type,
@@ -584,64 +631,64 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             : asOfDateFormatter.format(series.axisValue);
 
         this.components[0].render({
-            value: formattedValue,
-            order: settings.asOfDate.order,
             fontSettings: series.settings.asOfDate,
-        } as TextCellRenderOptions);
+            order: settings.asOfDate.order,
+            value: formattedValue,
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[0].updateOrder(settings.asOfDate.order);
 
         // Metric Name
         this.components[1].render({
+            fontSettings: series.settings.metricName,
+            hyperlink: series.hyperlink,
             hyperlinkAdapter,
             image: series.image,
-            value: series.name,
-            hyperlink: series.hyperlink,
             order: settings.metricName.order,
-            fontSettings: series.settings.metricName,
-        } as TextCellRenderOptions);
+            value: series.name,
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[1].updateOrder(settings.metricName.order);
 
         // Current Value
         this.components[2].render({
-            order: settings.currentValue.order,
             fontSettings: series.settings.currentValue,
+            order: settings.currentValue.order,
             value: this.getFormattedValueBySettings(series.currentValue, series.settings.currentValue),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[2].updateOrder(settings.currentValue.order);
 
         // KPI Indicator
         this.components[3].render({
-            order: settings.kpiIndicatorValue.order,
+            fontSettings: series.settings.kpiIndicatorValue,
             kpiIndicatorIndex: series.kpiIndicatorIndex,
             kpiIndicatorSettings: series.settings.kpiIndicator,
+            order: settings.kpiIndicatorValue.order,
             value: this.getFormattedValueBySettings(series.kpiIndicatorValue, series.settings.kpiIndicatorValue),
-            fontSettings: series.settings.kpiIndicatorValue,
-        } as KPIIndicatorCellRenderOptions);
+        } as IKPIIndicatorCellRenderOptions);
 
         this.verticalDraggableComponents[3].updateOrder(settings.kpiIndicatorValue.order);
 
         // Comparison Value
         this.components[4].render({
-            order: settings.comparisonValue.order,
             fontSettings: series.settings.comparisonValue,
+            order: settings.comparisonValue.order,
             value: this.getFormattedValueBySettings(series.comparisonValue, series.settings.comparisonValue),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[4].updateOrder(settings.comparisonValue.order);
 
-        const sparklineCellRenderOptions: SparklineCellRenderOptions = {
-            y,
-            series,
-            settings,
-            metadata,
-            viewport,
-            order: settings.sparklineSettings.order,
+        const sparklineCellRenderOptions: ISparklineCellRenderOptions = {
             kpiIndicatorIndex: series.kpiIndicatorIndex,
             kpiIndicatorSettings: settings.kpiIndicator,
+            metadata,
             offset: settings.sparklineSettings.getOffset(),
+            order: settings.sparklineSettings.order,
+            series,
+            settings,
+            viewport,
+            y,
         };
 
         // Sparkline
@@ -652,18 +699,18 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         this.bindClickEventToOpenModalWindow(sparklineCellRenderOptions);
 
         this.components[6].render({
-            order: settings.secondComparisonValue.order,
             fontSettings: series.settings.secondComparisonValue,
+            order: settings.secondComparisonValue.order,
             value: this.getFormattedValueBySettings(series.secondComparisonValue, series.settings.secondComparisonValue),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[6].updateOrder(settings.secondComparisonValue.order);
 
         this.components[7].render({
-            order: settings.secondKPIIndicatorValue.order,
             fontSettings: series.settings.secondKPIIndicatorValue,
+            order: settings.secondKPIIndicatorValue.order,
             value: this.getFormattedValueBySettings(series.secondKPIIndicatorValue, series.settings.secondKPIIndicatorValue),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[7].updateOrder(settings.secondKPIIndicatorValue.order);
     }
@@ -672,12 +719,12 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         if (settings.textReplacement) {
             return settings.textReplacement;
         } else {
-            const currentValueFormatter: IValueFormatter = FormattingUtils.getValueFormatter(
+            const currentValueFormatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
                 settings.displayUnits || value || 0,
                 undefined,
                 undefined,
                 settings.precision,
-                settings.getFormat()
+                settings.getFormat(),
             );
 
             return FormattingUtils.getFormattedValue(value, currentValueFormatter);

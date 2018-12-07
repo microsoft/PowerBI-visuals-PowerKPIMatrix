@@ -24,7 +24,17 @@
  *  THE SOFTWARE.
  */
 
+import { Selection } from "d3-selection";
+
+import { GridSettings } from "../../../settings/descriptors/gridSettings";
+import { IVisualComponent } from "../../visualComponent";
+import { IVisualComponentConstructorOptions } from "../../visualComponentConstructorOptions";
+import { CellComponent } from "../cell/cellComponent";
+import { ICellState } from "../cell/cellState";
+import { ICollapserCellConstructorOptions } from "../cell/collapser/collapserCellConstructorOptions";
 import { RowComponent } from "../row/RowComponent";
+import { IBodyRowConstructorOptions } from "./bodyRowConstructorOptions";
+import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
 
 export enum BodyRowComponentViewMode { // Enum's values are used as class name for CSS
     tabular,
@@ -34,19 +44,19 @@ export enum BodyRowComponentViewMode { // Enum's values are used as class name f
 export abstract class BaseBodyRowComponent extends RowComponent {
     protected extraClassName: string = "bodyRowComponent";
 
-    protected bodyOptions: BodyRowConstructorOptions;
-    protected cellOptions: CollapserCellConstructorOptions;
+    protected bodyOptions: IBodyRowConstructorOptions;
+    protected cellOptions: ICollapserCellConstructorOptions;
 
     protected rootContainerClassName: string = "bodyRowComponent_root_container";
     protected childrenContainerClassName: string = "bodyRowComponent_children_container";
 
     protected level: number = 0;
 
-    protected childrenContainer: D3.Selection;
+    protected childrenContainer: Selection<any, any, any, any>;
 
     protected parentOnChildrenSizeChangeHandler: () => void;
 
-    constructor(options: BodyRowConstructorOptions) {
+    constructor(options: IBodyRowConstructorOptions) {
         super(options);
 
         this.element.classed(this.extraClassName, true);
@@ -64,14 +74,12 @@ export abstract class BaseBodyRowComponent extends RowComponent {
         };
 
         this.cellOptions = {
+            ...options,
             element: this.containerElement,
-            scaleService: options.scaleService,
-            stateService: options.stateService,
-            powerKPIModalWindowService: options.powerKPIModalWindowService,
         };
     }
 
-    public abstract render(options: BodyRowRenderOptions): void;
+    public abstract render(options: IBodyRowRenderOptions): void;
 
     protected updateBorder(verticalGridSettings: GridSettings): void {
         super.updateBorder(this.level === 0 ? verticalGridSettings : null);
@@ -91,8 +99,8 @@ export abstract class BaseBodyRowComponent extends RowComponent {
 
     protected initCells(
         constructors: any[],
-        options: BodyRowConstructorOptions,
-        cellOptions: VisualComponentConstructorOptions
+        options: IBodyRowConstructorOptions,
+        cellOptions: IVisualComponentConstructorOptions,
     ): void {
         constructors.forEach((componentConstructor, componentConstructorIndex: number) => {
             const component: CellComponent = new componentConstructor(cellOptions);
@@ -108,23 +116,23 @@ export abstract class BaseBodyRowComponent extends RowComponent {
                 component,
                 {
                     element: this.containerElement,
-                    scaleService: options.scaleService,
+                    onDrag: (width: number, height: number) => {
+                        this.onCellSizeChange(
+                            width,
+                            height,
+                            componentConstructorIndex + this.level,
+                        );
+                    },
                     onDragStart: () => {
-                        const cellState: CellState = component.getState();
+                        const cellState: ICellState = component.getState();
 
                         return {
                             x: cellState.width,
                             y: cellState.height,
                         };
                     },
-                    onDrag: (width: number, height: number) => {
-                        this.onCellSizeChange(
-                            width,
-                            height,
-                            componentConstructorIndex + this.level
-                        );
-                    },
                     onSaveState: options.onSaveState,
+                    scaleService: options.scaleService,
                     width: options.defaultMargin,
                 });
         });
@@ -134,8 +142,8 @@ export abstract class BaseBodyRowComponent extends RowComponent {
         [
             ...this.components,
             ...this.verticalDraggableComponents,
-            this.horizontalDraggableComponent
-        ].forEach((component: VisualComponent) => {
+            this.horizontalDraggableComponent,
+        ].forEach((component: IVisualComponent) => {
             if (component) {
                 component.destroy();
             }

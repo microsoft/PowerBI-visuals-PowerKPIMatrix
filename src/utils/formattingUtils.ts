@@ -34,7 +34,7 @@ import {
 import { DataRepresentationAxisValueType } from "../converter/data/dataRepresentation/dataRepresentationAxisValueType";
 import { DataRepresentationTypeEnum } from "../converter/data/dataRepresentation/dataRepresentationType";
 
-import { AsOfDateSettings } from "../settings/descriptors/asOfDateSettings"ж
+import { AsOfDateSettings } from "../settings/descriptors/asOfDateSettings";
 
 export class FormattingUtils {
     public static getFormatterOfAxisValue(

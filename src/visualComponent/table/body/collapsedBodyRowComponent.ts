@@ -24,6 +24,26 @@
  *  THE SOFTWARE.
  */
 
+import { valueFormatter } from "powerbi-visuals-utils-formattingutils";
+
+import {
+    BaseBodyRowComponent,
+    BodyRowComponentViewMode,
+} from "./baseBodyRowComponent";
+
+import { FormattingUtils } from "../../../utils/formattingUtils";
+
+import { IDataRepresentationSeries } from "../../../converter/data/dataRepresentation/dataRepresentationSeries";
+
+import { IBodyRowConstructorOptions } from "./bodyRowConstructorOptions";
+import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
+
+import { CellComponent } from "../cell/cellComponent";
+import { TextCellComponent } from "../cell/text/textCellComponent";
+import { ITextCellRenderOptions } from "../cell/text/textCellRenderOptions";
+
+import { IRowState } from "../row/rowState";
+
 export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
     private emptyCellConstructor = CellComponent;
     private amountOfPreCells: number = 0;
@@ -39,7 +59,7 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         TextCellComponent, // Second KPI Indicator Value
     ];
 
-    constructor(options: BodyRowConstructorOptions) {
+    constructor(options: IBodyRowConstructorOptions) {
         super(options);
 
         this.name = "__##__collapsedBodyRowComponent__##__"; // Don't change this value. This value is used for state mapping
@@ -47,17 +67,7 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         this.hide(); // This component must be hidden by default
     }
 
-    private getCellConstructors(amountOfPreCells: number) {
-        const cellConstructors = [];
-
-        for (let i: number = 0; i < amountOfPreCells; i++) {
-            cellConstructors.push(this.emptyCellConstructor);
-        }
-
-        return cellConstructors.concat(this.cellConstructors);
-    }
-
-    public render(options: BodyRowRenderOptions): void {
+    public render(options: IBodyRowRenderOptions): void {
         const {
             series,
             settings,
@@ -70,7 +80,7 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
 
         this.level = series.level + 1;
 
-        const rowState: RowState =
+        const rowState: IRowState =
             (rowStateSet
                 && rowStateSet[series.name]
                 && rowStateSet[series.name].rowSet
@@ -107,7 +117,7 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         this.applyState(rowState);
     }
 
-    private renderCells(options: BodyRowRenderOptions): void {
+    private renderCells(options: IBodyRowRenderOptions): void {
         const {
             series,
             settings,
@@ -120,30 +130,30 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         const metricNameOrder: number = this.getOrder(settings.metricName.order);
 
         this.components[this.amountOfPreCells + 1].render({
+            fontSettings: settings.metricName,
             order: metricNameOrder,
             value: this.getLabel(series),
-            fontSettings: settings.metricName,
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[this.amountOfPreCells + 1].updateOrder(metricNameOrder);
 
         // Current Value's formatter
-        const currentValueFormatter: IValueFormatter = FormattingUtils.getValueFormatter(
+        const currentValueFormatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
             settings.currentValue.displayUnits || series.currentValue || 0,
             undefined,
             undefined,
             settings.currentValue.precision,
-            settings.currentValue.getFormat()
+            settings.currentValue.getFormat(),
         );
 
         // Current Value
         const currentValueOrder: number = this.getOrder(settings.currentValue.order);
 
         this.components[this.amountOfPreCells + 2].render({
-            order: currentValueOrder,
             fontSettings: settings.currentValue,
+            order: currentValueOrder,
             value: FormattingUtils.getFormattedValue(series.currentValue, currentValueFormatter),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[this.amountOfPreCells + 2].updateOrder(currentValueOrder);
 
@@ -151,22 +161,22 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         this.updateOrderByIndex(3, settings.kpiIndicatorValue.order);
 
         // Comparison Value's formatter
-        const comparisonValueFormatter: IValueFormatter = FormattingUtils.getValueFormatter(
+        const comparisonValueFormatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
             settings.comparisonValue.displayUnits || series.comparisonValue || 0,
             undefined,
             undefined,
             settings.comparisonValue.precision,
-            settings.comparisonValue.getFormat()
+            settings.comparisonValue.getFormat(),
         );
 
         // Comparison Value
         const comparisonValueOrder: number = this.getOrder(settings.comparisonValue.order);
 
         this.components[this.amountOfPreCells + 4].render({
-            order: comparisonValueOrder,
             fontSettings: settings.comparisonValue,
+            order: comparisonValueOrder,
             value: FormattingUtils.getFormattedValue(series.comparisonValue, comparisonValueFormatter),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[this.amountOfPreCells + 4].updateOrder(comparisonValueOrder);
 
@@ -174,26 +184,36 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
         this.updateOrderByIndex(5, settings.sparklineSettings.order);
 
         // Second Comparison Value's formatter
-        const secondComparisonValueFormatter: IValueFormatter = FormattingUtils.getValueFormatter(
+        const secondComparisonValueFormatter: valueFormatter.IValueFormatter = FormattingUtils.getValueFormatter(
             settings.secondComparisonValue.displayUnits || series.secondComparisonValue || 0,
             undefined,
             undefined,
             settings.secondComparisonValue.precision,
-            settings.secondComparisonValue.getFormat()
+            settings.secondComparisonValue.getFormat(),
         );
 
         // Second Comparison Value
         const secondComparisonValueOrder: number = this.getOrder(settings.secondComparisonValue.order);
 
         this.components[this.amountOfPreCells + 6].render({
-            order: secondComparisonValueOrder,
             fontSettings: settings.secondComparisonValue,
+            order: secondComparisonValueOrder,
             value: FormattingUtils.getFormattedValue(series.secondComparisonValue, secondComparisonValueFormatter),
-        } as TextCellRenderOptions);
+        } as ITextCellRenderOptions);
 
         this.verticalDraggableComponents[this.amountOfPreCells + 6].updateOrder(secondComparisonValueOrder);
 
         this.updateOrderByIndex(7, settings.secondKPIIndicatorValue.order);
+    }
+
+    private getCellConstructors(amountOfPreCells: number) {
+        const cellConstructors = [];
+
+        for (let i: number = 0; i < amountOfPreCells; i++) {
+            cellConstructors.push(this.emptyCellConstructor);
+        }
+
+        return cellConstructors.concat(this.cellConstructors);
     }
 
     private getOrder(order: number): number {
@@ -220,5 +240,4 @@ export class CollapsedBodyRowComponent extends BaseBodyRowComponent {
             ? `${amountOfHiddenSubCategories} Items hidden across ${amountOfHiddenItems} subcategories`
             : `${amountOfHiddenItems} Items hidden`;
     }
-
 }

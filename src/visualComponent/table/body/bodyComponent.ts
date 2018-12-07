@@ -24,10 +24,30 @@
  *  THE SOFTWARE.
  */
 
+import { TableBaseComponent } from "../tableBaseComponent";
+
+import { ICellState } from "../cell/cellState";
+import { OnCellSizeChangeHandler } from "../row/rowComponentConstructorOptions";
+import { IRowStateSet } from "../row/rowState";
+
+import { ModalWindowService } from "../../../services/modalWindowService";
+import { ScaleService } from "../../../services/scaleService";
+import { StateService } from "../../../services/state/stateService";
+
+import { IVisualComponent } from "../../visualComponent";
+import { IVisualComponentRenderOptions } from "../../visualComponentRenderOptions";
+import { IBodyConstructorOptions } from "./bodyConstructorOptions";
+import { BodyRowComponent } from "./bodyRowComponent";
+import { IBodyRowRenderOptions } from "./bodyRowRenderOptions";
+
+import { IDataRepresentationSeries } from "../../../converter/data/dataRepresentation/dataRepresentationSeries";
+
+import { ScrollUtils } from "../../../utils/scrollUtils";
+
 export class BodyComponent extends TableBaseComponent {
     private className: string = "bodyComponent";
 
-    private getCellStatesHandler: () => CellState[];
+    private getCellStatesHandler: () => ICellState[];
 
     private onSaveState: () => void;
     private onCellSizeChange: OnCellSizeChangeHandler;
@@ -39,7 +59,7 @@ export class BodyComponent extends TableBaseComponent {
 
     private defaultMargin: number;
 
-    constructor(options: BodyConstructorOptions) {
+    constructor(options: IBodyConstructorOptions) {
         super();
 
         this.getCellStatesHandler = options.getCellStates;
@@ -58,7 +78,7 @@ export class BodyComponent extends TableBaseComponent {
             .classed(this.className, true)
             .on("scroll", options.onScroll
                 ? () => {
-                    const element: HTMLDivElement = d3.event.target as HTMLDivElement;
+                    const element: HTMLDivElement = require("d3").event.target as HTMLDivElement;
 
                     options.onScroll(
                         element.scrollLeft,
@@ -66,13 +86,13 @@ export class BodyComponent extends TableBaseComponent {
                         element.offsetWidth - element.clientWidth,
                         element.offsetHeight - element.clientHeight);
                 }
-                : null
+                : null,
             );
 
         this.components = [];
     }
 
-    public render(options: VisualComponentRenderOptions) {
+    public render(options: IVisualComponentRenderOptions) {
         const {
             settings,
             data: {
@@ -87,7 +107,7 @@ export class BodyComponent extends TableBaseComponent {
 
         this.components
             .splice(seriesArray.length)
-            .forEach((component: VisualComponent) => {
+            .forEach((component: IVisualComponent) => {
                 component.clear();
                 component.destroy();
             });
@@ -95,33 +115,33 @@ export class BodyComponent extends TableBaseComponent {
         if (this.components.length < seriesArray.length) {
             for (let index: number = this.components.length; index < seriesArray.length; index++) {
                 this.components.push(new BodyRowComponent({
+                    cellStates: this.getCellStatesHandler && this.getCellStatesHandler() || [],
+                    defaultMargin: this.defaultMargin,
                     element: this.element,
+                    onCellSizeChange: this.onCellSizeChange,
                     onSaveState: this.onSaveState,
+                    powerKPIModalWindowService: this.powerKPIModalWindowService,
                     scaleService: this.scaleService,
                     stateService: this.stateService,
-                    defaultMargin: this.defaultMargin,
-                    onCellSizeChange: this.onCellSizeChange,
-                    powerKPIModalWindowService: this.powerKPIModalWindowService,
-                    cellStates: this.getCellStatesHandler && this.getCellStatesHandler() || [],
                 }));
             }
         }
 
-        const rowStateSet: RowStateSet = this.stateService.states.table.getRowStateSet();
+        const rowStateSet: IRowStateSet = this.stateService.states.table.getRowStateSet();
 
         seriesArray.forEach((series: IDataRepresentationSeries, rowIndex: number) => {
-            const rowRenderOptions: BodyRowRenderOptions = {
-                y,
-                type,
-                series,
-                metadata,
-                settings,
-                seriesDeep,
-                rowStateSet,
+            const rowRenderOptions: IBodyRowRenderOptions = {
                 hyperlinkAdapter,
-                viewport: options.viewport,
+                metadata,
                 originRowStateSet: rowStateSet,
+                rowStateSet,
+                series,
+                seriesDeep,
                 seriesSettings: series.settings,
+                settings,
+                type,
+                viewport: options.viewport,
+                y,
             };
 
             this.components[rowIndex].render(rowRenderOptions);

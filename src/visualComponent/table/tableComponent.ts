@@ -24,6 +24,29 @@
  *  THE SOFTWARE.
  */
 
+import { BodyComponent } from "./body/bodyComponent";
+import { HeaderRowComponent } from "./header/headerRowComponent";
+import { IHeaderRowRenderOptions } from "./header/headerRowRenderOptions";
+import { RowComponent } from "./row/rowComponent";
+import { IRowState } from "./row/rowState";
+import { TableBaseComponent } from "./tableBaseComponent";
+
+import { StateService } from "../../services/state/stateService";
+
+import { IVisualComponent } from "../visualComponent";
+import { IVisualComponentConstructorOptions } from "../visualComponentConstructorOptions";
+import { IVisualComponentRenderOptions } from "../visualComponentRenderOptions";
+import { ICellState } from "./cell/cellState";
+
+import {
+    IGeneratedCategory,
+    SettingsBase,
+} from "../../settings/settingsBase";
+
+import { FontSettings } from "../../settings/descriptors/fontSettings";
+import { LabelSettings } from "../../settings/descriptors/labelSettings";
+import { TableType } from "../../settings/descriptors/tableSettings";
+
 export class TableComponent extends TableBaseComponent {
     private className: string = "tableComponent";
     private columnClassName: string = "tableComponent_column";
@@ -36,7 +59,7 @@ export class TableComponent extends TableBaseComponent {
     private headerRowComponent: HeaderRowComponent;
     private bodyComponent: BodyComponent;
 
-    constructor(options: VisualComponentConstructorOptions) {
+    constructor(options: IVisualComponentConstructorOptions) {
         super();
 
         this.element = options.element
@@ -46,59 +69,54 @@ export class TableComponent extends TableBaseComponent {
         this.stateService = options.stateService;
 
         const headerRowComponent: HeaderRowComponent = new HeaderRowComponent({
-            element: this.element,
             defaultMargin: this.defaultMargin,
-            scaleService: options.scaleService,
-            stateService: options.stateService,
+            element: this.element,
             onCellSizeChange: this.updateSizeOfCellByIndex.bind(this),
             onSaveState: this.onSaveState.bind(this),
+            scaleService: options.scaleService,
+            stateService: options.stateService,
         });
 
         const bodyComponent: BodyComponent = new BodyComponent({
-            element: this.element,
-            scaleService: options.scaleService,
-            stateService: options.stateService,
             defaultMargin: this.defaultMargin,
-            onCellSizeChange: this.updateSizeOfCellByIndex.bind(this),
-            powerKPIModalWindowService: options.powerKPIModalWindowService,
-            onScroll: (headerRowComponent as HeaderRowComponent)
-                .scrollTo
-                .bind(headerRowComponent),
+            element: this.element,
             getCellStates: () => {
                 return (headerRowComponent as RowComponent).getState().cellSet[this.tableType];
             },
+            onCellSizeChange: this.updateSizeOfCellByIndex.bind(this),
             onSaveState: this.onSaveState.bind(this),
+            onScroll: (headerRowComponent as HeaderRowComponent)
+                .scrollTo
+                .bind(headerRowComponent),
+            powerKPIModalWindowService: options.powerKPIModalWindowService,
+            scaleService: options.scaleService,
+            stateService: options.stateService,
         });
 
         this.headerRowComponent = headerRowComponent;
         this.bodyComponent = bodyComponent;
 
         this.components = [
-            headerRowComponent,
             bodyComponent,
+            headerRowComponent,
         ];
     }
 
-    private onSaveState(): void {
-        this.stateService.states.table.set(this.getState());
-        this.stateService.save();
-    }
-
-    public render(options: VisualComponentRenderOptions): void {
+    public render(options: IVisualComponentRenderOptions): void {
         const {
             settings,
             settings: {
                 table: {
-                    type
-                }
+                    type,
+                },
             },
             data: {
-                seriesDeep
-            }
+                seriesDeep,
+            },
         } = options;
 
         if (this.tableType !== type) {
-            this.components.forEach((component: VisualComponent) => {
+            this.components.forEach((component: IVisualComponent) => {
                 if (component && component.resetScroll) {
                     component.resetScroll();
                 }
@@ -107,14 +125,14 @@ export class TableComponent extends TableBaseComponent {
 
         this.tableType = type;
 
-        const extendedOptions: HeaderRowRenderOptions = options as HeaderRowRenderOptions;
+        const extendedOptions: IHeaderRowRenderOptions = options as IHeaderRowRenderOptions;
 
         const columnNames: string[] = [];
         const columnOrders: number[] = [];
         const visibilities: boolean[] = [];
 
         for (let index: number = 0; index < seriesDeep - 1; index++) {
-            const category: GeneratedCategory = SettingsBase.getCategoryByIndex(index);
+            const category: IGeneratedCategory = SettingsBase.getCategoryByIndex(index);
 
             const categorySettings: FontSettings = settings[category.name];
 
@@ -152,16 +170,28 @@ export class TableComponent extends TableBaseComponent {
         this.synchronizeCellWidth();
     }
 
+    public destroy(): void {
+        this.headerRowComponent = null;
+        this.bodyComponent = null;
+
+        super.destroy();
+    }
+
+    private onSaveState(): void {
+        this.stateService.states.table.set(this.getState());
+        this.stateService.save();
+    }
+
     /**
      * This method allow us to synchronize widths of header and body rows.
-     * TODO: Let's revisit it later in order to make a better solution
+     * TODO: Let's revisit it later in order to make a better solution (the later is usually never)
      */
     private synchronizeCellWidth(): void {
         if (!this.headerRowComponent || !this.bodyComponent) {
             return;
         }
 
-        const headerState: RowState = this.headerRowComponent.getState();
+        const headerState: IRowState = this.headerRowComponent.getState();
 
         if (!headerState
             || !headerState.cellSet
@@ -171,7 +201,7 @@ export class TableComponent extends TableBaseComponent {
             return;
         }
 
-        headerState.cellSet[this.tableType].forEach((cellState: CellState, cellIndex: number) => {
+        headerState.cellSet[this.tableType].forEach((cellState: ICellState, cellIndex: number) => {
             if (cellState) {
                 const width: number = this.tableType === TableType.RowBasedKPIS
                     ? cellState.width
@@ -194,12 +224,5 @@ export class TableComponent extends TableBaseComponent {
         this.element
             .classed(this.columnClassName, this.tableType === TableType.ColumnBasedKPIS)
             .classed(this.rowClassName, this.tableType === TableType.RowBasedKPIS);
-    }
-
-    public destroy(): void {
-        this.headerRowComponent = null;
-        this.bodyComponent = null;
-
-        super.destroy();
     }
 }

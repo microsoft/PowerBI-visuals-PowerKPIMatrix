@@ -24,9 +24,19 @@
  *  THE SOFTWARE.
  */
 
+import { BaseContainerComponent } from "../baseContainerComponent";
+import { IVisualComponent } from "../visualComponent";
+import { RowComponent } from "./row/rowComponent";
+import { IRowElementsVisibility } from "./row/rowElementsVisibility";
+import { IRowState } from "./row/rowState";
+
+import { TableType } from "../../settings/descriptors/tableSettings";
+
+import { ITableState } from "./tableState";
+
 export abstract class TableBaseComponent
     extends BaseContainerComponent
-    implements RowElementsVisibility {
+    implements IRowElementsVisibility {
 
     protected tableType: TableType = TableType.RowBasedKPIS;
 
@@ -35,27 +45,27 @@ export abstract class TableBaseComponent
             return;
         }
 
-        this.components.forEach((component: VisualComponent) => {
+        this.components.forEach((component: IVisualComponent) => {
             if ((component as RowComponent).updateSizeOfCellByIndex) {
                 (component as RowComponent).updateSizeOfCellByIndex(width, height, cellIndex);
             }
         });
     }
 
-    public getState(): TableState {
-        const state: TableState = {
-            rowSet: {}
+    public getState(): ITableState {
+        const state: ITableState = {
+            rowSet: {},
         };
 
         if (this.components) {
-            this.components.forEach((component: VisualComponent) => {
+            this.components.forEach((component: IVisualComponent) => {
                 if (component.getState) {
                     if (component instanceof RowComponent) {
-                        const rowState: RowState = component.getState();
+                        const rowState: IRowState = component.getState();
 
                         state.rowSet[rowState.name] = rowState;
                     } else if (component instanceof TableBaseComponent) {
-                        const subTableState: TableState = component.getState();
+                        const subTableState: ITableState = component.getState();
 
                         for (const rowName in subTableState.rowSet) {
                             state.rowSet[rowName] = subTableState.rowSet[rowName];
@@ -69,7 +79,7 @@ export abstract class TableBaseComponent
     }
 
     public updateVisibility(visibilities: boolean[]): void {
-        this.components.forEach((component: RowElementsVisibility) => {
+        this.components.forEach((component: IRowElementsVisibility) => {
             if (component.updateVisibility) {
                 component.updateVisibility(visibilities);
             }

@@ -24,18 +24,29 @@
  *  THE SOFTWARE.
  */
 
+import { Selection } from "d3-selection";
+
+import powerbi from "powerbi-visuals-api";
+
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
+
+import { BaseContainerComponent } from "../visualComponent/baseContainerComponent";
+import { IVisualComponent } from "../visualComponent/visualComponent";
+import { IVisualComponentConstructorOptions } from "../visualComponent/visualComponentConstructorOptions";
+import { IVisualComponentRenderOptionsBase } from "../visualComponent/visualComponentRenderOptionsBase";
+
 export interface IModalWindowServiceInitOptions {
-    element: D3.Selection;
-    componentCreators: Array<((options: VisualComponentConstructorOptions) => VisualComponent)>;
+    element: Selection<any, any, any, any>;
+    componentCreators: Array<((options: IVisualComponentConstructorOptions) => IVisualComponent)>;
 }
 
 export class ModalWindowService extends BaseContainerComponent {
     private className: string = "modalWindow_rootElement";
     private innerElementClassName: string = "modalWindow_rootElement-innerElement";
 
-    private innerElement: D3.Selection;
+    private innerElement: Selection<any, any, any, any>;
 
-    private renderOptions: VisualComponentRenderOptionsBase;
+    private renderOptions: IVisualComponentRenderOptionsBase;
 
     constructor(options: IModalWindowServiceInitOptions) {
         super();
@@ -49,12 +60,14 @@ export class ModalWindowService extends BaseContainerComponent {
             .append("div")
             .classed(this.innerElementClassName, true)
             .on("click", () => {
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
-                d3.event.stopImmediatePropagation();
+                const event: Event = require("d3").event;
+
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
             });
 
-        const componentOptions: VisualComponentConstructorOptions = {
+        const componentOptions: IVisualComponentConstructorOptions = {
             element: this.innerElement,
         };
 
@@ -65,7 +78,7 @@ export class ModalWindowService extends BaseContainerComponent {
         });
     }
 
-    public render(options: VisualComponentRenderOptionsBase): void {
+    public render(options: IVisualComponentRenderOptionsBase): void {
         const shouldBeShown: boolean = options
             && options.settings
             && options.settings.popOutGeneralSettings
@@ -86,15 +99,26 @@ export class ModalWindowService extends BaseContainerComponent {
         this.renderComponent(options);
     }
 
-    private renderComponent(options: VisualComponentRenderOptionsBase): void {
+    public getRenderOptions(): IVisualComponentRenderOptionsBase {
+        return this.renderOptions;
+    }
+
+    public destroy() {
+        this.renderOptions = null;
+        this.innerElement = null;
+
+        super.destroy();
+    }
+
+    private renderComponent(options: IVisualComponentRenderOptionsBase): void {
         const { settings: { popOutGeneralSettings } } = options;
 
-        const viewport: IViewport = this.getInnerViewport(
+        const viewport: powerbi.IViewport = this.getInnerViewport(
             options.viewport,
-            popOutGeneralSettings.getViewportSizeInPercent()
+            popOutGeneralSettings.getViewportSizeInPercent(),
         );
 
-        const extendedOptions: VisualComponentRenderOptionsBase = {
+        const extendedOptions: IVisualComponentRenderOptionsBase = {
             ...options,
             viewport,
         };
@@ -108,32 +132,23 @@ export class ModalWindowService extends BaseContainerComponent {
         super.render(extendedOptions);
     }
 
-    private getInnerViewport(baseViewport: IViewport, innerElementSize: number): IViewport {
+    private getInnerViewport(baseViewport: powerbi.IViewport, innerElementSize: number): powerbi.IViewport {
         return {
-            width: baseViewport.width * innerElementSize,
             height: baseViewport.height * innerElementSize,
+            width: baseViewport.width * innerElementSize,
         };
     }
 
-    private updateElementSize(element: D3.Selection, viewport: IViewport): void {
+    private updateElementSize(
+        element: Selection<any, any, any, any>,
+        viewport: powerbi.IViewport,
+    ): void {
         if (!element) {
             return;
         }
 
-        element.style({
-            width: PixelConverter.toString(viewport.width),
-            height: PixelConverter.toString(viewport.height),
-        });
-    }
-
-    public getRenderOptions(): VisualComponentRenderOptionsBase {
-        return this.renderOptions;
-    }
-
-    public destroy() {
-        this.renderOptions = null;
-        this.innerElement = null;
-
-        super.destroy();
+        element
+            .style("height", pixelConverter.toString(viewport.height))
+            .style("width", pixelConverter.toString(viewport.width));
     }
 }
