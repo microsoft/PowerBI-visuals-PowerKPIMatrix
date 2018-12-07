@@ -24,175 +24,183 @@
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import PixelConverter = jsCommon.PixelConverter;
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
 
-    export class HeaderRowComponent extends RowComponent {
-        private extraClassName: string = "headerRowComponent";
-        private componentContainerClassName: string = "headerRowComponent_container";
+import { TableType } from "../../../settings/descriptors/tableSettings";
+import { ScrollUtils } from "../../../utils/scrollUtils";
+import { IVisualComponent } from "../../visualComponent";
+import { IVisualComponentConstructorOptions } from "../../visualComponentConstructorOptions";
+import { CellComponent } from "../cell/cellComponent";
+import { ICellState } from "../cell/cellState";
+import { TextCellComponent } from "../cell/text/textCellComponent";
+import { ITextCellRenderOptions } from "../cell/text/textCellRenderOptions";
+import { RowComponent } from "../row/rowComponent";
+import { IRowComponentConstructorOptions } from "../row/rowComponentConstructorOptions";
+import { IHeaderRowRenderOptions } from "./headerRowRenderOptions";
 
-        private maxSize: number = 200;
+export class HeaderRowComponent extends RowComponent {
+    private extraClassName: string = "headerRowComponent";
+    private componentContainerClassName: string = "headerRowComponent_container";
 
-        constructor(options: RowComponentConstructorOptions) {
-            super(options);
+    private maxSize: number = 200;
 
-            this.initHorizontalDraggableComponent(this.options);
+    constructor(options: IRowComponentConstructorOptions) {
+        super(options);
 
-            this.name = "__#__headerRowComponent__#__"; // Don't change this value. This value is used for state mapping
+        this.initHorizontalDraggableComponent(this.options);
 
-            this.element.classed(this.extraClassName, true);
-            this.containerElement.classed(this.componentContainerClassName, true);
-        }
+        this.name = "__#__headerRowComponent__#__"; // Don't change this value. This value is used for state mapping
 
-        public render(options: HeaderRowRenderOptions): void {
-            const {
-                settings,
-                columnNames,
-                columnOrders,
-            } = options;
+        this.element.classed(this.extraClassName, true);
+        this.containerElement.classed(this.componentContainerClassName, true);
+    }
 
-            this.tableType = settings.table.type;
+    public render(options: IHeaderRowRenderOptions): void {
+        const {
+            settings,
+            columnNames,
+            columnOrders,
+        } = options;
 
-            if (settings && settings.header && settings.header.show) {
-                this.initCells(columnNames.length);
+        this.tableType = settings.table.type;
 
-                this.updateGrid(settings.horizontalGrid, settings.verticalGrid);
+        if (settings && settings.header && settings.header.show) {
+            this.initCells(columnNames.length);
 
-                this.show();
+            this.updateGrid(settings.horizontalGrid, settings.verticalGrid);
 
-                this.components.forEach((component: VisualComponent, componentIndex: number) => {
-                    const order: number = columnOrders[componentIndex];
+            this.show();
 
-                    const componentRenderOptions: TextCellRenderOptions = {
-                        order,
-                        fontSettings: settings.header,
-                        value: columnNames[componentIndex],
-                    };
+            this.components.forEach((component: IVisualComponent, componentIndex: number) => {
+                const order: number = columnOrders[componentIndex];
 
-                    component.render(componentRenderOptions);
-
-                    this.verticalDraggableComponents[componentIndex].updateOrder(order);
-                });
-
-                this.applyFontSettings(settings.header);
-            } else {
-                this.hide();
-            }
-
-            this.applyState(this.options.stateService.states.table.getRowStateSet()[this.name]);
-        }
-
-        private initCells(cellsLength: number): void {
-            this.destroyComponentsByLength(this.components, cellsLength);
-            this.destroyComponentsByLength(this.verticalDraggableComponents, cellsLength);
-
-            if (this.components.length < cellsLength) {
-                const constructorOptions: VisualComponentConstructorOptions = {
-                    element: this.containerElement
+                const componentRenderOptions: ITextCellRenderOptions = {
+                    fontSettings: settings.header,
+                    order,
+                    value: columnNames[componentIndex],
                 };
 
-                for (
-                    let index: number = this.components.length;
-                    index < cellsLength;
-                    index++
-                ) {
-                    this.initCellElement(constructorOptions, index);
-                }
-            }
-        }
+                component.render(componentRenderOptions);
 
-        private destroyComponentsByLength(components: VisualComponent[], length: number): void {
-            components
-                .splice(length)
-                .forEach((component: VisualComponent) => {
-                    component.clear();
-                    component.destroy();
-                });
-        }
-
-        private initCellElement(
-            constructorOptions: VisualComponentConstructorOptions,
-            index: number
-        ): void {
-            const cell: CellComponent = new TextCellComponent(constructorOptions);
-
-            this.pushComponent(
-                cell,
-                {
-                    element: this.containerElement,
-                    scaleService: this.options.scaleService,
-                    onDragStart: () => {
-                        const cellState: CellState = cell.getState();
-
-                        return {
-                            x: cellState.width,
-                            y: cellState.height,
-                        };
-                    },
-                    onDrag: (width: number, height: number) => {
-                        this.onCellSizeChange(width, height, index);
-                    },
-                    onSaveState: this.options.onSaveState,
-                    width: this.options.defaultMargin,
-                });
-        }
-
-        protected onSizeChange(width: number, height: number): void {
-            let currentHeight: number = height;
-            let currentWidth: number = width;
-
-            if (this.tableType === TableType.RowBasedKPIS
-                && !isNaN(currentHeight)
-                && currentHeight !== null
-            ) {
-                currentHeight = Math.min(currentHeight, this.maxSize);
-            } else if (this.tableType === TableType.ColumnBasedKPIS
-                && !isNaN(currentWidth)
-                && currentWidth !== null
-            ) {
-                currentWidth = Math.min(currentWidth, this.maxSize);
-            }
-
-            super.onSizeChange(currentWidth, currentHeight);
-        }
-
-        public scrollTo(
-            xOffset: number,
-            yOffset: number,
-            scrollbarWidth: number,
-            scrollbarHeight: number
-        ): void {
-            if (!this.containerElement) {
-                return;
-            }
-
-            let marginRight: string = null;
-            let marginBottom: string = null;
-
-            switch (this.tableType) {
-                case TableType.RowBasedKPIS: {
-                    marginRight = PixelConverter.toString(scrollbarWidth);
-
-                    break;
-                }
-                case TableType.ColumnBasedKPIS: {
-                    marginBottom = PixelConverter.toString(scrollbarHeight);
-
-                    break;
-                }
-            }
-
-            ScrollUtils.d3ScrollTo(this.containerElement, xOffset, yOffset);
-
-            this.containerElement.style({
-                "margin-bottom": marginBottom,
-                "margin-right": marginRight,
+                this.verticalDraggableComponents[componentIndex].updateOrder(order);
             });
+
+            this.applyFontSettings(settings.header);
+        } else {
+            this.hide();
         }
 
-        public resetScroll(): void {
-            this.scrollTo(0, 0, 0, 0);
+        this.applyState(this.options.stateService.states.table.getRowStateSet()[this.name]);
+    }
+
+    public scrollTo(
+        xOffset: number,
+        yOffset: number,
+        scrollbarWidth: number,
+        scrollbarHeight: number,
+    ): void {
+        if (!this.containerElement) {
+            return;
         }
+
+        let marginRight: string = null;
+        let marginBottom: string = null;
+
+        switch (this.tableType) {
+            case TableType.RowBasedKPIS: {
+                marginRight = pixelConverter.toString(scrollbarWidth);
+
+                break;
+            }
+            case TableType.ColumnBasedKPIS: {
+                marginBottom = pixelConverter.toString(scrollbarHeight);
+
+                break;
+            }
+        }
+
+        ScrollUtils.d3ScrollTo(this.containerElement, xOffset, yOffset);
+
+        this.containerElement
+            .style("margin-bottom", marginBottom)
+            .style("margin-right", marginRight);
+    }
+
+    public resetScroll(): void {
+        this.scrollTo(0, 0, 0, 0);
+    }
+
+    protected onSizeChange(width: number, height: number): void {
+        let currentHeight: number = height;
+        let currentWidth: number = width;
+
+        if (this.tableType === TableType.RowBasedKPIS
+            && !isNaN(currentHeight)
+            && currentHeight !== null
+        ) {
+            currentHeight = Math.min(currentHeight, this.maxSize);
+        } else if (this.tableType === TableType.ColumnBasedKPIS
+            && !isNaN(currentWidth)
+            && currentWidth !== null
+        ) {
+            currentWidth = Math.min(currentWidth, this.maxSize);
+        }
+
+        super.onSizeChange(currentWidth, currentHeight);
+    }
+
+    private initCells(cellsLength: number): void {
+        this.destroyComponentsByLength(this.components, cellsLength);
+        this.destroyComponentsByLength(this.verticalDraggableComponents, cellsLength);
+
+        if (this.components.length < cellsLength) {
+            const constructorOptions: IVisualComponentConstructorOptions = {
+                element: this.containerElement,
+            };
+
+            for (
+                let index: number = this.components.length;
+                index < cellsLength;
+                index++
+            ) {
+                this.initCellElement(constructorOptions, index);
+            }
+        }
+    }
+
+    private initCellElement(
+        constructorOptions: IVisualComponentConstructorOptions,
+        index: number,
+    ): void {
+        const cell: CellComponent = new TextCellComponent(constructorOptions);
+
+        this.pushComponent(
+            cell,
+            {
+                element: this.containerElement,
+                onDrag: (width: number, height: number) => {
+                    this.onCellSizeChange(width, height, index);
+                },
+                onDragStart: () => {
+                    const cellState: ICellState = cell.getState();
+
+                    return {
+                        x: cellState.width,
+                        y: cellState.height,
+                    };
+                },
+                onSaveState: this.options.onSaveState,
+                scaleService: this.options.scaleService,
+                width: this.options.defaultMargin,
+            });
+    }
+
+    private destroyComponentsByLength(components: IVisualComponent[], length: number): void {
+        components
+            .splice(length)
+            .forEach((component: IVisualComponent) => {
+                component.clear();
+                component.destroy();
+            });
     }
 }

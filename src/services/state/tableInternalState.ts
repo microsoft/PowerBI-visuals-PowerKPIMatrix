@@ -24,20 +24,20 @@
  *  THE SOFTWARE.
  */
 
-import { TableState } from "../../visualComponent/table/tableState";
+import { ITableState } from "../../visualComponent/table/tableState";
 import { ISettingsServiceItem } from "../settingsService";
 import { State } from "./state";
 
 import { RowStateSet } from "../../visualComponent/table/row/rowState";
 
-export class TableInternalState extends State<TableState> {
+export class TableInternalState extends State<ITableState> {
     constructor() {
         super();
 
         this.state = { rowSet: {} };
     }
 
-    public set(state: TableState): void {
+    public set(state: ITableState): void {
         this.state = state || {
             rowSet: {},
         };

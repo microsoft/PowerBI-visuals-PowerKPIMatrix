@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *
  *  Copyright (c) Microsoft Corporation
- *  All rights reserved. 
+ *  All rights reserved.
  *  MIT License
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,140 +12,152 @@
  *  copies of the Software, and to permit persons to whom the Software is
  *  furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in 
+ *  The above copyright notice and this permission notice shall be included in
  *  all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
 
-namespace powerbi.visuals.samples.powerKPIMatrix {
-    // jsCommon
-    import PixelConverter = jsCommon.PixelConverter;
+import {
+    drag as d3Drag,
+    DragBehavior,
+} from "d3-drag";
 
-    // powerbi
-    import IViewport = powerbi.IViewport;
+import powerbi from "powerbi-visuals-api";
 
-    export class DraggableComponent extends BaseComponent {
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
 
-        private className: string = "draggableComponent";
+import { BaseComponent } from "../../baseComponent";
+import { IVisualComponentRenderOptions } from "../../visualComponentRenderOptions";
+import { ICellState } from "../cell/cellState";
 
-        private width: number;
-        private height: number;
+import {
+    IDraggableConstructorOptions,
+    IPoint,
+} from "./draggableConstructorOptions";
 
-        constructor(options: DraggableConstructorOptions) {
-            super();
+export class DraggableComponent extends BaseComponent {
 
-            this.width = options.width || 0;
-            this.height = options.height || 0;
+    private className: string = "draggableComponent";
 
-            const drag: D3.Behavior.Drag = d3.behavior.drag()
-                .origin(() => {
-                    const point: IPoint = options.onDragStart
-                        ? options.onDragStart()
-                        : { x: 0, y: 0 };
+    private width: number;
+    private height: number;
 
-                    const scale: IViewport = options.scaleService.getScale();
+    constructor(options: IDraggableConstructorOptions) {
+        super();
 
-                    point.x *= scale.width;
-                    point.y *= scale.height;
+        this.width = options.width || 0;
+        this.height = options.height || 0;
 
-                    return point;
-                })
-                .on("dragstart", () => {
-                    this.stopEventPropagation(d3.event.sourceEvent); // We should stop propagation of this event in order to stop moving entire custom visual
-                })
-                .on("drag", options.onDrag
-                    ? () => {
-                        const event: D3.D3Event = d3.event;
+        const drag: DragBehavior<any, any, any> = d3Drag()
+            .subject(() => {
+                const point: IPoint = options.onDragStart
+                    ? options.onDragStart()
+                    : { x: 0, y: 0 };
 
-                        const scale: IViewport = options.scaleService.getScale();
+                const scale: powerbi.IViewport = options.scaleService.getScale();
 
-                        options.onDrag(
-                            event.x / scale.width,
-                            event.y / scale.height
-                        );
-                    }
-                    : null
-                )
-                .on("dragend", options.onSaveState || null);
+                point.x *= scale.width;
+                point.y *= scale.height;
 
-            this.element = options.element
-                .append("div")
-                .classed(this.className, true)
-                .on("pointerdown", () => { // We should stop propagation of this event in order to stop moving entire custom visual
-                    this.stopEventPropagation(d3.event);
-                })
-                .on("click", () => {
-                    this.stopEventPropagation(d3.event);
-                })
-                .call(drag);
+                return point;
+            })
+            .on("start", () => {
+                // We should stop propagation of this event in order to stop moving entire custom visual
+                this.stopEventPropagation(require("d3").event.sourceEvent);
+            })
+            .on("drag", options.onDrag
+                ? () => {
+                    const event: MouseEvent = require("d3").event;
 
-            this.updateSize(options.width, options.height);
+                    const scale: powerbi.IViewport = options.scaleService.getScale();
+
+                    options.onDrag(
+                        event.x / scale.width,
+                        event.y / scale.height,
+                    );
+                }
+                : null,
+            )
+            .on("end", options.onSaveState || null);
+
+        this.element = options.element
+            .append("div")
+            .classed(this.className, true)
+            .on("pointerdown", () => { // We should stop propagation of this event in order to stop moving entire custom visual
+                this.stopEventPropagation(require("d3").event);
+            })
+            .on("click", () => {
+                this.stopEventPropagation(require("d3").event);
+            })
+            .call(drag);
+
+        this.updateSize(options.width, options.height);
+    }
+
+    public getState(): ICellState {
+        return {
+            height: this.height,
+            width: this.width,
+        };
+    }
+
+    public updateSize(width: number, height: number, shouldKeepCurrentSize: boolean = false): void {
+        if (!this.element) {
+            return;
         }
 
-        private stopEventPropagation(event: Event): void {
-            if (!event || !event.stopPropagation) {
-                return;
-            }
+        let widthInPx: string = null;
+        let heightInPx: string = null;
 
-            event.stopPropagation();
+        if (!isNaN(width) && isFinite(width)) {
+            this.width = width;
+
+            widthInPx = pixelConverter.toString(width);
+        } else if (shouldKeepCurrentSize) {
+            widthInPx = pixelConverter.toString(this.width);
         }
 
-        public getState(): CellState {
-            return {
-                width: this.width,
-                height: this.height,
-            };
+        if (!isNaN(height) && isFinite(height)) {
+            this.height = height;
+
+            heightInPx = pixelConverter.toString(height);
+        } else if (shouldKeepCurrentSize) {
+            heightInPx = pixelConverter.toString(this.height);
         }
 
-        public updateSize(width: number, height: number, shouldKeepCurrentSize: boolean = false): void {
-            if (!this.element) {
-                return;
-            }
+        this.element
+            .style("width", widthInPx)
+            .style("min-width", widthInPx)
+            .style("max-width", widthInPx)
+            .style("height", heightInPx)
+            .style("min-height", heightInPx)
+            .style("max-height", heightInPx);
+    }
 
-            let widthInPx: string = null;
-            let heightInPx: string = null;
-
-            if (!isNaN(width) && isFinite(width)) {
-                this.width = width;
-
-                widthInPx = PixelConverter.toString(width);
-            } else if (shouldKeepCurrentSize) {
-                widthInPx = PixelConverter.toString(this.width);
-            }
-
-            if (!isNaN(height) && isFinite(height)) {
-                this.height = height;
-
-                heightInPx = PixelConverter.toString(height);
-            } else if (shouldKeepCurrentSize) {
-                heightInPx = PixelConverter.toString(this.height);
-            }
-
-            this.element.style({
-                "width": widthInPx,
-                "min-width": widthInPx,
-                "max-width": widthInPx,
-                "height": heightInPx,
-                "min-height": heightInPx,
-                "max-height": heightInPx,
-            });
+    public updateColor(color: string): void {
+        if (!this.element) {
+            return;
         }
 
-        public updateColor(color: string): void {
-            if (!this.element) {
-                return;
-            }
+        this.element.style("background-color", color || null);
+    }
 
-            this.element.style("background-color", color || null);
+    public render(options: IVisualComponentRenderOptions) {
+        // No need to render
+    }
+
+    private stopEventPropagation(event: Event): void {
+        if (!event || !event.stopPropagation) {
+            return;
         }
 
-        public render(options: VisualComponentRenderOptions) { }
+        event.stopPropagation();
     }
 }

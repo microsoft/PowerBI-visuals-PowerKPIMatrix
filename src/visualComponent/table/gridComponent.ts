@@ -24,6 +24,9 @@
  *  THE SOFTWARE.
  */
 
-export interface GridComponent extends VisualComponent {
+import { GridSettings } from "../../settings/descriptors/gridSettings";
+import { IVisualComponent } from "../visualComponent";
+
+export interface IGridComponent extends IVisualComponent {
     updateGrid(settings: GridSettings): void;
 }

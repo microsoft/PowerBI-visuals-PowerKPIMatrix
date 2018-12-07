@@ -24,6 +24,6 @@
  *  THE SOFTWARE.
  */
 
-export interface TableState extends VisualComponentStateBase {
+export interface ITableState extends VisualComponentStateBase {
     rowSet: RowStateSet;
 }
