@@ -28,7 +28,7 @@ import { ITableState } from "../../visualComponent/table/tableState";
 import { ISettingsServiceItem } from "../settingsService";
 import { State } from "./state";
 
-import { RowStateSet } from "../../visualComponent/table/row/rowState";
+import { IRowStateSet } from "../../visualComponent/table/row/rowState";
 
 export class TableInternalState extends State<ITableState> {
     constructor() {
@@ -43,7 +43,7 @@ export class TableInternalState extends State<ITableState> {
         };
     }
 
-    public getRowStateSet(): RowStateSet {
+    public getRowStateSet(): IRowStateSet {
         return this.state.rowSet || {};
     }
 

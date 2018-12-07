@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
-export interface RowElementsVisibility extends VisualComponent {
+import { IVisualComponent } from "../../visualComponent";
+
+export interface IRowElementsVisibility extends IVisualComponent {
     updateVisibility(visibilities: boolean[]): void;
 }

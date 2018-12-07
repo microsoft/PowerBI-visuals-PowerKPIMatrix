@@ -24,16 +24,39 @@
  *  THE SOFTWARE.
  */
 
+import { Selection } from "d3-selection";
+
+import powerbi from "powerbi-visuals-api";
+
+import { pixelConverter } from "powerbi-visuals-utils-typeutils";
+
+import { FontSettings } from "../../../settings/descriptors/fontSettings";
+import { GridSettings } from "../../../settings/descriptors/gridSettings";
+import { TableType } from "../../../settings/descriptors/tableSettings";
+import { BaseContainerComponent } from "../../baseContainerComponent";
+import { IVisualComponent } from "../../visualComponent";
+import { CellComponent } from "../cell/cellComponent";
+import { ICellState } from "../cell/cellState";
+import { DraggableComponent } from "../draggable/draggableComponent";
+
+import {
+    IDraggableConstructorOptions,
+    IPoint,
+} from "../draggable/draggableConstructorOptions";
+
+import { IRowComponentConstructorOptions } from "./rowComponentConstructorOptions";
+import { IRowElementsVisibility } from "./rowElementsVisibility";
+import { IRowState } from "./rowState";
+
 export abstract class RowComponent
     extends BaseContainerComponent
-    implements RowElementsVisibility {
+    implements IRowElementsVisibility {
 
-    private containerClassName: string = "rowComponent_container";
     protected className: string = "rowComponent";
 
     protected tableType: TableType = TableType.RowBasedKPIS;
 
-    protected containerElement: D3.Selection;
+    protected containerElement: Selection<any, any, any, any>;
 
     protected horizontalDraggableComponent: DraggableComponent;
     protected verticalDraggableComponents: DraggableComponent[] = [];
@@ -43,9 +66,11 @@ export abstract class RowComponent
      */
     protected name: string;
 
-    protected options: RowComponentConstructorOptions;
+    protected options: IRowComponentConstructorOptions;
 
-    constructor(options: RowComponentConstructorOptions) {
+    private containerClassName: string = "rowComponent_container";
+
+    constructor(options: IRowComponentConstructorOptions) {
         super();
 
         this.options = options;
@@ -61,19 +86,316 @@ export abstract class RowComponent
         this.components = [];
     }
 
-    protected initHorizontalDraggableComponent(options: RowComponentConstructorOptions): void {
+    public getWidth(): number {
+        const viewport: powerbi.IViewport = this.getSize([
+            ...this.components,
+            ...this.verticalDraggableComponents,
+        ]);
+
+        switch (this.tableType) {
+            case TableType.ColumnBasedKPIS: {
+                return viewport.height;
+            }
+            case TableType.RowBasedKPIS:
+            default: {
+                return viewport.width;
+            }
+        }
+    }
+
+    public updateVisibility(visibilities: boolean[]): void {
+        if (!this.components || !this.verticalDraggableComponents) {
+            return;
+        }
+
+        this.updateVisibilityOfComponents(
+            visibilities,
+            this.components,
+            this.verticalDraggableComponents);
+
+        this.updateSizeBasedOnChildren();
+    }
+
+    public getHeight(shouldConsiderSplitter: boolean = true): number {
+        const components: IVisualComponent[] = [];
+
+        this.components.some((component: IVisualComponent) => {
+            if (component && component.isShown) {
+                components.push(component);
+
+                return true;
+            }
+
+            return false;
+        });
+
+        if (shouldConsiderSplitter) {
+            components.push(this.horizontalDraggableComponent);
+        }
+
+        switch (this.tableType) {
+            case TableType.ColumnBasedKPIS: {
+                return this.getSize(components).width;
+            }
+            case TableType.RowBasedKPIS:
+            default: {
+                return this.getSize(components).height;
+            }
+        }
+    }
+
+    public clear(): void {
+        if (this.containerElement) {
+            this.containerElement
+                .selectAll("*")
+                .remove();
+        }
+
+        super.clear();
+    }
+
+    public destroy(): void {
+        if (this.containerElement) {
+            this.containerElement.remove();
+        }
+
+        this.containerElement = null;
+
+        [
+            this.horizontalDraggableComponent,
+            ...this.verticalDraggableComponents,
+        ].forEach((component: DraggableComponent) => {
+            if (component) {
+                component.destroy();
+            }
+        });
+
+        this.horizontalDraggableComponent = null;
+        this.verticalDraggableComponents = null;
+
+        super.destroy();
+    }
+
+    public updateCellComponentSizeByIndex(width: number, height: number, cellIndex: number): void {
+        const component: CellComponent = this.getCellByIndex(cellIndex);
+
+        if (component && component.updateSize) {
+            component.updateSize(width, height);
+        }
+    }
+
+    public updateSizeOfCellByIndex(width: number, height: number, cellIndex: number): void {
+        this.updateCellComponentSizeByIndex(width, height, cellIndex);
+
+        this.updateSizeBasedOnChildren();
+    }
+
+    public getState(): IRowState {
+        const state: IRowState = {
+            cellSet: {
+                [this.tableType]: [],
+            },
+            name: this.name,
+        };
+
+        if (this.components) {
+            this.components.forEach((component: IVisualComponent) => {
+                if (component && component.getState) {
+                    state.cellSet[this.tableType].push(component.getState() as ICellState);
+                }
+            });
+        }
+
+        return state;
+    }
+
+    public updateGrid(
+        horizontalGridSettings: GridSettings,
+        verticalGridSettings: GridSettings,
+    ): void {
+        if (this.tableType === TableType.ColumnBasedKPIS) {
+            [horizontalGridSettings, verticalGridSettings] = [verticalGridSettings, horizontalGridSettings];
+        }
+
+        this.updateDraggableComponents(
+            [this.horizontalDraggableComponent],
+            horizontalGridSettings,
+            true,
+        );
+
+        this.updateDraggableComponents(
+            this.verticalDraggableComponents,
+            verticalGridSettings,
+            false,
+        );
+
+        this.updateBorder(verticalGridSettings);
+    }
+
+    protected updateBorder(verticalGridSettings: GridSettings): void {
+        const border: string = this.getStringRepresentationOfBorderByGridSettings(verticalGridSettings);
+
+        this.element
+            .style("border-top", this.tableType === TableType.ColumnBasedKPIS
+                ? border
+                : null,
+            )
+            .style("border-left", this.tableType === TableType.RowBasedKPIS
+                ? border
+                : null,
+            );
+    }
+
+    protected getStringRepresentationOfBorderByGridSettings(gridSettings: GridSettings): string {
+        return gridSettings && gridSettings.show
+            ? `${pixelConverter.toString(gridSettings.thickness)} solid ${gridSettings.color}`
+            : null;
+    }
+
+    protected initHorizontalDraggableComponent(options: IRowComponentConstructorOptions): void {
         if (this.horizontalDraggableComponent) {
             return;
         }
 
         this.horizontalDraggableComponent = new DraggableComponent({
             element: this.element,
-            scaleService: options.scaleService,
-            onDragStart: this.getPoint.bind(this),
-            onDrag: this.onSizeChange.bind(this),
-            onSaveState: options.onSaveState,
             height: options.defaultMargin,
+            onDrag: this.onSizeChange.bind(this),
+            onDragStart: this.getPoint.bind(this),
+            onSaveState: options.onSaveState,
+            scaleService: options.scaleService,
         });
+    }
+
+    protected onSizeChange(width: number, height: number): void {
+        this.components.forEach((component: CellComponent, componentIndex: number) => {
+            if (component instanceof CellComponent) {
+                const currentWidth: number = this.tableType === TableType.RowBasedKPIS
+                    ? undefined
+                    : width;
+
+                const currentHeight: number = this.tableType === TableType.ColumnBasedKPIS
+                    ? undefined
+                    : height;
+
+                component.updateSize(currentWidth, currentHeight);
+
+                if (componentIndex === 1) {
+                    const cellState: ICellState = component.getState();
+
+                    this.updateSize(undefined, this.tableType === TableType.RowBasedKPIS
+                        ? cellState.height
+                        : cellState.width);
+                }
+            }
+        });
+    }
+
+    protected updateSize(width: number, height: number): void {
+        if (this.tableType === TableType.ColumnBasedKPIS) {
+            [width, height] = [height, width];
+        }
+
+        let heightStr: string = null;
+        let widthStr: string = null;
+
+        switch (this.tableType) {
+            case TableType.RowBasedKPIS: {
+                heightStr = height !== undefined && height !== null
+                    ? pixelConverter.toString(height)
+                    : null;
+
+                break;
+            }
+            case TableType.ColumnBasedKPIS: {
+                widthStr = width !== undefined && width !== null
+                    ? pixelConverter.toString(width)
+                    : null;
+
+                break;
+            }
+        }
+
+        this.containerElement
+            .style("height", heightStr)
+            .style("width", widthStr);
+    }
+
+    protected updateSizeBasedOnChildren(): void {
+        if (!this.horizontalDraggableComponent) {
+            return;
+        }
+
+        let width: number = this.getWidth();
+        let height: number;
+
+        if (this.tableType === TableType.ColumnBasedKPIS) {
+            [width, height] = [height, width];
+        }
+
+        this.horizontalDraggableComponent.updateSize(width, height, true);
+    }
+
+    protected pushComponent(component: IVisualComponent, options: IDraggableConstructorOptions): void {
+        this.components.push(component);
+        this.verticalDraggableComponents.push(new DraggableComponent(options));
+    }
+
+    protected applyFontSettings(fontSettings: FontSettings): void {
+        if (!this.element || !fontSettings) {
+            return;
+        }
+
+        this.element
+            .style("font-size", pixelConverter.toString(pixelConverter.fromPointToPixel(fontSettings.textFontSize)))
+            .style("font-family", fontSettings.fontFamily)
+            .classed(this.italicClassName, fontSettings.isItalic)
+            .classed(this.boldClassName, fontSettings.isBold);
+    }
+
+    protected updateVisibilityOfComponents(
+        visibilities: boolean[],
+        components: IVisualComponent[],
+        verticalDraggableComponents: IVisualComponent[],
+    ): void {
+        for (
+            let componentIndex: number = 0;
+            componentIndex < components.length;
+            componentIndex++
+        ) {
+            const visibility: boolean = visibilities[componentIndex];
+
+            [
+                components[componentIndex],
+                verticalDraggableComponents[componentIndex],
+            ].forEach((component: IVisualComponent) => {
+                if (component) {
+                    if (visibility) {
+                        component.show();
+                    } else {
+                        component.hide();
+                    }
+                }
+            });
+        }
+
+        this.updateSizeBasedOnChildren();
+    }
+
+    protected onCellSizeChange(width: number, height: number, index: number): void {
+        if (!this.options || !this.options.onCellSizeChange) {
+            return;
+        }
+
+        const currentWidth: number = this.tableType === TableType.RowBasedKPIS
+            ? width
+            : undefined;
+
+        const currentHeight: number = this.tableType === TableType.ColumnBasedKPIS
+            ? height
+            : undefined;
+
+        this.options.onCellSizeChange(currentWidth, currentHeight, index);
     }
 
     protected getCellByIndex(index: number): CellComponent {
@@ -86,7 +408,7 @@ export abstract class RowComponent
             : null;
     }
 
-    protected applyState(state: RowState): void {
+    protected applyState(state: IRowState): void {
         if (!this.options.stateService) {
             return;
         }
@@ -99,7 +421,7 @@ export abstract class RowComponent
                 && this.components[0] instanceof CellComponent
                 && this.components[0].getState
             ) {
-                const cellState: CellState = (this.components[0] as CellComponent).getState();
+                const cellState: ICellState = (this.components[0] as CellComponent).getState();
 
                 width = cellState.width;
                 height = cellState.height;
@@ -129,7 +451,7 @@ export abstract class RowComponent
         }
 
         this.components.forEach((component: CellComponent, cellIndex: number) => {
-            const cellState: CellState = state.cellSet[this.tableType][cellIndex]
+            const cellState: ICellState = state.cellSet[this.tableType][cellIndex]
                 || (this.components && this.components[0] && (this.components[0] as CellComponent).getState());
 
             if (cellState) {
@@ -146,292 +468,12 @@ export abstract class RowComponent
                 this.updateCellComponentSizeByIndex(
                     cellState.width,
                     cellState.height,
-                    cellIndex
+                    cellIndex,
                 );
             }
         });
 
         this.updateSizeBasedOnChildren();
-    }
-
-    private getPoint(): IPoint {
-        let cellState: CellState = {
-            width: 0,
-            height: 0,
-        };
-
-        for (const component of this.components) {
-            if (component && component.getState) {
-                cellState = (component as CellComponent).getState();
-
-                break;
-            }
-        }
-
-        return {
-            x: cellState.width,
-            y: cellState.height
-        };
-    }
-
-    protected onSizeChange(width: number, height: number): void {
-        this.components.forEach((component: CellComponent, componentIndex: number) => {
-            if (component instanceof CellComponent) {
-                const currentWidth: number = this.tableType === TableType.RowBasedKPIS
-                    ? undefined
-                    : width;
-
-                const currentHeight: number = this.tableType === TableType.ColumnBasedKPIS
-                    ? undefined
-                    : height;
-
-                component.updateSize(currentWidth, currentHeight);
-
-                if (componentIndex === 1) {
-                    const cellState: CellState = component.getState();
-
-                    this.updateSize(undefined, this.tableType === TableType.RowBasedKPIS
-                        ? cellState.height
-                        : cellState.width);
-                }
-            }
-        });
-    }
-
-    protected updateSize(width: number, height: number): void {
-        if (this.tableType === TableType.ColumnBasedKPIS) {
-            [width, height] = [height, width];
-        }
-
-        let heightStr: string = null;
-        let widthStr: string = null;
-
-        switch (this.tableType) {
-            case TableType.RowBasedKPIS: {
-                heightStr = height !== undefined && height !== null
-                    ? PixelConverter.toString(height)
-                    : null;
-
-                break;
-            }
-            case TableType.ColumnBasedKPIS: {
-                widthStr = width !== undefined && width !== null
-                    ? PixelConverter.toString(width)
-                    : null;
-
-                break;
-            }
-        }
-
-        this.containerElement.style({
-            height: heightStr,
-            width: widthStr
-        });
-    }
-
-    protected updateSizeBasedOnChildren(): void {
-        if (!this.horizontalDraggableComponent) {
-            return;
-        }
-
-        let width: number = this.getWidth();
-        let height: number;
-
-        if (this.tableType === TableType.ColumnBasedKPIS) {
-            [width, height] = [height, width];
-        }
-
-        this.horizontalDraggableComponent.updateSize(width, height, true);
-    }
-
-    protected pushComponent(component: VisualComponent, options: DraggableConstructorOptions): void {
-        this.components.push(component);
-        this.verticalDraggableComponents.push(new DraggableComponent(options));
-    }
-
-    protected applyFontSettings(fontSettings: FontSettings): void {
-        if (!this.element || !fontSettings) {
-            return;
-        }
-
-        this.element
-            .style({
-                "font-size": PixelConverter.toString(PixelConverter.fromPointToPixel(fontSettings.textFontSize)),
-                "font-family": fontSettings.fontFamily
-            })
-            .classed(this.italicClassName, fontSettings.isItalic)
-            .classed(this.boldClassName, fontSettings.isBold);
-    }
-
-    public getWidth(): number {
-        const viewport: IViewport = this.getSize([
-            ...this.components,
-            ...this.verticalDraggableComponents,
-        ]);
-
-        switch (this.tableType) {
-            case TableType.ColumnBasedKPIS: {
-                return viewport.height;
-            }
-            case TableType.RowBasedKPIS:
-            default: {
-                return viewport.width;
-            }
-        }
-    }
-
-    public getHeight(shouldConsiderSplitter: boolean = true): number {
-        const components: VisualComponent[] = [];
-
-        this.components.some((component: VisualComponent) => {
-            if (component && component.isShown) {
-                components.push(component);
-
-                return true;
-            }
-
-            return false;
-        });
-
-        if (shouldConsiderSplitter) {
-            components.push(this.horizontalDraggableComponent);
-        }
-
-        switch (this.tableType) {
-            case TableType.ColumnBasedKPIS: {
-                return this.getSize(components).width;
-            }
-            case TableType.RowBasedKPIS:
-            default: {
-                return this.getSize(components).height;
-            }
-        }
-    }
-
-    private getSize(components: VisualComponent[]): IViewport {
-        return (components || []).reduce(
-            (viewport: IViewport, component: VisualComponent) => {
-                if (component && component.isShown && component.getState) {
-                    const cellState: CellState = component.getState() as CellState;
-
-                    viewport.height += cellState.height;
-                    viewport.width += cellState.width;
-                }
-
-                return viewport;
-            },
-            {
-                width: 0,
-                height: 0
-            }
-        );
-    }
-
-    public clear(): void {
-        if (this.containerElement) {
-            this.containerElement
-                .selectAll("*")
-                .remove();
-        }
-
-        super.clear();
-    }
-
-    public destroy(): void {
-        if (this.containerElement) {
-            this.containerElement.remove();
-        }
-
-        this.containerElement = null;
-
-        [
-            this.horizontalDraggableComponent,
-            ...this.verticalDraggableComponents
-        ].forEach((component: DraggableComponent) => {
-            if (component) {
-                component.destroy();
-            }
-        });
-
-        this.horizontalDraggableComponent = null;
-        this.verticalDraggableComponents = null;
-
-        super.destroy();
-    }
-
-    public updateCellComponentSizeByIndex(width: number, height: number, cellIndex: number): void {
-        const component: CellComponent = this.getCellByIndex(cellIndex);
-
-        if (component && component.updateSize) {
-            component.updateSize(width, height);
-        }
-    }
-
-    public updateSizeOfCellByIndex(width: number, height: number, cellIndex: number): void {
-        this.updateCellComponentSizeByIndex(width, height, cellIndex);
-
-        this.updateSizeBasedOnChildren();
-    }
-
-    public getState(): RowState {
-        const state: RowState = {
-            name: this.name,
-            cellSet: {
-                [this.tableType]: [],
-            },
-        };
-
-        if (this.components) {
-            this.components.forEach((component: VisualComponent) => {
-                if (component && component.getState) {
-                    state.cellSet[this.tableType].push(component.getState() as CellState);
-                }
-            });
-        }
-
-        return state;
-    }
-
-    public updateGrid(
-        horizontalGridSettings: GridSettings,
-        verticalGridSettings: GridSettings
-    ): void {
-        if (this.tableType === TableType.ColumnBasedKPIS) {
-            [horizontalGridSettings, verticalGridSettings] = [verticalGridSettings, horizontalGridSettings];
-        }
-
-        this.updateDraggableComponents(
-            [this.horizontalDraggableComponent],
-            horizontalGridSettings,
-            true
-        );
-
-        this.updateDraggableComponents(
-            this.verticalDraggableComponents,
-            verticalGridSettings,
-            false
-        );
-
-        this.updateBorder(verticalGridSettings);
-    }
-
-    protected updateBorder(verticalGridSettings: GridSettings): void {
-        const border: string = this.getStringRepresentationOfBorderByGridSettings(verticalGridSettings);
-
-        this.element.style({
-            "border-top": this.tableType === TableType.ColumnBasedKPIS
-                ? border
-                : null,
-            "border-left": this.tableType === TableType.RowBasedKPIS
-                ? border
-                : null,
-        });
-    }
-
-    protected getStringRepresentationOfBorderByGridSettings(gridSettings: GridSettings): string {
-        return gridSettings && gridSettings.show
-            ? `${PixelConverter.toString(gridSettings.thickness)} solid ${gridSettings.color}`
-            : null;
     }
 
     private updateDraggableComponents(
@@ -468,61 +510,43 @@ export abstract class RowComponent
         });
     }
 
-    public updateVisibility(visibilities: boolean[]): void {
-        if (!this.components || !this.verticalDraggableComponents) {
-            return;
-        }
+    private getSize(components: IVisualComponent[]): powerbi.IViewport {
+        return (components || []).reduce(
+            (viewport: powerbi.IViewport, component: IVisualComponent) => {
+                if (component && component.isShown && component.getState) {
+                    const cellState: ICellState = component.getState() as ICellState;
 
-        this.updateVisibilityOfComponents(
-            visibilities,
-            this.components,
-            this.verticalDraggableComponents);
-
-        this.updateSizeBasedOnChildren();
-    }
-
-    protected updateVisibilityOfComponents(
-        visibilities: boolean[],
-        components: VisualComponent[],
-        verticalDraggableComponents: VisualComponent[]
-    ): void {
-        for (
-            let componentIndex: number = 0;
-            componentIndex < components.length;
-            componentIndex++
-        ) {
-            const visibility: boolean = visibilities[componentIndex];
-
-            [
-                components[componentIndex],
-                verticalDraggableComponents[componentIndex]
-            ].forEach((component: VisualComponent) => {
-                if (component) {
-                    if (visibility) {
-                        component.show();
-                    } else {
-                        component.hide();
-                    }
+                    viewport.height += cellState.height;
+                    viewport.width += cellState.width;
                 }
-            });
-        }
 
-        this.updateSizeBasedOnChildren();
+                return viewport;
+            },
+            {
+                height: 0,
+                width: 0,
+            },
+        );
     }
 
-    protected onCellSizeChange(width: number, height: number, index: number): void {
-        if (!this.options || !this.options.onCellSizeChange) {
-            return;
+    private getPoint(): IPoint {
+        let cellState: ICellState = {
+            height: 0,
+            width: 0,
+        };
+
+        for (const component of this.components) {
+            if (component && component.getState) {
+                cellState = (component as CellComponent).getState();
+
+                break;
+            }
         }
 
-        const currentWidth: number = this.tableType === TableType.RowBasedKPIS
-            ? width
-            : undefined;
-
-        const currentHeight: number = this.tableType === TableType.ColumnBasedKPIS
-            ? height
-            : undefined;
-
-        this.options.onCellSizeChange(currentWidth, currentHeight, index);
+        return {
+            x: cellState.width,
+            y: cellState.height,
+        };
     }
+
 }

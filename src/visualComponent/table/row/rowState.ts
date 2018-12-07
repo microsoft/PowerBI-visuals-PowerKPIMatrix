@@ -25,17 +25,17 @@
  */
 
 import { IVisualComponentStateBase } from "../../visualComponentStateBase";
-import 
+import { ICellState } from "../cell/cellState";
 
 export interface IRowState extends IVisualComponentStateBase {
     name: string;
     cellSet: {
-        [tableType: number]: CellState[];
+        [tableType: number]: ICellState[];
     };
     isShown?: boolean;
-    rowSet?: RowStateSet;
+    rowSet?: IRowStateSet;
 }
 
-export interface RowStateSet extends IVisualComponentStateBase {
+export interface IRowStateSet extends IVisualComponentStateBase {
     [rowName: string]: IRowState;
 }
