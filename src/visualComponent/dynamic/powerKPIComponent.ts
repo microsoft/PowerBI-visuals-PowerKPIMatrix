@@ -84,7 +84,6 @@ import { IDataRepresentationPointSet } from "../../converter/data/dataRepresenta
 import { NumericValueUtils } from "../../utils/numericValueUtils";
 
 export interface IPowerKPIConstructorOptions extends IVisualComponentConstructorOptions {
-    style: powerbi.extensibility.IColorPalette;
     host: powerbi.extensibility.visual.IVisualHost;
 }
 

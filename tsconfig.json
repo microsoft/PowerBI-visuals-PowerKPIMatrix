@@ -15,6 +15,10 @@
     ]
   },
   "files": [
-    "./src/visual.ts"
+    "./src/visual.ts",
+    "./node_modules/powerbi-visuals-powerkpi/src/visual.ts"
+  ],
+  "include": [
+    "./node_modules/powerbi-visuals-powerkpi/**/*"
   ]
 }

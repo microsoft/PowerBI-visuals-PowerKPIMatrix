@@ -186,8 +186,7 @@ export class Settings extends SettingsBase<Settings> {
     }
 
     public parse(dataView: powerbi.DataView): Settings {
-        // this.powerKPISettings = PowerKPISettings.parse(dataView);
-        // TODO: fix it
+        this.powerKPISettings = PowerKPISettings.parse(dataView);
 
         return super.parse(dataView);
     }

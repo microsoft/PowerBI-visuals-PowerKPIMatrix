@@ -74,6 +74,8 @@ import { SettingsPropertyBase } from "./settings/descriptors/settingsPropertyBas
 import { SparklineSettings } from "./settings/descriptors/sparklineSettings";
 import { Settings } from "./settings/settings";
 
+import { PowerKPIComponent } from "./visualComponent/dynamic/powerKPIComponent";
+
 export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
     private columnSetConverter: IConverter<IDataRepresentationColumnSet>;
     private dataDirector: DataDirector<IDataRepresentation>;
@@ -127,12 +129,11 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.powerKPIModalWindowService = new ModalWindowService({
             componentCreators: [
                 (options: IVisualComponentConstructorOptions) => {
-                    options = options; // TODLO
-                    // return new PowerKPIComponent({
-                    //     ...options,
-                    //     host,
-                    //     style,
-                    // });
+                    options = options;
+                    return new PowerKPIComponent({
+                        ...options,
+                        host,
+                    });
 
                     return null;
                 },

@@ -54,7 +54,7 @@
     "less-loader": "^4.1.0",
     "mini-css-extract-plugin": "^0.4.4",
     "powerbi-visuals-api": "^2.2.2",
-    "powerbi-visuals-tools": "^3.0.7",
+    "powerbi-visuals-tools": "^3.0.9",
     "powerbi-visuals-utils-testutils": "^2.1.4",
     "powerbi-visuals-powerkpi": "git@github.com:Microsoft/PowerBI-visuals-PowerKPI.git",
     "puppeteer": "^1.10.0",
