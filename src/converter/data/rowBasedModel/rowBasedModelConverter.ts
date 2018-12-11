@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+
 import { actualValueColumn } from "../../../columns/actualValueColumn";
 import { comparisonValueColumn } from "../../../columns/comparisonValueColumn";
 import { dateColumn } from "../../../columns/dateColumn";
@@ -46,6 +48,10 @@ import {
 import { NumericValueUtils } from "../../../utils/numericValueUtils";
 
 export class RowBasedModelConverter extends DataConverter {
+    constructor(protected createSelectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder) {
+        super(false);
+    }
+
     public deepSearchSeries(
         seriesSet: IDataRepresentationSeriesSet,
         levels: string[] = [],
@@ -116,6 +122,7 @@ export class RowBasedModelConverter extends DataConverter {
                         settingsState,
                         dataRepresentation.type,
                         viewMode,
+                        this.createSelectionIdBuilder,
                     );
 
                 let currentValue: number;

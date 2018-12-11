@@ -27,12 +27,6 @@
  @import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
  @import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
 
-/**
- * Import Power KPI's styles
- */
-// @import (less) "../../../powerKPI/visual/styles/styles.less";
-// TODO: import Power KPI
-
 @font-face {
     font-family: 'PowerKPIMatrixGlyph';
     src: data-uri('../fonts/PowerVisuals.eot') format('embedded-opentype'),
@@ -341,6 +335,8 @@
                         cursor: pointer;
 
                         transition: color .2s, background-color .2s, border-color .2s;
+
+                        border: none;
 
                         &:hover,
                         &:active {

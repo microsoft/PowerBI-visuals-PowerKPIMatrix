@@ -24,6 +24,8 @@
  *  THE SOFTWARE.
  */
 
+import powerbi from "powerbi-visuals-api";
+
 import {
     DataConverter,
     IColumnValue,
@@ -49,7 +51,7 @@ import { IDataRepresentationSeriesSet } from "../dataRepresentation/dataRepresen
  * TODO: Let's revisit and optimize this once you have a chance to improve this
  */
 export class ColumnBasedModelConverter extends DataConverter {
-    constructor() {
+    constructor(protected createSelectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder) {
         super(true);
     }
 
@@ -120,6 +122,7 @@ export class ColumnBasedModelConverter extends DataConverter {
                                 settingsState,
                                 dataRepresentation.type,
                                 viewMode,
+                                this.createSelectionIdBuilder,
                             );
 
                         const columnValue: IColumnValue = columnValues[actualValueColumn.name][columnName];

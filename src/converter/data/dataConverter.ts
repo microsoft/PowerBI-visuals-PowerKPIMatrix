@@ -703,6 +703,7 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
         settingsState: SettingsState,
         type: DataRepresentationTypeEnum,
         viewMode: powerbi.ViewMode,
+        createSelectionIdBuilder: () => powerbi.visuals.ISelectionIdBuilder,
     ): IDataRepresentationSeries {
         let series: IDataRepresentationSeries = this.deepSearchSeries(
             seriesSet,
@@ -723,10 +724,20 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
         }
 
         if (series && !series.hasBeenFilled) {
-            const selectionId: powerbi.visuals.ISelectionId = null; /* SelectionId.createWithIdAndMeasure(
-                identities && identities[identityIndex],
-                identityQueryName
-            );*/
+            const selectionId: powerbi.visuals.ISelectionId = createSelectionIdBuilder()
+                .withCategory(
+                    {
+                        identity: identities || [],
+                        source: {
+                            displayName: series.name || identityQueryName,
+                            queryName: identityQueryName,
+                        },
+                        values: [],
+                    },
+                    identityIndex,
+                )
+                .withMeasure(identityQueryName)
+                .createSelectionId();
 
             const settings: SeriesSettings = SeriesSettings.getDefault() as SeriesSettings;
 

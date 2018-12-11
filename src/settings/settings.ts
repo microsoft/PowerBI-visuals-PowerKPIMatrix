@@ -59,6 +59,39 @@ import {
 import { PowerKPISettings } from "./powerKPISettings";
 
 export class Settings extends SettingsBase<Settings> {
+    public static enumerateObjectInstances(
+        settings: Settings,
+        options: powerbi.EnumerateVisualObjectInstancesOptions,
+    ): powerbi.VisualObjectInstanceEnumeration {
+        const enumeration: powerbi.VisualObjectInstanceEnumeration = super.enumerateObjectInstances(
+            settings,
+            options,
+        );
+
+        if (options
+            && options.objectName
+            && settings[options.objectName]
+        ) {
+            return enumeration;
+        }
+
+        const powerKPIEnumeration: powerbi.VisualObjectInstanceEnumeration =
+            PowerKPISettings.enumerateObjectInstances(settings.powerKPISettings, options);
+
+        return {
+            instances: [
+                ...Settings.getInstances(enumeration),
+                ...Settings.getInstances(powerKPIEnumeration),
+            ],
+        };
+    }
+
+    private static getInstances(enumeration: powerbi.VisualObjectInstanceEnumeration): powerbi.VisualObjectInstance[] {
+        return enumeration
+            && (enumeration as powerbi.VisualObjectInstanceEnumerationObject).instances
+            || [];
+    }
+
     public internalState: PersistentSettings = new PersistentSettings();
 
     public metricSpecific: MetricSpecificSettings = new MetricSpecificSettings();

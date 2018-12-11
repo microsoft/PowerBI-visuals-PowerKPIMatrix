@@ -111,13 +111,13 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.scaleService = new ScaleService();
         this.settingsService = new SettingsService();
 
+        const { host } = constructorOptions;
+
         this.dataDirector = new DataDirector(
             rowBasedMetricNameColumn,
-            new RowBasedModelConverter(),
-            new ColumnBasedModelConverter(),
+            new RowBasedModelConverter(host.createSelectionIdBuilder.bind(host)),
+            new ColumnBasedModelConverter(host.createSelectionIdBuilder.bind(host)),
         );
-
-        const { host } = constructorOptions;
 
         this.rootElement = d3Select(constructorOptions.element);
 
@@ -375,7 +375,7 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
                 this.applySettings(
                     objectName,
                     series.name,
-                    series.selectionId.getSelector(),
+                    series.selectionId && series.selectionId.getSelector && series.selectionId.getSelector(),
                     enumerationObject,
                     getSettings(series.settings[objectName]));
             } else if (series.children && series.children.length) {
