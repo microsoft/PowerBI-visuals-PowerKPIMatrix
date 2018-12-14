@@ -27,14 +27,14 @@
 import { FontSettings } from "./fontSettings";
 
 export class NumberSettingsBase extends FontSettings {
-    public format: string = undefined;
-    public defaultFormat: string = undefined;
-    public columnFormat: string = undefined;
+    public format: string = null;
+    public defaultFormat: string = null;
+    public columnFormat: string = null;
 
     public displayUnits: number = 0;
-    public precision: number = undefined;
+    public precision: number = null;
 
-    public textReplacement: string = undefined;
+    public textReplacement: string = null;
 
     protected minPrecision: number = 0;
     protected maxPrecision: number = 17;
@@ -70,9 +70,11 @@ export class NumberSettingsBase extends FontSettings {
     protected hideNumericProperties(): void {
         Object.defineProperties(this, {
             displayUnits: {
+                configurable: true,
                 enumerable: false,
             },
             precision: {
+                configurable: true,
                 enumerable: false,
             },
         });
@@ -82,6 +84,7 @@ export class NumberSettingsBase extends FontSettings {
         Object.defineProperty(
             this,
             "format", {
+                configurable: true,
                 enumerable: false,
             },
         );

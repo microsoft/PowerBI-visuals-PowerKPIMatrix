@@ -64,7 +64,7 @@ export class TableSettings
 
     public getDefaultUnmappedCategoryName(): string {
         return this.shouldHideUnmappedMetrics
-            ? undefined
+            ? null
             : this.defaultUnmappedCategoryName;
     }
 
@@ -88,6 +88,7 @@ export class TableSettings
             this,
             name,
             {
+                configurable: true,
                 enumerable: false,
             },
         );

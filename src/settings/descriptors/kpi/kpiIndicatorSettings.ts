@@ -226,7 +226,7 @@ export class KPIIndicatorSettings
     }
 
     private hidePropertyByName(name: string): void {
-        Object.defineProperty(this, name, { enumerable: false });
+        Object.defineProperty(this, name, { enumerable: false, configurable: true });
     }
 
     private getPropertyName(name: string, index: number): string {

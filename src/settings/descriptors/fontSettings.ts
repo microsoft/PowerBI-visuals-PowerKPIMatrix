@@ -107,9 +107,9 @@ export class FontSettings
         this.hyperlinkColor = "#0000EE";
         this.shouldShowLabel = true;
         this.shouldShowImage = true;
-        this.imageIconWidth = undefined;
-        this.imageIconHeight = undefined;
-        this.backgroundColor = undefined;
+        this.imageIconWidth = null;
+        this.imageIconHeight = null;
+        this.backgroundColor = null;
     }
 
     public updateHyperlinkVisibility(visibility: boolean): void {
@@ -166,6 +166,7 @@ export class FontSettings
     protected changeVisibilityOfColor(enumerable: boolean): void {
         Object.defineProperties(this, {
             color: {
+                configurable: true,
                 enumerable,
             },
         });
@@ -174,6 +175,7 @@ export class FontSettings
     private changeVisibilityOfCommonProperties(enumerable: boolean): void {
         Object.defineProperties(this, {
             isUnderlined: {
+                configurable: true,
                 enumerable,
             },
         });
@@ -184,9 +186,11 @@ export class FontSettings
     private changeVisibilityOfHyperlinkProperties(enumerable: boolean): void {
         Object.defineProperties(this, {
             hyperlinkColor: {
+                configurable: true,
                 enumerable,
             },
             isHyperlinkUnderlined: {
+                configurable: true,
                 enumerable,
             },
         });
@@ -197,15 +201,19 @@ export class FontSettings
 
         Object.defineProperties(this, {
             imageIconHeight: {
+                configurable: true,
                 enumerable: isImageSizeShown,
             },
             imageIconWidth: {
+                configurable: true,
                 enumerable: isImageSizeShown,
             },
             shouldShowImage: {
+                configurable: true,
                 enumerable,
             },
             shouldShowLabel: {
+                configurable: true,
                 enumerable,
             },
         });
@@ -214,6 +222,6 @@ export class FontSettings
     private getImageSize(imageSize: number, minImageSize: number, maxImageSize: number): number {
         return NumericValueUtils.isValueFinite(imageSize) && imageSize > minImageSize
             ? Math.min(imageSize, maxImageSize)
-            : undefined;
+            : null;
     }
 }

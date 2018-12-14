@@ -27,6 +27,6 @@
 import { SettingsPropertyBase } from "./settingsPropertyBase";
 
 export class MetricSpecificSettings extends SettingsPropertyBase {
-    public backgroundColor: string = undefined;
+    public backgroundColor: string = null;
     public alternativeBackgroundColor: string = "rgb(239, 239, 239)";
 }

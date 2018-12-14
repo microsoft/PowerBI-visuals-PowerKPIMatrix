@@ -27,6 +27,6 @@
 import { ShowSettings } from "./showSettings";
 
 export class LabelSettings extends ShowSettings {
-    public backgroundColor: string = undefined;
+    public backgroundColor: string = null;
     public label: string = "";
 }

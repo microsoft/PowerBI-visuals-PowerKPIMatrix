@@ -56,8 +56,8 @@ export class SparklineSettings
 
     public shouldUseCommonScale: boolean = false;
 
-    public yMin: number = undefined;
-    public yMax: number = undefined;
+    public yMin: number = null;
+    public yMax: number = null;
 
     public verticalReferenceLineColor: string = "#666";
     public verticalReferenceLineThickness: number = 1;

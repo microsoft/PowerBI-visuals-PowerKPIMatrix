@@ -28,7 +28,7 @@ import { HorizontalTextAlignment } from "../fontSettings";
 import { NumberSettingsBase } from "../numberSettingsBase";
 
 export class KPIIndicatorValueSettings extends NumberSettingsBase {
-    public kpiColor: string = undefined;
+    public kpiColor: string = null;
 
     public setDefault(): void {
         super.setDefault();

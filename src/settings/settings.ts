@@ -206,7 +206,7 @@ export class Settings extends SettingsBase<Settings> {
             case TableStyle.Default:
             default: {
                 this.header.setDefault();
-                this.header.backgroundColor = undefined;
+                this.header.backgroundColor = null;
 
                 this.horizontalGrid.setDefault();
                 this.verticalGrid.setDefault();
