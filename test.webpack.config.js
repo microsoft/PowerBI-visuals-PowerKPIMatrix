@@ -22,7 +22,7 @@ module.exports = {
             {
                 test: /\.ts$/,
                 use: 'ts-loader',
-                exclude: /(node_modules|dist|coverage|karma.conf.ts)/
+                exclude: /(dist|coverage|karma.conf.ts)/
             },
             {
                 test: /\.ts$/i,

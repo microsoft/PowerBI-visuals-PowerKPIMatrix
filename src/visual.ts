@@ -271,7 +271,6 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
             case "secondComparisonValue":
             case "secondKPIIndicatorValue":
             case "metricSpecific": {
-                debugger;
                 this.enumerateSettings(
                     enumerationObject,
                     objectName,
