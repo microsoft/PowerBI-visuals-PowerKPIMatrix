@@ -58,7 +58,7 @@ export class NumberSettingsBase extends FontSettings {
     }
 
     protected getValidPrecision(precision: number): number {
-        if (isNaN(precision)) {
+        if (isNaN(precision) || precision == null) {
             return precision;
         }
 
