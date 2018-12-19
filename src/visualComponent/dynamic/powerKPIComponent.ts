@@ -24,16 +24,6 @@
  *  THE SOFTWARE.
  */
 
-// powerKpi
-// import PowerKpiSeriesSettings = powerKpi.SeriesSettings;
-// import PowerKpiDataRepresentation = powerKpi.DataRepresentation;
-// import PowerKpiDataRepresentationAxis = powerKpi.DataRepresentationAxis;
-// import PowerKpiDataRepresentationScale = powerKpi.DataRepresentationScale;
-// import PowerKpiDataRepresentationPoint = powerKpi.DataRepresentationPoint;
-// import PowerKpiDataRepresentationSeries = powerKpi.IDataRepresentationSeries;
-// import PowerKpiDataRepresentationPointFilter = powerKpi.DataRepresentationPointFilter;
-// import PowerKpiDataRepresentationPointGradientColor = powerKpi.DataRepresentationPointGradientColor;
-
 import powerbi from "powerbi-visuals-api";
 
 import { PowerKPI } from "../../../node_modules/powerbi-visuals-powerkpi/src/visual";
@@ -96,6 +86,7 @@ export class PowerKPIComponent extends BaseComponent {
         const {
             element,
             host,
+            rootElement,
         } = constructorOptions;
 
         this.element = element.append("div");
@@ -104,6 +95,7 @@ export class PowerKPIComponent extends BaseComponent {
             this.instance = new PowerKPI({
                 element: this.element.node(),
                 host,
+                rootElement: rootElement.node(),
             });
         }
         catch (_) {

@@ -131,13 +131,11 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
         this.powerKPIModalWindowService = new ModalWindowService({
             componentCreators: [
                 (options: IVisualComponentConstructorOptions) => {
-                    options = options;
                     return new PowerKPIComponent({
                         ...options,
                         host,
+                        rootElement: this.rootElement,
                     });
-
-                    return null;
                 },
             ],
             element: this.rootElement,
