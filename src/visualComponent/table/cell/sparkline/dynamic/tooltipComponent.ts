@@ -67,11 +67,9 @@ export class TooltipComponent implements IVisualComponent {
         }
 
         const {
-            scale,
             series,
             position,
             metadata,
-            viewport,
         } = options;
 
         const baseDataItems: IVisualTooltipDataItem[] = [];
@@ -131,18 +129,6 @@ export class TooltipComponent implements IVisualComponent {
             baseDataItems.push(...additionalDataItems);
         }
 
-        const yOffset: number = position.y - position.offsetY;
-        const screenHeight: number = window.innerHeight;
-        const middleScreenHeight: number = screenHeight / 2;
-        const height: number = viewport.height * scale.height;
-
-        const isElementAboveOfMiddleOfScreen: boolean =
-            (
-                yOffset + (height / 2) < middleScreenHeight
-                && (yOffset + height) < middleScreenHeight
-            )
-            || yOffset < middleScreenHeight;
-
         const coordinates: [number, number] = this.getCoordinates(
             position.x,
             position.y,
@@ -150,14 +136,7 @@ export class TooltipComponent implements IVisualComponent {
 
         this.renderTooltip(
             baseDataItems,
-            [
-                coordinates[0],
-                isElementAboveOfMiddleOfScreen ? 0 : screenHeight,
-            ],
-            0,
-            isElementAboveOfMiddleOfScreen
-                ? yOffset + height + this.extraYOffset
-                : screenHeight - yOffset + this.extraYOffset,
+            coordinates,
         );
     }
 
@@ -294,8 +273,6 @@ export class TooltipComponent implements IVisualComponent {
     private renderTooltip(
         dataItems: IVisualTooltipDataItem[],
         coordinates: [number, number],
-        offsetX: number,
-        offsetY: number,
     ): void {
         if (!dataItems
             || !dataItems.length
@@ -312,12 +289,6 @@ export class TooltipComponent implements IVisualComponent {
             });
         }
     }
-
-    // public get isShown(): boolean {
-    //     return this.tooltipComponent
-    //         && this.tooltipComponent.isTooltipComponentVisible
-    //         && this.tooltipComponent.isTooltipComponentVisible();
-    // }
 
     private getTooltipMarkerShape(markerShape: TooltipMarkerShapeEnum): string {
         return TooltipMarkerShapeEnum[markerShape];

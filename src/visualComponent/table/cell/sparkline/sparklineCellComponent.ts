@@ -244,7 +244,7 @@ export class SparklineCellComponent extends CellContainerComponent {
     }
 
     private pointerMoveEvent(options: ISparklineCellRenderOptions): void {
-        const event: MouseEvent | TouchEvent = require("d3").event as any;
+        const event: MouseEvent | TouchEvent = require("d3-selection").event as any;
 
         let offsetX: number = Number.MAX_VALUE;
         let offsetY: number = Number.MAX_VALUE;
@@ -254,17 +254,13 @@ export class SparklineCellComponent extends CellContainerComponent {
 
         const viewportScale: powerbi.IViewport = this.scaleService.getScale();
 
-        const elementRect: ClientRect = this.element
-            .node()
-            .getBoundingClientRect();
-
         switch (event.type) {
             case "mousemove": {
                 offsetX = (event as MouseEvent).offsetX;
                 offsetY = (event as MouseEvent).offsetY;
 
                 originalXPosition = (event as MouseEvent).pageX;
-                originalYPosition = elementRect.top + offsetY;
+                originalYPosition = (event as MouseEvent).pageY;
 
                 break;
             }
@@ -279,8 +275,8 @@ export class SparklineCellComponent extends CellContainerComponent {
                     originalXPosition = touch.touches[0].pageX;
                     originalYPosition = touch.touches[0].pageY;
 
-                    offsetX = (originalXPosition - elementRect.left) / viewportScale.width;
-                    offsetY = (originalYPosition - elementRect.top);
+                    offsetX = originalXPosition / viewportScale.width;
+                    offsetY = originalYPosition;
                 }
 
                 break;
