@@ -14,9 +14,8 @@ steps:
 
 - script: |
     npm install
-    npm run lint
     npm run test
-  displayName: 'npm install, lint and test'
+  displayName: 'npm install and test'
 
 - task: PublishTestResults@2
   inputs:
