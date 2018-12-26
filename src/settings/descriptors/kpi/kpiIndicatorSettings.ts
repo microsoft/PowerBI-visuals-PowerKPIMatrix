@@ -33,7 +33,6 @@ export interface IPropertyConfiguration {
     name: string;
     defaultValue: any | ((index: number) => any);
     displayName: (text: string) => string;
-    // type: powerbi.ValueTypeDescriptor; // DataViewObjectPropertyTypeDescriptor;
 }
 
 interface IEnumPropertyConfiguration {
@@ -117,7 +116,6 @@ export class KPIIndicatorSettings
             },
             displayName: (text: string) => text,
             name: "color",
-            // type: { fill: { solid: { color: true } } },
         },
         {
             defaultValue: (index: number) => {
@@ -130,13 +128,11 @@ export class KPIIndicatorSettings
             },
             displayName: () => "    Indicator",
             name: "shape",
-            // type: { enumeration: this.getEnumType() }
         },
         {
             defaultValue: (index: number) => index + 1,
             displayName: () => "    Value",
             name: this.kpiIndexPropertyName,
-            // type: { numeric: true },
         },
     ];
 
@@ -185,22 +181,6 @@ export class KPIIndicatorSettings
             this.hidePropertyByName("verticalPosition");
         }
     }
-
-    // public applyProperties(
-    //     properties: DataViewObjectPropertyDescriptors,
-    //     margin: string,
-    // ): void {
-    //     for (let index: number = 0; index < this._maxAmountOfKPIs; index++) {
-    //         this._properties.forEach((property: IPropertyConfiguration) => {
-    //             const indexedName: string = this.getPropertyName(property.name, index);
-
-    //             properties[indexedName] = {
-    //                 displayName: property.displayName(`${margin}KPI ${index + 1}`),
-    //                 type: property.type,
-    //             };
-    //         });
-    //     }
-    // }
 
     public getCurrentKPI(kpiIndex: number): IKPIIndicatorSettings {
         if (NumericValueUtils.isValueFinite(kpiIndex)) {

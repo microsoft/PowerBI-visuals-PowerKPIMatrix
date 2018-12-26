@@ -43,18 +43,8 @@ export class ScaleService {
 
         const rect: ClientRect = this.rootElement.getBoundingClientRect();
 
-        let clientWidth: number;
-        let clientHeight: number;
-
-        if (!this.rootElement.clientWidth || !this.rootElement.clientHeight) {
-            const $container: JQuery = $(this.rootElement);
-
-            clientWidth = $container.width();
-            clientHeight = $container.height();
-        } else {
-            clientWidth = this.rootElement.clientWidth;
-            clientHeight = this.rootElement.clientHeight;
-        }
+        const clientWidth: number = this.rootElement.clientWidth || 1;
+        const clientHeight: number = this.rootElement.clientHeight || 1;
 
         return {
             height: rect.height / clientHeight,
