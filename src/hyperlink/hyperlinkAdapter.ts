@@ -38,10 +38,15 @@ export class HyperlinkAdapter {
             return;
         }
 
+        // TODO: We should get rid of window.open once this.hostServices.launchUrl is supported by none iframe mode
+        const wasHyperlinkOpened: boolean = !!window.open(hyperlink, "_blank");
+
+        if (wasHyperlinkOpened) {
+            return;
+        }
+
         if (this.hostServices && this.hostServices.launchUrl) {
             this.hostServices.launchUrl(hyperlink);
-        } else {
-            window.open(hyperlink, "_blank");
         }
     }
 }
