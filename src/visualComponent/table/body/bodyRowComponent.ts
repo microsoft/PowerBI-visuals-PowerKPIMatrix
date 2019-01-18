@@ -297,19 +297,19 @@ export class BodyRowComponent extends BaseBodyRowComponent {
     private bindClickEventToOpenModalWindow(data: ISparklineCellRenderOptions): void {
         this.powerKPIModalWindowServiceRenderData = data;
 
-        const isInteractable: boolean = this.powerKPIModalWindowServiceRenderData
+        const isOpenable: boolean = this.powerKPIModalWindowServiceRenderData
             && this.powerKPIModalWindowServiceRenderData.settings
             && this.powerKPIModalWindowServiceRenderData.settings.popOutGeneralSettings
             && this.powerKPIModalWindowServiceRenderData.settings.popOutGeneralSettings.show;
 
         this.element
-            .on("click", isInteractable
+            .on("click", isOpenable
                 ? () => {
                     this.powerKPIModalWindowService.render(this.powerKPIModalWindowServiceRenderData);
                 }
                 : null,
             )
-            .classed(this.bodyRowComponentClickActionClassName, isInteractable);
+            .classed(this.bodyRowComponentClickActionClassName, isOpenable);
 
         if (this.powerKPIModalWindowService && this.powerKPIModalWindowService.isShown) {
             const currentData: ISparklineCellRenderOptions =
