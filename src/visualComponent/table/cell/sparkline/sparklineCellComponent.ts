@@ -244,7 +244,11 @@ export class SparklineCellComponent extends CellContainerComponent {
     }
 
     private pointerMoveEvent(options: ISparklineCellRenderOptions): void {
-        const event: MouseEvent | TouchEvent = require("d3-selection").event as any;
+        const event: MouseEvent | TouchEvent = require("d3-selection").event;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
 
         let offsetX: number = Number.MAX_VALUE;
         let offsetY: number = Number.MAX_VALUE;
@@ -265,17 +269,15 @@ export class SparklineCellComponent extends CellContainerComponent {
                 break;
             }
             case "touchmove": {
-                event.preventDefault();
-                event.stopPropagation();
-                event.stopImmediatePropagation();
-
                 const touch: TouchEvent = event as TouchEvent;
 
                 if (touch && touch.touches && touch.touches[0]) {
                     originalXPosition = touch.touches[0].pageX;
                     originalYPosition = touch.touches[0].pageY;
 
-                    offsetX = originalXPosition / viewportScale.width;
+                    const element: SVGElement = this.element.node() as SVGElement;
+
+                    offsetX = (originalXPosition - element.getBoundingClientRect().left) / viewportScale.width;
                     offsetY = originalYPosition;
                 }
 
