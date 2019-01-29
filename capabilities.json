@@ -2774,7 +2774,8 @@
           "type": {
             "bool": true
           },
-          "displayName": "Keep Series Settings On Filtering In Edit mode"
+          "displayName": "Keep Series Settings On Filtering In Edit mode",
+          "description": "Series settings are saved for up to 20 data series (metrics) if any filter is applied"
         }
       }
     },
