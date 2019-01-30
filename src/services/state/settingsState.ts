@@ -42,6 +42,8 @@ export class SettingsState extends State<ISettingsState> {
             { ...this.state, ...this.tempState },
         );
     }
+
+    private maxNumberOfSupportedSeriesToBeSerialized: number = 20;
     private tempState: ISettingsState = {};
 
     public setSeriesSettings(seriesName: string, settings: SeriesSettings) {
@@ -83,6 +85,22 @@ export class SettingsState extends State<ISettingsState> {
         this.reset();
 
         super.parse(value);
+    }
+
+    protected serializeState(state: ISettingsState): string {
+        const stateToBeSerialized: ISettingsState = Object.keys(state)
+            .slice(0, this.maxNumberOfSupportedSeriesToBeSerialized)
+            .reduce(
+                (currentState: ISettingsState, propertyName: string) => {
+                    return {
+                        ...currentState,
+                        [propertyName]: state[propertyName],
+                    };
+                },
+                {},
+            );
+
+        return super.serializeState(stateToBeSerialized);
     }
 
     private areStatesEqual(oldState: ISettingsState, newState: ISettingsState): boolean {
