@@ -23,32 +23,16 @@
 *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 *  THE SOFTWARE.
 */
+import powerbi from "powerbi-visuals-api";
 
-import { VisualBuilderBase } from "powerbi-visuals-utils-testutils";
+import { DataBuilder, DataViewType } from "./dataBuilder";
 
-import { PowerKPIMatrix } from "../src/visual";
-
-export class VisualBuilder extends VisualBuilderBase<PowerKPIMatrix> {
-    protected build(): PowerKPIMatrix {
-        return new PowerKPIMatrix({
-            element: this.element.get(0),
-            host: this.visualHost,
-        });
+export class ColumnBaseDataBuilderWithgAxisTypeAdaptedData extends DataBuilder {
+    constructor() {
+        super(0, 1, DataViewType.CATEGORICAL_CONTINUOUS_SAMPLE);
     }
 
-    public get instance(): PowerKPIMatrix {
-        return this.visual;
-    }
-
-    public get $root(): JQuery {
-        return this.element.children(".powerKPIMatrix_rootComponent");
-    }
-
-    public get $cells(): JQuery {
-        return this.$root.find(".cellComponent");
-    }
-
-    public get $linePath(): JQuery {
-        return this.$root.find(".lineComponent_line");
+    public getDataView(columnNames?: string[]): powerbi.DataView {
+        return this.getDataViewCore(columnNames, []);
     }
 }

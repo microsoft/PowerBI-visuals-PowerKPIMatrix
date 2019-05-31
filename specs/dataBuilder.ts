@@ -47,6 +47,11 @@ interface IValuesSet {
     [columnName: string]: number[][];
 }
 
+export enum DataViewType {
+    DEFAULT,
+    CATEGORICAL_CONTINUOUS_SAMPLE,
+}
+
 export abstract class DataBuilder extends testDataViewBuilder.TestDataViewBuilder {
     public dates: Date[];
     public values: IValuesSet = {};
@@ -70,25 +75,49 @@ export abstract class DataBuilder extends testDataViewBuilder.TestDataViewBuilde
         },
     ];
 
-    constructor(amountOfValues: number, amountOfSeries: number) {
+    constructor(amountOfValues: number, amountOfSeries: number, caseType: DataViewType = DataViewType.DEFAULT) {
         super();
 
-        this.amountOfValues = amountOfValues;
-        this.amountOfSeries = amountOfSeries;
+        if (caseType === DataViewType.CATEGORICAL_CONTINUOUS_SAMPLE) {
+            this.amountOfValues = 28;
+            this.amountOfSeries = 1;
 
-        const endDate: Date = new Date(1970, 0, 1);
+            const endDate: Date = new Date(2019, 3, 12);
 
-        endDate.setDate(endDate.getDate() + this.amountOfValues);
+            endDate.setDate(endDate.getDate() + this.amountOfValues);
 
-        this.dates = getDateRange(
-            new Date(1970, 0, 1),
-            endDate,
-            8.64e+7,
-        );
+            this.dates = [
+                new Date(2019, 3, 14),
+                new Date(2019, 3, 28),
+                new Date(2019, 4, 2),
+                new Date(2019, 4, 3),
+                new Date(2019, 4, 4),
+                new Date(2019, 4, 7),
+            ];
 
-        this.columns.forEach((column: IColumnDefinition) => {
-            this.values[column.column.name] = this.getRandomValuesSet(column.max, column.max);
-        });
+            const activeValuesSet: number[][] = [[57, 6, 75, 57, 54, 57]];
+
+            this.values[actualValueColumn.name] = activeValuesSet;
+            this.values[comparisonValueColumn.name] = this.getRandomValuesSet(-99999999, 99999999);
+            this.values[kpiIndicatorIndexColumn.name] = this.getRandomValuesSet(-99999999, 99999999);
+        } else {
+            this.amountOfValues = amountOfValues;
+            this.amountOfSeries = amountOfSeries;
+
+            const endDate: Date = new Date(1970, 0, 1);
+
+            endDate.setDate(endDate.getDate() + this.amountOfValues);
+
+            this.dates = getDateRange(
+                new Date(1970, 0, 1),
+                endDate,
+                8.64e+7,
+            );
+
+            this.columns.forEach((column: IColumnDefinition) => {
+                this.values[column.column.name] = this.getRandomValuesSet(column.max, column.max);
+            });
+        }
     }
 
     protected getRandomValuesSet(min: number, max: number): number[][] {
