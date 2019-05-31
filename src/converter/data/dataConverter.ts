@@ -23,47 +23,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 import powerbi from "powerbi-visuals-api";
-
-import { IDataRepresentationColumnMapping } from "../columnMapping/dataRepresentation/dataRepresentationColumnMapping";
-import { IDataRepresentation } from "./dataRepresentation/dataRepresentation";
-
-import {
-    IDataRepresentationAxis,
-    IDataRepresentationAxisWithScale,
-} from "./dataRepresentation/dataRepresentationAxis";
-
-import { DataRepresentationAxisValueType } from "./dataRepresentation/dataRepresentationAxisValueType";
-import { IDataRepresentationColumns } from "./dataRepresentation/dataRepresentationColumns";
-import { DataRepresentationScale } from "./dataRepresentation/dataRepresentationScale";
-import { IDataRepresentationSeries } from "./dataRepresentation/dataRepresentationSeries";
-import { IDataRepresentationSeriesSet } from "./dataRepresentation/dataRepresentationSeriesSet";
-import { DataRepresentationSeriesUtils } from "./dataRepresentation/dataRepresentationSeriesUtils";
-import { DataRepresentationTypeEnum } from "./dataRepresentation/dataRepresentationType";
-
-import { NumericValueUtils } from "../../utils/numericValueUtils";
-
-import { SettingsState } from "../../services/state/settingsState";
-
-import {
-    SubtotalSettings,
-    SubtotalType,
-} from "../../settings/descriptors/subtotalSettings";
-
-import { IKPIIndicatorSettings } from "../../settings/descriptors/kpi/kpiIndicatorSettings";
-import { NumberSettingsBase } from "../../settings/descriptors/numberSettingsBase";
-import { LineStyle } from "../../settings/descriptors/sparklineSettings";
-
-import { SettingsPropertyBase } from "../../settings/descriptors/settingsPropertyBase";
-import { TableStyle } from "../../settings/descriptors/tableSettings";
-
-import { SeriesSettings } from "../../settings/seriesSettings";
-import { Settings } from "../../settings/settings";
-
-import { IConverter } from "../converter";
-import { IConverterOptions } from "../converterOptions";
-import { VarianceStrategy } from "./variance/varianceStrategy";
+import { AxisType } from "powerbi-visuals-powerkpi/src/settings/descriptors/axis/axisDescriptor";
 
 import { actualValueColumn } from "../../columns/actualValueColumn";
 import { categoryColumn } from "../../columns/categoryColumn";
@@ -75,7 +36,36 @@ import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
 import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
 import { sortOrderColumn } from "../../columns/sortOrderColumn";
 import { IVisualDataColumn } from "../../columns/visualDataColumn";
+import { SettingsState } from "../../services/state/settingsState";
+import { IKPIIndicatorSettings } from "../../settings/descriptors/kpi/kpiIndicatorSettings";
+import { NumberSettingsBase } from "../../settings/descriptors/numberSettingsBase";
+import { SettingsPropertyBase } from "../../settings/descriptors/settingsPropertyBase";
+import { LineStyle } from "../../settings/descriptors/sparklineSettings";
+import { SubtotalSettings, SubtotalType } from "../../settings/descriptors/subtotalSettings";
+import { TableStyle } from "../../settings/descriptors/tableSettings";
+import { SeriesSettings } from "../../settings/seriesSettings";
+import { Settings } from "../../settings/settings";
+import { NumericValueUtils } from "../../utils/numericValueUtils";
+import {
+    IDataRepresentationColumnMapping,
+} from "../columnMapping/dataRepresentation/dataRepresentationColumnMapping";
+import { IConverter } from "../converter";
+import { IConverterOptions } from "../converterOptions";
+import { IDataRepresentation } from "./dataRepresentation/dataRepresentation";
+import {
+    IDataRepresentationAxis, IDataRepresentationAxisWithScale,
+} from "./dataRepresentation/dataRepresentationAxis";
+import {
+    DataRepresentationAxisValueType,
+} from "./dataRepresentation/dataRepresentationAxisValueType";
+import { IDataRepresentationColumns } from "./dataRepresentation/dataRepresentationColumns";
 import { IDataRepresentationPointSet } from "./dataRepresentation/dataRepresentationPointSet";
+import { DataRepresentationScale } from "./dataRepresentation/dataRepresentationScale";
+import { IDataRepresentationSeries } from "./dataRepresentation/dataRepresentationSeries";
+import { IDataRepresentationSeriesSet } from "./dataRepresentation/dataRepresentationSeriesSet";
+import { DataRepresentationSeriesUtils } from "./dataRepresentation/dataRepresentationSeriesUtils";
+import { DataRepresentationTypeEnum } from "./dataRepresentation/dataRepresentationType";
+import { VarianceStrategy } from "./variance/varianceStrategy";
 
 export interface IHyperlinkSet {
     [metricName: string]: string;
@@ -134,7 +124,7 @@ export interface ICurrentSeriesData {
 export interface IConverterStepOptions {
     dataRepresentation: IDataRepresentation;
     columnValues: IColumnValues;
-    identities: powerbi.data.DataRepetitionSelector[]; // TODO: it used to be DataViewScopeIdentity
+    identities: powerbi.visuals.CustomVisualOpaqueIdentity[];
     identityQueryName: string;
     columnMapping: IDataRepresentationColumnMapping;
     rows: powerbi.DataViewTableRow[];
@@ -230,7 +220,7 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
                 secondComparisonValueColumn,
             ]);
 
-        dataRepresentation.type = this.getTypeOfColumn(xAxisMetadataColumn);
+        dataRepresentation.type = this.getTypeOfColumn(xAxisMetadataColumn, settings.powerKPISettings.xAxis.type);
         dataRepresentation.metadata = xAxisMetadataColumn;
 
         settings.asOfDate.parseByType(dataRepresentation.type);
@@ -352,14 +342,14 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
         return undefined;
     }
 
-    protected getTypeOfColumn(column: powerbi.DataViewMetadataColumn): DataRepresentationTypeEnum {
+    protected getTypeOfColumn(column: powerbi.DataViewMetadataColumn, forcedXAxisType: AxisType): DataRepresentationTypeEnum {
         if (column) {
-            if (column.type.dateTime) {
+            if (column.type.text || forcedXAxisType === AxisType.categorical) {
+                return DataRepresentationTypeEnum.StringType;
+            } else if (column.type.dateTime) {
                 return DataRepresentationTypeEnum.DateType;
             } else if (column.type.integer || column.type.numeric) {
                 return DataRepresentationTypeEnum.NumberType;
-            } else if (column.type.text) {
-                return DataRepresentationTypeEnum.StringType;
             }
         }
 
@@ -695,7 +685,7 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
         seriesArray: IDataRepresentationSeries[],
         levels: string[],
         displayName: string,
-        identities: powerbi.data.DataRepetitionSelector[],
+        identities: powerbi.visuals.CustomVisualOpaqueIdentity[],
         identityIndex: number,
         identityQueryName: string,
         rows: powerbi.DataViewTableRow[],

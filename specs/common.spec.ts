@@ -23,45 +23,33 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 import "jasmine-jquery";
 
+import { select as d3Select, Selection as ID3Selection } from "d3-selection";
 import powerbi from "powerbi-visuals-api";
+import { MockISelectionIdBuilder, testDom } from "powerbi-visuals-utils-testutils";
 
 import {
-    select as d3Select,
-    Selection as ID3Selection,
- } from "d3-selection";
-
+    ColumnBasedModelConverter,
+} from "../src/converter/data/columnBasedModel/columnBasedModelConverter";
+import { DataConverter } from "../src/converter/data/dataConverter";
 import {
-    MockISelectionIdBuilder,
-    testDom,
-} from "powerbi-visuals-utils-testutils";
-
+    IDataRepresentationSeries,
+} from "../src/converter/data/dataRepresentation/dataRepresentationSeries";
 import {
-    IKPIIndicatorSettings,
-    KPIIndicatorSettings,
-} from "../src/settings/descriptors/kpi/kpiIndicatorSettings";
-
-import { ColumnBasedModelConverter } from "../src/converter/data/columnBasedModel/columnBasedModelConverter";
+    IDataRepresentationSeriesSet,
+} from "../src/converter/data/dataRepresentation/dataRepresentationSeriesSet";
 import { RowBasedModelConverter } from "../src/converter/data/rowBasedModel/rowBasedModelConverter";
-
 import { ModalWindowService } from "../src/services/modalWindowService";
 import { ScaleService } from "../src/services/scaleService";
 import { SettingsState } from "../src/services/state/settingsState";
-
-import { IDataRepresentationSeries } from "../src/converter/data/dataRepresentation/dataRepresentationSeries";
-import { IDataRepresentationSeriesSet } from "../src/converter/data/dataRepresentation/dataRepresentationSeriesSet";
-
+import {
+    IKPIIndicatorSettings, KPIIndicatorSettings,
+} from "../src/settings/descriptors/kpi/kpiIndicatorSettings";
 import { Settings } from "../src/settings/settings";
-
 import { LazyComponent } from "../src/visualComponent/lazyComponent";
 import { IVisualComponent } from "../src/visualComponent/visualComponent";
-
-import { ColumnBasedDataBuilder } from "./columnBasedDataBuilder";
-import { DataBuilder } from "./dataBuilder";
 import { TestWrapper } from "./testWrapper";
-import { VisualBuilder } from "./visualBuilder";
 
 describe("Power KPI Matrix", () => {
     describe("static", () => {
@@ -77,6 +65,34 @@ describe("Power KPI Matrix", () => {
 
         beforeEach(() => {
             testWrapper = TestWrapper.createWithColumnBasedData();
+        });
+
+        it("X axis is continuous", (done) => {
+            const continuousPath: string = "M2.8,15.686956521739134L72.43478260869566,52.2L92.3304347826087,2.799999999999997L97" +
+            ".30434782608695,15.686956521739134L102.27826086956522,17.834782608695654L117.2,15.686956521739134";
+            testWrapper = TestWrapper.createWithColumnBasedAndAxisTypeAdaptedData();
+            testWrapper.visualBuilder.updateRenderTimeout(testWrapper.dataView, () => {
+                const linePathData = testWrapper.visualBuilder.$linePath.attr("d");
+                expect(linePathData).toEqual(continuousPath);
+                done();
+            });
+        });
+
+        it("X axis is categorical", (done) => {
+            const categoricalPath: string = "M2.8,15.686956521739134L25.680000000000003,52.2L48.56,2.799999999999997L71" +
+            ".44000000000001,15.686956521739134L94.32000000000001,17.834782608695654L117.2,15.686956521739134";
+            testWrapper = TestWrapper.createWithColumnBasedAndAxisTypeAdaptedData();
+            testWrapper.dataView.metadata.objects = {
+                integratedPowerKPI_xAxis: {
+                    type: 1,
+                },
+            };
+
+            testWrapper.visualBuilder.updateRenderTimeout(testWrapper.dataView, () => {
+                const linePathData = testWrapper.visualBuilder.$linePath.attr("d");
+                expect(linePathData).toEqual(categoricalPath);
+                done();
+            });
         });
 
         it("root element should be defined in DOM", (done) => {

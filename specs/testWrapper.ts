@@ -23,9 +23,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 import powerbi from "powerbi-visuals-api";
 
+import {
+    ColumnBaseDataBuilderWithgAxisTypeAdaptedData,
+} from "./columnBaseDataBuilderWithgAxisTypeAdaptedData";
 import { ColumnBasedDataBuilder } from "./columnBasedDataBuilder";
 import { DataBuilder } from "./dataBuilder";
 import { VisualBuilder } from "./visualBuilder";
@@ -33,6 +35,10 @@ import { VisualBuilder } from "./visualBuilder";
 export class TestWrapper {
     public static createWithColumnBasedData(): TestWrapper {
         return new TestWrapper(new ColumnBasedDataBuilder());
+    }
+
+    public static createWithColumnBasedAndAxisTypeAdaptedData(): TestWrapper {
+        return new TestWrapper(new ColumnBaseDataBuilderWithgAxisTypeAdaptedData());
     }
 
     public dataView: powerbi.DataView;
