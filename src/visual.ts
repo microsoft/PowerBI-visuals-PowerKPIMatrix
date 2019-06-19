@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-import "core-js/stable";
-import "regenerator-runtime/runtime";
-
 import "../styles/styles.less";
 
 import {
@@ -98,6 +95,10 @@ export class PowerKPIMatrix implements powerbi.extensibility.visual.IVisual {
     private rootElement: Selection<any, any, any, any>;
 
     constructor(constructorOptions: powerbi.extensibility.visual.VisualConstructorOptions) {
+        if (window.location !== window.parent.location) {
+            require("core-js/stable");
+        }
+
         this.columnSetConverter = new ColumnSetConverter();
 
         this.stateService = new StateService(
