@@ -99,7 +99,7 @@ export abstract class SettingsBase<T extends dataViewObjectsParser.DataViewObjec
                 for (const propertyName in properties[objectName]) {
                     const defaultValue: any = this[objectName][propertyName];
 
-                    this[objectName][propertyName] = dataViewObjects.DataViewObjects.getCommonValue(
+                    this[objectName][propertyName] = dataViewObjects.getCommonValue(
                         objects,
                         properties[objectName][propertyName],
                         defaultValue);

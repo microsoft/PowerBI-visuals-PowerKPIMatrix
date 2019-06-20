@@ -1,4 +1,5 @@
 ## 3.1.1
+* Conditional loading of `core-js/stable` only for sandbox mode
 * `@babel/polyfill` replacement by `core-js/stable`
 * Styles optimization
 
