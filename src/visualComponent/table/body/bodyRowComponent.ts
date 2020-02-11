@@ -93,7 +93,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         TextCellComponent, // Comparison Value
         SparklineCellComponent, // Sparkline
         TextCellComponent, // Second Comparison Value
-        TextCellComponent, // Second KPI Indicator Value
+        KPIIndicatorCellComponent, // Second KPI Indicator Value
     ];
 
     private tabularViewCellConstructors = [CollapserCellComponent];
@@ -699,6 +699,7 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
         this.bindClickEventToOpenModalWindow(sparklineCellRenderOptions);
 
+        // Second Comparison Value
         this.components[6].render({
             fontSettings: series.settings.secondComparisonValue,
             order: settings.secondComparisonValue.order,
@@ -707,11 +708,14 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
         this.verticalDraggableComponents[6].updateOrder(settings.secondComparisonValue.order);
 
+        // Second KPI Indicator
         this.components[7].render({
             fontSettings: series.settings.secondKPIIndicatorValue,
+            kpiIndicatorIndex: series.secondKPIIndicatorIndex,
+            kpiIndicatorSettings: series.settings.kpiIndicator,
             order: settings.secondKPIIndicatorValue.order,
             value: this.getFormattedValueBySettings(series.secondKPIIndicatorValue, series.settings.secondKPIIndicatorValue),
-        } as ITextCellRenderOptions);
+        } as IKPIIndicatorCellRenderOptions);
 
         this.verticalDraggableComponents[7].updateOrder(settings.secondKPIIndicatorValue.order);
     }

@@ -111,6 +111,9 @@ export interface ICurrentSeriesData {
     kpiIndicatorValueFormat: string;
     isKPIIndicatorValueSpecified: boolean;
 
+    secondKPIIndicatorIndex: number;
+    isSecondKPIIndicatorIndexSpecified: boolean;
+
     secondComparisonValue: number;
     secondComparisonValueFormat: string;
     isSecondComparisonValueSpecified: boolean;
@@ -545,8 +548,10 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
             secondComparisonValue,
             secondComparisonValueFormat,
             isSecondComparisonValueSpecified,
+            secondKPIIndicatorIndex,
             isSecondKPIIndicatorValueSpecified,
             secondComparisonValueColumnName,
+            isSecondKPIIndicatorIndexSpecified,
             secondKPIIndicatorValue,
             secondKPIIndicatorValueFormat,
         } = data;
@@ -626,6 +631,7 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
                 DataConverter.applyYArguments(series.y, series.secondComparisonValue);
             }
 
+            // KPI Indicator
             series.kpiIndicatorIndex = NumericValueUtils.isValueFinite(kpiIndicatorIndex)
                 ? kpiIndicatorIndex
                 : NaN;
@@ -654,6 +660,29 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
                 series.currentValue,
                 series.comparisonValue,
             );
+
+            // Second KPI Indicator
+            series.secondKPIIndicatorIndex = NumericValueUtils.isValueFinite(secondKPIIndicatorIndex)
+                ? secondKPIIndicatorIndex
+                : NaN;
+
+            if (isSecondKPIIndicatorIndexSpecified) {
+                series.points[0].kpiIndicatorIndexes.push(secondKPIIndicatorIndex);
+
+                if (series.settings.sparklineSettings.isActualVisible
+                    && series.settings.sparklineSettings.shouldActualUseKPIColors
+                    && series.points[0]
+                ) {
+                    const currentKPI: IKPIIndicatorSettings = settings
+                        .kpiIndicator
+                        .getCurrentKPI(secondKPIIndicatorIndex);
+
+                    const color: string = currentKPI && currentKPI.color
+                        || series.points[0].color;
+
+                    series.points[0].colors.push(color);
+                }
+            }
 
             series.secondKPIIndicatorValue = this.getVariance(
                 isSecondKPIIndicatorValueSpecified,

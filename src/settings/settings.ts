@@ -160,7 +160,6 @@ export class Settings extends SettingsBase<Settings> {
         this.secondKPIIndicatorValue.defaultFormat = "+0.00 %;-0.00 %;0.00 %";
         this.secondKPIIndicatorValue.label = "Second KPI Status";
         this.secondKPIIndicatorValue.order = 7;
-        this.secondKPIIndicatorValue.shouldMatchKPIColor = false;
 
         this.sparklineSettings.isEnumerable = false;
         this.sparklineSettings.label = "Sparklines";

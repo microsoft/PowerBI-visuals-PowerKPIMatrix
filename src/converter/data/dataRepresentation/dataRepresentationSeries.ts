@@ -46,6 +46,7 @@ export interface IDataRepresentationSeries {
     currentValue?: number;
     comparisonValue?: number;
     secondComparisonValue?: number;
+    secondKPIIndicatorIndex?: number;
     secondKPIIndicatorValue?: number;
     x?: IDataRepresentationAxisWithScale;
     y?: IDataRepresentationAxisWithScale;
