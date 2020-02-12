@@ -92,8 +92,8 @@ export class BodyRowComponent extends BaseBodyRowComponent {
         KPIIndicatorCellComponent, // KPI Indicator
         TextCellComponent, // Comparison Value
         SparklineCellComponent, // Sparkline
-        TextCellComponent, // Second Comparison Value
         KPIIndicatorCellComponent, // Second KPI Indicator Value
+        TextCellComponent, // Second Comparison Value
     ];
 
     private tabularViewCellConstructors = [CollapserCellComponent];
@@ -699,17 +699,8 @@ export class BodyRowComponent extends BaseBodyRowComponent {
 
         this.bindClickEventToOpenModalWindow(sparklineCellRenderOptions);
 
-        // Second Comparison Value
-        this.components[6].render({
-            fontSettings: series.settings.secondComparisonValue,
-            order: settings.secondComparisonValue.order,
-            value: this.getFormattedValueBySettings(series.secondComparisonValue, series.settings.secondComparisonValue),
-        } as ITextCellRenderOptions);
-
-        this.verticalDraggableComponents[6].updateOrder(settings.secondComparisonValue.order);
-
         // Second KPI Indicator
-        this.components[7].render({
+        this.components[6].render({
             fontSettings: series.settings.secondKPIIndicatorValue,
             kpiIndicatorIndex: series.secondKPIIndicatorIndex,
             kpiIndicatorSettings: series.settings.kpiIndicator,
@@ -717,7 +708,16 @@ export class BodyRowComponent extends BaseBodyRowComponent {
             value: this.getFormattedValueBySettings(series.secondKPIIndicatorValue, series.settings.secondKPIIndicatorValue),
         } as IKPIIndicatorCellRenderOptions);
 
-        this.verticalDraggableComponents[7].updateOrder(settings.secondKPIIndicatorValue.order);
+        this.verticalDraggableComponents[6].updateOrder(settings.secondKPIIndicatorValue.order);
+
+        // Second Comparison Value
+        this.components[7].render({
+            fontSettings: series.settings.secondComparisonValue,
+            order: settings.secondComparisonValue.order,
+            value: this.getFormattedValueBySettings(series.secondComparisonValue, series.settings.secondComparisonValue),
+        } as ITextCellRenderOptions);
+
+        this.verticalDraggableComponents[7].updateOrder(settings.secondComparisonValue.order);
     }
 
     private getFormattedValueBySettings(value: number, settings: NumberSettingsBase): string {
