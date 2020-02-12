@@ -666,24 +666,6 @@ export abstract class DataConverter implements IConverter<IDataRepresentation> {
                 ? secondKPIIndicatorIndex
                 : NaN;
 
-            if (isSecondKPIIndicatorIndexSpecified) {
-                series.points[0].kpiIndicatorIndexes.push(secondKPIIndicatorIndex);
-
-                if (series.settings.sparklineSettings.isActualVisible
-                    && series.settings.sparklineSettings.shouldActualUseKPIColors
-                    && series.points[0]
-                ) {
-                    const currentKPI: IKPIIndicatorSettings = settings
-                        .kpiIndicator
-                        .getCurrentKPI(secondKPIIndicatorIndex);
-
-                    const color: string = currentKPI && currentKPI.color
-                        || series.points[0].color;
-
-                    series.points[0].colors.push(color);
-                }
-            }
-
             series.secondKPIIndicatorValue = this.getVariance(
                 isSecondKPIIndicatorValueSpecified,
                 secondKPIIndicatorValue,
