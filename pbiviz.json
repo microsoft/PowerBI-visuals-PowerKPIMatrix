@@ -1,10 +1,10 @@
 {
   "visual": {
-    "name": "PowerKPIMatrix2",
-    "displayName": "Power KPI Matrix 3.2.1",
-    "guid": "powerKPIMatrixEB2381CC88A8425FBEB1B07FF57784E7",
+    "name": "PowerKPIMatrix",
+    "displayName": "Power KPI Matrix 3.1.1",
+    "guid": "powerKPIMatrixEB2381CC88A8425FBEB1B07FF57784E6",
     "visualClassName": "PowerKPIMatrix",
-    "version": "3.2.1",
+    "version": "3.1.1",
     "description": "Monitor balanced scorecards and unlimited number of metrics and KPIs in a single, compact, easy to read list.",
     "supportUrl": "https://aka.ms/customvisualscommunity",
     "gitHubUrl": "https://github.com/Microsoft/PowerBI-visuals-PowerKPIMatrix"
