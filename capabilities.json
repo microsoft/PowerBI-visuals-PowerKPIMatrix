@@ -2157,139 +2157,6 @@
         }
       }
     },
-    "secondComparisonValue": {
-      "displayName": "Second Comparison Value",
-      "description": "Second Comparison Value options",
-      "properties": {
-        "format": {
-          "type": {
-            "text": true
-          },
-          "displayName": "  Format"
-        },
-        "displayUnits": {
-          "type": {
-            "formatting": {
-              "labelDisplayUnits": true
-            }
-          },
-          "displayName": "  Display Units",
-          "suppressFormatPainterCopy": true
-        },
-        "precision": {
-          "type": {
-            "numeric": true
-          },
-          "displayName": "  Decimal Places",
-          "placeHolderText": "Auto",
-          "suppressFormatPainterCopy": true
-        },
-        "textReplacement": {
-          "type": {
-            "text": true
-          },
-          "displayName": "  Text Replacement"
-        },
-        "show": {
-          "type": {
-            "bool": true
-          },
-          "displayName": "  Show"
-        },
-        "order": {
-          "type": {
-            "numeric": true
-          },
-          "displayName": "  Column Order",
-          "suppressFormatPainterCopy": true
-        },
-        "label": {
-          "type": {
-            "text": true
-          },
-          "displayName": "  Label"
-        },
-        "fontSize": {
-          "type": {
-            "formatting": {
-              "fontSize": true
-            }
-          },
-          "displayName": "  Text Size"
-        },
-        "isBold": {
-          "type": {
-            "bool": true
-          },
-          "displayName": "  Bold"
-        },
-        "isItalic": {
-          "type": {
-            "bool": true
-          },
-          "displayName": "  Italic"
-        },
-        "isUnderlined": {
-          "type": {
-            "bool": true
-          },
-          "displayName": "  Underline"
-        },
-        "fontFamily": {
-          "type": {
-            "formatting": {
-              "fontFamily": true
-            }
-          },
-          "displayName": "  Font Family"
-        },
-        "alignment": {
-          "type": {
-            "formatting": {
-              "alignment": true
-            }
-          },
-          "displayName": "  Horizontal Alignment"
-        },
-        "verticalAlignment": {
-          "type": {
-            "enumeration": [{
-              "value": "top",
-              "displayName": "Top"
-            }, {
-              "value": "center",
-              "displayName": "Center"
-            }, {
-              "value": "bottom",
-              "displayName": "Bottom"
-            }]
-          },
-          "displayName": "  Vertical Alignment"
-        },
-        "color": {
-          "type": {
-            "fill": {
-              "solid": {
-                "color": true
-              }
-            }
-          },
-          "displayName": "  Color"
-        },
-        "backgroundColor": {
-          "type": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "nullable": true
-                }
-              }
-            }
-          },
-          "displayName": "  Background Color"
-        }
-      }
-    },
     "secondKPIIndicatorValue": {
       "displayName": "Second KPI Indicator Value",
       "properties": {
@@ -2431,6 +2298,139 @@
             "bool": true
           },
           "displayName": "  Match KPI Indicator Color"
+        }
+      }
+    },
+    "secondComparisonValue": {
+      "displayName": "Second Comparison Value",
+      "description": "Second Comparison Value options",
+      "properties": {
+        "format": {
+          "type": {
+            "text": true
+          },
+          "displayName": "  Format"
+        },
+        "displayUnits": {
+          "type": {
+            "formatting": {
+              "labelDisplayUnits": true
+            }
+          },
+          "displayName": "  Display Units",
+          "suppressFormatPainterCopy": true
+        },
+        "precision": {
+          "type": {
+            "numeric": true
+          },
+          "displayName": "  Decimal Places",
+          "placeHolderText": "Auto",
+          "suppressFormatPainterCopy": true
+        },
+        "textReplacement": {
+          "type": {
+            "text": true
+          },
+          "displayName": "  Text Replacement"
+        },
+        "show": {
+          "type": {
+            "bool": true
+          },
+          "displayName": "  Show"
+        },
+        "order": {
+          "type": {
+            "numeric": true
+          },
+          "displayName": "  Column Order",
+          "suppressFormatPainterCopy": true
+        },
+        "label": {
+          "type": {
+            "text": true
+          },
+          "displayName": "  Label"
+        },
+        "fontSize": {
+          "type": {
+            "formatting": {
+              "fontSize": true
+            }
+          },
+          "displayName": "  Text Size"
+        },
+        "isBold": {
+          "type": {
+            "bool": true
+          },
+          "displayName": "  Bold"
+        },
+        "isItalic": {
+          "type": {
+            "bool": true
+          },
+          "displayName": "  Italic"
+        },
+        "isUnderlined": {
+          "type": {
+            "bool": true
+          },
+          "displayName": "  Underline"
+        },
+        "fontFamily": {
+          "type": {
+            "formatting": {
+              "fontFamily": true
+            }
+          },
+          "displayName": "  Font Family"
+        },
+        "alignment": {
+          "type": {
+            "formatting": {
+              "alignment": true
+            }
+          },
+          "displayName": "  Horizontal Alignment"
+        },
+        "verticalAlignment": {
+          "type": {
+            "enumeration": [{
+              "value": "top",
+              "displayName": "Top"
+            }, {
+              "value": "center",
+              "displayName": "Center"
+            }, {
+              "value": "bottom",
+              "displayName": "Bottom"
+            }]
+          },
+          "displayName": "  Vertical Alignment"
+        },
+        "color": {
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          },
+          "displayName": "  Color"
+        },
+        "backgroundColor": {
+          "type": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "displayName": "  Background Color"
         }
       }
     },
@@ -3118,6 +3118,12 @@
           "displayName": "Format",
           "type": {
             "text": true
+          }
+        },
+        "matchKPIColor": {
+          "displayName": "Match KPI Indicator Color",
+          "type": {
+            "bool": true
           }
         }
       },
