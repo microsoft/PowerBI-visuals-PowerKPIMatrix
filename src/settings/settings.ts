@@ -151,16 +151,15 @@ export class Settings extends SettingsBase<Settings> {
         this.comparisonValue.label = "Comparison Value";
         this.comparisonValue.order = 5;
 
-        this.secondComparisonValue.isEnumerable = false;
-        this.secondComparisonValue.defaultFormat = "#,0.00";
-        this.secondComparisonValue.label = "Second Comparison Value";
-        this.secondComparisonValue.order = 6;
-
         this.secondKPIIndicatorValue.isEnumerable = false;
         this.secondKPIIndicatorValue.defaultFormat = "+0.00 %;-0.00 %;0.00 %";
         this.secondKPIIndicatorValue.label = "Second KPI Status";
-        this.secondKPIIndicatorValue.order = 7;
-        this.secondKPIIndicatorValue.shouldMatchKPIColor = false;
+        this.secondKPIIndicatorValue.order = 6;
+
+        this.secondComparisonValue.isEnumerable = false;
+        this.secondComparisonValue.defaultFormat = "#,0.00";
+        this.secondComparisonValue.label = "Second Comparison Value";
+        this.secondComparisonValue.order = 7;
 
         this.sparklineSettings.isEnumerable = false;
         this.sparklineSettings.label = "Sparklines";

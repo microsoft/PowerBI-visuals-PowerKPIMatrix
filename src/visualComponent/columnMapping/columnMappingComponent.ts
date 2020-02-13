@@ -33,6 +33,7 @@ import { comparisonValueColumn } from "../../columns/comparisonValueColumn";
 import { kpiIndicatorIndexColumn } from "../../columns/kpiIndicatorIndexColumn";
 import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
 import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorIndexColumn } from "../../columns/secondKPIIndicatorIndexColumn";
 import { secondKPIIndicatorValueColumn } from "../../columns/secondKPIIndicatorValueColumn";
 
 import { StateService } from "../../services/state/stateService";
@@ -120,6 +121,7 @@ export class ColumnMappingComponent extends BaseContainerComponent {
                 kpiIndicatorIndexColumn,
                 kpiIndicatorValueColumn,
                 secondComparisonValueColumn,
+                secondKPIIndicatorIndexColumn,
                 secondKPIIndicatorValueColumn,
             ],
             element: this.scrollableElement,

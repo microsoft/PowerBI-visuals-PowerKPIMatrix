@@ -33,6 +33,7 @@ import { kpiIndicatorIndexColumn } from "../../../columns/kpiIndicatorIndexColum
 import { kpiIndicatorValueColumn } from "../../../columns/kpiIndicatorValueColumn";
 import { rowBasedMetricNameColumn } from "../../../columns/rowBasedMetricNameColumn";
 import { secondComparisonValueColumn } from "../../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorIndexColumn } from "../../../columns/secondKPIIndicatorIndexColumn";
 import { secondKPIIndicatorValueColumn } from "../../../columns/secondKPIIndicatorValueColumn";
 
 import { DataRepresentationAxisValueType } from "../dataRepresentation/dataRepresentationAxisValueType";
@@ -145,6 +146,9 @@ export class RowBasedModelConverter extends DataConverter {
                 let isSecondComparisonValueSpecified: boolean = false;
                 let secondComparisonValueColumnName: string;
 
+                let secondKPIIndicatorIndex: number = NaN;
+                let isSecondKPIIndicatorIndexSpecified: boolean = false;
+
                 let secondKPIIndicatorValue: number = NaN;
                 let secondKPIIndicatorValueFormat: string;
                 let isSecondKPIIndicatorValueSpecified: boolean = false;
@@ -197,6 +201,13 @@ export class RowBasedModelConverter extends DataConverter {
 
                                 break;
                             }
+                            case secondKPIIndicatorIndexColumn.name: {
+                                secondKPIIndicatorIndex = value;
+
+                                isSecondKPIIndicatorIndexSpecified = true;
+
+                                break;
+                            }
                             case secondKPIIndicatorValueColumn.name: {
                                 secondKPIIndicatorValue = value;
                                 secondKPIIndicatorValueFormat = format;
@@ -222,6 +233,7 @@ export class RowBasedModelConverter extends DataConverter {
                     isKPIIndicatorIndexSpecified,
                     isKPIIndicatorValueSpecified,
                     isSecondComparisonValueSpecified,
+                    isSecondKPIIndicatorIndexSpecified,
                     isSecondKPIIndicatorValueSpecified,
                     kpiIndicatorIndex,
                     kpiIndicatorValue,
@@ -229,6 +241,7 @@ export class RowBasedModelConverter extends DataConverter {
                     secondComparisonValue,
                     secondComparisonValueColumnName,
                     secondComparisonValueFormat,
+                    secondKPIIndicatorIndex,
                     secondKPIIndicatorValue,
                     secondKPIIndicatorValueFormat,
                     series,
