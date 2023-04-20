@@ -54,7 +54,7 @@
     "powerbi-visuals-api": "~2.5.0",
     "powerbi-visuals-powerkpi": "https://github.com/microsoft/PowerBI-visuals-PowerKPI",
     "powerbi-visuals-tools": "^3.1.2",
-    "powerbi-visuals-utils-testutils": "^2.2.0",
+    "powerbi-visuals-utils-testutils": "^2.6.0",
     "puppeteer": "^1.17.0",
     "regenerator-runtime": "0.13.2",
     "style-loader": "^0.23.1",
