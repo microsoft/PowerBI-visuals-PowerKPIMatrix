@@ -32,6 +32,7 @@ import { kpiIndicatorIndexColumn } from "../../columns/kpiIndicatorIndexColumn";
 import { kpiIndicatorValueColumn } from "../../columns/kpiIndicatorValueColumn";
 import { rowBasedMetricNameColumn } from "../../columns/rowBasedMetricNameColumn";
 import { secondComparisonValueColumn } from "../../columns/secondComparisonValueColumn";
+import { secondKPIIndicatorIndexColumn } from "../../columns/secondKPIIndicatorIndexColumn";
 import { secondKPIIndicatorValueColumn } from "../../columns/secondKPIIndicatorValueColumn";
 import { IVisualDataColumn } from "../../columns/visualDataColumn";
 
@@ -77,6 +78,7 @@ export class ColumnSetConverter implements IConverter<IDataRepresentationColumnS
             kpiIndicatorIndexColumn,
             kpiIndicatorValueColumn,
             secondComparisonValueColumn,
+            secondKPIIndicatorIndexColumn,
             secondKPIIndicatorValueColumn,
             rowBasedMetricNameColumn,
         ].forEach((column: IVisualDataColumn) => {

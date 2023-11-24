@@ -24,6 +24,10 @@
     "displayName": "Second Comparison Value",
     "kind": "Measure"
   }, {
+    "name": "secondKPIIndicatorIndex",
+    "displayName": "Second KPI Indicator Index",
+    "kind": "Measure"
+  }, {
     "name": "secondKPIIndicatorValue",
     "displayName": "Second KPI Indicator Value",
     "kind": "Measure"
@@ -2153,9 +2157,8 @@
         }
       }
     },
-    "secondComparisonValue": {
-      "displayName": "Second Comparison Value",
-      "description": "Second Comparison Value options",
+    "secondKPIIndicatorValue": {
+      "displayName": "Second KPI Indicator Value",
       "properties": {
         "format": {
           "type": {
@@ -2185,6 +2188,12 @@
             "text": true
           },
           "displayName": "  Text Replacement"
+        },
+        "isShown": {	
+          "type": {	
+            "bool": true	
+          },	
+          "displayName": "  Show"	
         },
         "show": {
           "type": {
@@ -2283,11 +2292,18 @@
             }
           },
           "displayName": "  Background Color"
+        },
+        "shouldMatchKPIColor": {
+          "type": {
+            "bool": true
+          },
+          "displayName": "  Match KPI Indicator Color"
         }
       }
     },
-    "secondKPIIndicatorValue": {
-      "displayName": "Second KPI Indicator Value",
+    "secondComparisonValue": {
+      "displayName": "Second Comparison Value",
+      "description": "Second Comparison Value options",
       "properties": {
         "format": {
           "type": {
@@ -3102,6 +3118,12 @@
           "displayName": "Format",
           "type": {
             "text": true
+          }
+        },
+        "matchKPIColor": {
+          "displayName": "Match KPI Indicator Color",
+          "type": {
+            "bool": true
           }
         }
       },
@@ -3980,6 +4002,9 @@
       "secondComparisonValue": {
         "max": 0
       },
+      "secondKPIIndicatorIndex": {
+        "max": 0
+      },
       "secondKPIIndicatorValue": {
         "max": 0
       },
@@ -4018,6 +4043,9 @@
       "secondComparisonValue": {
         "min": 0
       },
+      "secondKPIIndicatorIndex": {
+        "min": 0
+      },
       "secondKPIIndicatorValue": {
         "min": 0
       },
@@ -4060,6 +4088,9 @@
       "secondComparisonValue": {
         "max": 1
       },
+      "secondKPIIndicatorIndex": {
+        "max": 1
+      },
       "secondKPIIndicatorValue": {
         "max": 1
       },
@@ -4100,6 +4131,9 @@
         "max": 1
       },
       "secondComparisonValue": {
+        "max": 1
+      },
+      "secondKPIIndicatorIndex": {
         "max": 1
       },
       "secondKPIIndicatorValue": {
@@ -4151,6 +4185,10 @@
         }, {
           "for": {
             "in": "secondComparisonValue"
+          }
+        }, {
+          "for": {
+            "in": "secondKPIIndicatorIndex"
           }
         }, {
           "for": {
