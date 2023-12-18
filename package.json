@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/PowerBI-visuals-PowerKPIMatrix.git"
+    "url": "git+https://github.com/axk3601/PowerBI-visuals-PowerKPIMatrix/blob/patch-1.git"
   },
   "keywords": [
     "powerbi-visuals",
@@ -25,9 +25,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Microsoft/PowerBI-visuals-PowerKPIMatrix/issues"
+    "url": "https://github.com/axk3601/PowerBI-visuals-PowerKPIMatrix/blob/patch-1/issues"
   },
-  "homepage": "https://github.com/Microsoft/PowerBI-visuals-PowerKPIMatrix#readme",
+  "homepage": "https://github.com/axk3601/PowerBI-visuals-PowerKPIMatrix/blob/patch-1#readme",
   "devDependencies": {
     "@types/d3": "^5.7.0",
     "@types/jasmine": "^3.3.5",
