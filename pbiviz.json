@@ -7,7 +7,7 @@
     "version": "3.1.1",
     "description": "Monitor balanced scorecards and unlimited number of metrics and KPIs in a single, compact, easy to read list.",
     "supportUrl": "https://aka.ms/customvisualscommunity",
-    "gitHubUrl": "https://github.com/Microsoft/PowerBI-visuals-PowerKPIMatrix"
+    "gitHubUrl": "https://github.com/axk3601/PowerBI-visuals-PowerKPIMatrix/tree/patch-1"
   },
   "author": {
     "name": "Microsoft",

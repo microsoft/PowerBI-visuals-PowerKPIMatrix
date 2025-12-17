@@ -79,6 +79,17 @@
         }
       }
     },
+    "general": {
+        "properties": {
+            "formatString": {
+                "type": {
+                    "formatting": {
+                        "formatString": true
+                    }
+                }
+            }
+        }
+    },
     "editButtonHack": {
       "displayName": "Edit Button Hack",
       "properties": {}
